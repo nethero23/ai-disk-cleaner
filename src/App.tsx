@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
@@ -83,6 +83,7 @@ export function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [growth, setGrowth] = useState<Growth[]>([]);
   const [obStep, setObStep] = useState<number | null>(null);
+  const [portable, setPortable] = useState(false);
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateState, setUpdateState] = useState<"idle" | "checking" | "downloading" | "installed">("idle");
   const [updatePct, setUpdatePct] = useState(0);
@@ -205,10 +206,12 @@ export function App() {
   useEffect(() => {
     invoke<Drive[]>("drives").then(setAllDrives).catch(() => {});
     invoke<Settings>("get_settings")
-      .then((st) => {
+      .then(async (st) => {
         setSettings(st);
         if (!st.onboarded) setObStep(0);
-        if (st.auto_update_check) runCheckUpdate(false);
+        const p = await invoke<boolean>("is_portable").catch(() => false);
+        setPortable(p);
+        if (st.auto_update_check && !p) runCheckUpdate(false);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1224,17 +1227,26 @@ export function App() {
           )}
 
           <h2>{s.setAppUpdate}</h2>
-          <p>
-            <label>
-              <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
-              {s.setAutoUpdateCheck}
-            </label>
-          </p>
-          <p>
-            <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
-              {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
-            </button>
-          </p>
+          {portable ? (
+            <p className="muted">
+              {s.portableNoUpdate}{" "}
+              <button className="linkish" onClick={() => openUrl("https://github.com/nethero23/ai-disk-cleaner/releases")}>{s.portableReleases}</button>
+            </p>
+          ) : (
+            <>
+              <p>
+                <label>
+                  <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
+                  {s.setAutoUpdateCheck}
+                </label>
+              </p>
+              <p>
+                <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
+                  {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
+                </button>
+              </p>
+            </>
+          )}
 
           <h2>{s.setUpdate}</h2>
           <p className="muted">{s.setUpdateBody}</p>
