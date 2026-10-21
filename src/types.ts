@@ -202,3 +202,11 @@ export interface Drive {
   free_bytes: number;
   system: boolean;
 }
+
+export interface Unrecognized {
+  name: string;
+  path: string;
+  bytes: number;
+  files: number;
+  newest: string | null;
+}

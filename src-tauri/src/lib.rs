@@ -378,6 +378,26 @@ async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
         .map_err(|e| e.to_string())?
 }
 
+/// Big profile folders no rule claims (≥ 1 GB), for rule suggestions.
+#[tauri::command]
+async fn unrecognized(
+    app: AppHandle,
+) -> Result<Vec<cleaner_core::unrecognized::Unrecognized>, String> {
+    let (rules, _, settings) = effective_rules(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let ctx = cleaner_core::paths::PathContext::from_env();
+        cleaner_core::unrecognized::find(&rules, &ctx, 1024 * 1024 * 1024, &settings.excluded_paths)
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// The prefilled GitHub issue URL for one unrecognized folder.
+#[tauri::command]
+fn suggest_rule_url(entry: cleaner_core::unrecognized::Unrecognized, lang: String) -> String {
+    cleaner_core::unrecognized::issue_url("nethero23/ai-disk-cleaner", &entry, &lang)
+}
+
 /// Rule ids whose items are chat history that can be exported first.
 #[tauri::command]
 fn exportable() -> Vec<String> {
@@ -573,6 +593,8 @@ pub fn run() {
             compactable,
             vhdx_files,
             compact_vhdx,
+            unrecognized,
+            suggest_rule_url,
             exportable,
             export_items,
             drives,
