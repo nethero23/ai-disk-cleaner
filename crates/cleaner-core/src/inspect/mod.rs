@@ -9,6 +9,7 @@ pub mod artifacts;
 pub mod claude;
 pub mod conda;
 pub mod cursor;
+pub mod drives;
 pub mod huggingface;
 pub mod lmstudio;
 pub mod ollama;

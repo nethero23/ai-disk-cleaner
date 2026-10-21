@@ -185,6 +185,7 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         lang: settings.lang.clone(),
         global_min_bytes: settings.min_item_bytes,
         excluded: settings.excluded_paths.clone(),
+        extra_roots: settings.scan_drives.clone(),
         ..ScanOptions::default()
     };
     let mut report = scan_all(&rules, &opts);
