@@ -40,6 +40,8 @@ pub struct Settings {
     pub scan_drives: Vec<PathBuf>,
     /// A model not touched for this many days is suggested as idle.
     pub idle_model_days: u32,
+    /// The first-run walkthrough has been shown (or skipped).
+    pub onboarded: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -64,6 +66,7 @@ impl Default for Settings {
             auto_update_check: true,
             scan_drives: Vec::new(),
             idle_model_days: 90,
+            onboarded: false,
         }
     }
 }

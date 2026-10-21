@@ -142,6 +142,7 @@ export interface Settings {
   auto_update_check: boolean;
   scan_drives: string[];
   idle_model_days: number;
+  onboarded: boolean;
 }
 
 export interface RuleInfo {
