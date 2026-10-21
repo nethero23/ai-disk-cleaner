@@ -3,6 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { getVersion } from "@tauri-apps/api/app";
 import type { Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
@@ -70,6 +73,10 @@ export function App() {
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [update, setUpdate] = useState<Update | null>(null);
+  const [updateState, setUpdateState] = useState<"idle" | "checking" | "downloading" | "installed">("idle");
+  const [updatePct, setUpdatePct] = useState(0);
+  const [updateMsg, setUpdateMsg] = useState<string | null>(null);
 
   useEffect(() => {
     invoke<string[]>("relocatable").then((ids) => setRelocatable(new Set(ids))).catch(() => {});
@@ -151,9 +158,49 @@ export function App() {
     setView("settings");
   }
 
+  async function runCheckUpdate(manual: boolean) {
+    setUpdateState("checking");
+    setUpdateMsg(null);
+    try {
+      const u = await checkUpdate({ timeout: 15000 });
+      setUpdate(u);
+      if (!u && manual) setUpdateMsg(s.upToDate(await getVersion().catch(() => "")));
+    } catch (e) {
+      if (manual) setUpdateMsg(s.updateFailed(String(e)));
+    }
+    setUpdateState("idle");
+  }
+
+  async function installUpdate() {
+    if (!update) return;
+    setUpdateState("downloading");
+    setUpdatePct(0);
+    let total = 0;
+    let got = 0;
+    try {
+      await update.downloadAndInstall((ev) => {
+        if (ev.event === "Started") total = ev.data.contentLength ?? 0;
+        else if (ev.event === "Progress") {
+          got += ev.data.chunkLength;
+          if (total) setUpdatePct(Math.min(100, Math.round((got / total) * 100)));
+        }
+      });
+      setUpdateState("installed");
+    } catch (e) {
+      setUpdateMsg(s.updateFailed(String(e)));
+      setUpdateState("idle");
+    }
+  }
+
   useEffect(() => {
     invoke<Drive[]>("drives").then(setAllDrives).catch(() => {});
-    invoke<Settings>("get_settings").then(setSettings).catch(() => {});
+    invoke<Settings>("get_settings")
+      .then((st) => {
+        setSettings(st);
+        if (st.auto_update_check) runCheckUpdate(false);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function saveSettings(next: Settings) {
@@ -548,6 +595,28 @@ export function App() {
 
       {error && <div className="banner error">{error}</div>}
       {notice && <div className="banner ok">{notice}</div>}
+      {update && (
+        <div className="banner update">
+          <span>
+            <strong>{s.updateAvailable(update.version)}</strong>
+            {update.body && <span className="muted"> · {update.body.split("\n")[0].slice(0, 120)}</span>}
+          </span>
+          <span style={{ flex: 1 }} />
+          {updateState === "downloading" && <span className="muted">{s.updateDownloading(`${updatePct}%`)}</span>}
+          {updateState === "installed" ? (
+            <>
+              <span>{s.updateInstalled}</span>
+              <button className="primary" onClick={() => relaunch()}>{s.updateRelaunch}</button>
+            </>
+          ) : (
+            <>
+              <button className="primary" disabled={updateState === "downloading"} onClick={installUpdate}>{s.updateInstall}</button>
+              <button className="ghost" disabled={updateState === "downloading"} onClick={() => setUpdate(null)}>{s.updateLater}</button>
+            </>
+          )}
+        </div>
+      )}
+      {updateMsg && <div className="banner ok">{updateMsg}</div>}
       {result && (
         <div className="banner ok">
           {s.done(humanSize(result.freed_bytes))}
@@ -779,6 +848,19 @@ export function App() {
           {settings.last_background_scan && (
             <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
           )}
+
+          <h2>{s.setAppUpdate}</h2>
+          <p>
+            <label>
+              <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
+              {s.setAutoUpdateCheck}
+            </label>
+          </p>
+          <p>
+            <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
+              {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
+            </button>
+          </p>
 
           <h2>{s.setUpdate}</h2>
           <p className="muted">{s.setUpdateBody}</p>
