@@ -23,6 +23,10 @@ pub struct CleanRecord {
     pub safety: SafetyLevel,
     pub ok: bool,
     pub error: Option<String>,
+    /// All records of one `clean` call share a batch id, so "undo the last
+    /// clean" knows what belongs together. Empty on records from older versions.
+    #[serde(default)]
+    pub batch: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -85,6 +89,7 @@ pub fn delete_item(item: &ScanItem) -> Result<()> {
 /// Deletes each item, logging to `log_path`, and never stops on one failure.
 pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
     let mut summary = CleanSummary::default();
+    let batch = Utc::now().timestamp_millis().to_string();
     let mut log = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
@@ -101,6 +106,7 @@ pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
             safety: item.safety,
             ok: result.is_ok(),
             error: result.err().map(|e| e.to_string()),
+            batch: batch.clone(),
         };
         if rec.ok {
             summary.freed_bytes += rec.size_bytes;
@@ -166,6 +172,7 @@ mod tests {
             safety: SafetyLevel::Safe,
             ok: true,
             error: None,
+            batch: "1".into(),
         };
         std::fs::write(&log, format!("{}\n", serde_json::to_string(&rec).unwrap())).unwrap();
         let back = read_log(&log);

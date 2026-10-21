@@ -155,6 +155,26 @@ fn clean_log(app: AppHandle) -> Vec<CleanRecord> {
     clean::read_log(&log_path(&app))
 }
 
+/// For the history page: which cleaned paths can still be restored.
+#[tauri::command]
+async fn restore_status(
+    paths: Vec<PathBuf>,
+) -> Result<Vec<cleaner_core::restore::RestoreStatus>, String> {
+    tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::status(&paths))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Puts cleaned items back from the Recycle Bin.
+#[tauri::command]
+async fn restore_items(
+    records: Vec<CleanRecord>,
+) -> Result<cleaner_core::restore::RestoreSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::restore(&records))
+        .await
+        .map_err(|e| e.to_string())
+}
+
 #[derive(Serialize)]
 struct RuleInfo {
     id: String,
@@ -552,6 +572,8 @@ pub fn run() {
             clean_items,
             clean_log,
             growth_report,
+            restore_status,
+            restore_items,
             rules,
             get_settings,
             save_settings,

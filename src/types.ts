@@ -54,6 +54,20 @@ export interface CleanRecord {
   safety: SafetyLevel;
   ok: boolean;
   error: string | null;
+  batch?: string;
+}
+
+export type Whereabouts = "present" | "in_bin" | "gone";
+
+export interface RestoreStatus {
+  path: string;
+  state: Whereabouts;
+}
+
+export interface RestoreSummary {
+  restored: number;
+  restored_bytes: number;
+  results: { path: string; ok: boolean; error: string | null }[];
 }
 
 export interface CleanSummary {
