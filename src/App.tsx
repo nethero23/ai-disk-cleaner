@@ -6,7 +6,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
+import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -80,6 +80,7 @@ export function App() {
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [growth, setGrowth] = useState<Growth[]>([]);
   const [obStep, setObStep] = useState<number | null>(null);
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateState, setUpdateState] = useState<"idle" | "checking" | "downloading" | "installed">("idle");
@@ -555,6 +556,7 @@ export function App() {
     });
     const p = listen<ScanReport>("background-scan", (e) => {
       setReport(e.payload);
+      invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
       setPhase("ready");
       setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgBanner(humanSize(e.payload.total_bytes)));
@@ -576,6 +578,7 @@ export function App() {
     try {
       const r = await invoke<ScanReport>("scan", { lang });
       setReport(r);
+      invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.
       const safe = r.items.filter(isDefaultTicked).map((i) => i.id);
       setSelected(new Set(safe));
@@ -1043,6 +1046,19 @@ export function App() {
               {s.setAutoClean}
             </label>
           </p>
+          <p>
+            {s.setGrowthNotify}{" "}
+            <select
+              value={settings.growth_notify_bytes}
+              onChange={(e) => saveSettings({ ...settings, growth_notify_bytes: Number(e.target.value) })}
+            >
+              <option value={0}>{s.growthOff}</option>
+              <option value={1024 * 1024 * 1024}>1 GB</option>
+              <option value={2 * 1024 * 1024 * 1024}>2 GB</option>
+              <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
+              <option value={10 * 1024 * 1024 * 1024}>10 GB</option>
+            </select>
+          </p>
           {settings.last_background_scan && (
             <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
           )}
@@ -1294,6 +1310,21 @@ export function App() {
             </div>
             {summaryLine && <p className="summary-line">{summaryLine}</p>}
             {report.cancelled && <div className="banner">{s.scanPartial}</div>}
+            {growth.some((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024) && (
+              <div className="growth" title={s.growthHint}>
+                <span className="muted">{s.growthTitle}</span>
+                {growth
+                  .filter((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024)
+                  .slice(0, 5)
+                  .map((g) => (
+                    <span key={g.tool} className={`growth-chip ${g.delta_bytes > 0 ? "up" : "down"}`}>
+                      {g.delta_bytes > 0
+                        ? s.growthRow(g.tool, humanSize(g.delta_bytes), new Date(g.since).toLocaleDateString())
+                        : s.growthShrank(g.tool, humanSize(-g.delta_bytes))}
+                    </span>
+                  ))}
+              </div>
+            )}
             <div className="stat-row">
               <Pill level="safe" label={s.safety.safe} size={humanSize(report.safe_bytes)} hint={s.safetyHint.safe} />
               <Pill level="redownload" label={s.safety.redownload} size={humanSize(report.redownload_bytes)} hint={s.safetyHint.redownload} />
