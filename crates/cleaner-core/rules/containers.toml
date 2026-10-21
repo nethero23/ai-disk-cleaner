@@ -20,9 +20,13 @@ tool = "WSL"
 category = "container"
 name_zh = "WSL 发行版虚拟磁盘"
 name_en = "WSL distribution virtual disks"
-paths = ["${LOCALAPPDATA}/Packages"]
+# Store installs keep the disk in their package folder; newer `wsl --install`
+# puts it in %LOCALAPPDATA%\wsl\{guid}.
+paths = ["${LOCALAPPDATA}/Packages", "${LOCALAPPDATA}/wsl"]
+all_paths = true
 safety = "review"
 inspector = "children"
+require = ["LocalState/ext4.vhdx", "ext4.vhdx"]
 min_bytes = 2147483648
 consequence_zh = "这是整个 Linux 子系统。删除即丢失其中全部文件"
 consequence_en = "This is a whole Linux system; deleting loses everything inside it"

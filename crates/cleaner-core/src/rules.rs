@@ -55,6 +55,11 @@ pub struct Rule {
     /// While one is running the items are marked in use and not deleted.
     #[serde(default)]
     pub processes: Vec<String>,
+    /// For the `children` inspector: only report subfolders containing one of
+    /// these relative paths (e.g. `LocalState/ext4.vhdx` picks WSL distros out
+    /// of every Store app's package folder).
+    #[serde(default)]
+    pub require: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

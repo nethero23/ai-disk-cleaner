@@ -40,7 +40,7 @@ export function App() {
   const [view, setView] = useState<"scan" | "history">("scan");
   const [history, setHistory] = useState<CleanRecord[]>([]);
   const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
-  const [moving, setMoving] = useState<{ item: ScanItem; dest: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
+  const [moving, setMoving] = useState<{ item: ScanItem; dest: string; source: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -51,20 +51,25 @@ export function App() {
 
   async function pickMoveTarget(item: ScanItem) {
     const dest = await openDialog({ directory: true, multiple: false, title: s.moveTitle });
-    if (typeof dest === "string") setMoving({ item, dest });
+    if (typeof dest !== "string") return;
+    const source = await invoke<string>("move_source", { ruleId: item.rule_id, path: item.path }).catch(() => item.path);
+    setMoving({ item, dest, source });
   }
 
   async function runMove() {
     if (!moving) return;
-    const { item, dest } = moving;
-    setMoving({ item, dest, progress: [0, item.size_bytes] });
+    const { item, dest, source } = moving;
+    setMoving({ item, dest, source, progress: [0, item.size_bytes] });
     const unlisten = await listen<{ copied: number; total: number }>("relocate-progress", (e) => {
       setMoving((m) => (m ? { ...m, progress: [e.payload.copied, e.payload.total] } : m));
     });
     try {
       const result = await invoke<RelocateResult>("relocate_item", { ruleId: item.rule_id, path: item.path, destRoot: dest });
-      setMoving({ item, dest, result });
-      setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => i.id !== item.id) } : prev));
+      setMoving({ item, dest, source, result });
+      // A whole store may have moved, taking its other items with it.
+      const moved = (i: ScanItem) =>
+        i.id === item.id || i.path === result.from || i.path.startsWith(result.from + "\\") || i.path.startsWith(result.from + "/");
+      setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !moved(i)) } : prev));
       setSelected((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
@@ -461,7 +466,8 @@ export function App() {
             ) : (
               <>
                 <p>{s.moveBody(moving.item.name, humanSize(moving.item.size_bytes), moving.dest)}</p>
-                <p className="muted">{moving.item.path}</p>
+                {moving.source !== moving.item.path && <p className="warn">{s.moveWhole(moving.source)}</p>}
+                <p className="muted">{moving.source}</p>
                 <div className="modal-actions">
                   <button className="ghost" onClick={() => setMoving(null)}>{s.cancel}</button>
                   <button className="primary" onClick={runMove}>{s.moveTitle}</button>

@@ -200,6 +200,7 @@ mod tests {
             consequence_en: "rebuilds {size}".into(),
             min_bytes: 0,
             windows_only: false,
+            require: vec![],
             processes: vec![],
         }
     }

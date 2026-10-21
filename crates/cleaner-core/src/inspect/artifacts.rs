@@ -121,6 +121,13 @@ fn should_skip(entry: &DirEntry) -> bool {
         return false;
     }
     let name = entry.file_name().to_string_lossy();
+    // Dot folders in the home directory are tool installs, not projects:
+    // `~/.qoder/extensions/x/dist` or `~/.some-cli/node_modules` is the tool
+    // itself, and an old mtime there means "installed a while ago", not
+    // "abandoned". Artifact folders that start with a dot are still matched.
+    if name.starts_with('.') && !ARTIFACTS.iter().any(|(n, _)| *n == name) {
+        return true;
+    }
     SKIP_DIRS.iter().any(|s| *s == name)
 }
 
@@ -151,7 +158,10 @@ pub fn artifacts(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> 
         .follow_links(false)
         .max_depth(MAX_DEPTH)
         .into_iter();
-    while let Some(Ok(entry)) = it.next() {
+    // An unreadable folder yields an Err; skip it rather than ending the walk,
+    // or every project after the first locked folder goes unreported.
+    while let Some(next) = it.next() {
+        let Ok(entry) = next else { continue };
         if entry.depth() == 0 {
             continue;
         }
@@ -225,6 +235,10 @@ mod tests {
         fs::create_dir_all(home.join("AppData/proj2/node_modules")).unwrap();
         fs::write(home.join("AppData/proj2/package.json"), "{}").unwrap();
         fs::write(home.join("AppData/proj2/node_modules/c"), vec![0u8; 500]).unwrap();
+        // Nor are dot folders: an editor extension's dist is the extension itself.
+        fs::create_dir_all(home.join(".qoder/extensions/ext/dist")).unwrap();
+        fs::write(home.join(".qoder/extensions/ext/package.json"), "{}").unwrap();
+        fs::write(home.join(".qoder/extensions/ext/dist/d.js"), vec![0u8; 500]).unwrap();
 
         let rule = Rule {
             id: "projects.artifacts".into(),
@@ -240,6 +254,7 @@ mod tests {
             consequence_en: String::new(),
             min_bytes: 0,
             windows_only: false,
+            require: vec![],
             processes: vec![],
         };
         let mut vars = HashMap::new();

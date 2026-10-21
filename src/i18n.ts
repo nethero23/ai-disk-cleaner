@@ -63,6 +63,7 @@ const strings = {
     moveTitle: "搬家",
     moveBody: (name: string, size: string, dest: string) =>
       `将把「${name}」（${size}）完整复制到 ${dest}，核对无误后删除原位置，并让对应工具指向新位置。原位置不会先删。`,
+    moveWhole: (p: string) => `这个工具通过环境变量找数据，只能整个目录一起搬：${p}`,
     moveEnv: (v: string) => `会设置用户环境变量 ${v}`,
     moveJunction: "会在原位置留一个目录联接，程序无需改设置",
     moving: "正在复制…",
@@ -138,6 +139,7 @@ const strings = {
     moveTitle: "Move",
     moveBody: (name: string, size: string, dest: string) =>
       `"${name}" (${size}) will be copied to ${dest}, verified, then removed from its old place, and the tool pointed at the new location. The original is not touched until the copy is verified.`,
+    moveWhole: (p: string) => `This tool finds its data through an environment variable, so the whole folder moves: ${p}`,
     moveEnv: (v: string) => `Sets user environment variable ${v}`,
     moveJunction: "Leaves a directory junction at the old path, so nothing needs reconfiguring",
     moving: "Copying…",
