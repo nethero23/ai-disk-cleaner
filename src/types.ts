@@ -205,6 +205,14 @@ export interface Drive {
   system: boolean;
 }
 
+export interface Unrecognized {
+  name: string;
+  path: string;
+  bytes: number;
+  files: number;
+  newest: string | null;
+}
+
 export interface DeepTask {
   id: string;
   title: string;

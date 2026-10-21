@@ -408,6 +408,26 @@ async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
         .map_err(|e| e.to_string())?
 }
 
+/// Big profile folders no rule claims (≥ 1 GB), for rule suggestions.
+#[tauri::command]
+async fn unrecognized(
+    app: AppHandle,
+) -> Result<Vec<cleaner_core::unrecognized::Unrecognized>, String> {
+    let (rules, _, settings) = effective_rules(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let ctx = cleaner_core::paths::PathContext::from_env();
+        cleaner_core::unrecognized::find(&rules, &ctx, 1024 * 1024 * 1024, &settings.excluded_paths)
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// The prefilled GitHub issue URL for one unrecognized folder.
+#[tauri::command]
+fn suggest_rule_url(entry: cleaner_core::unrecognized::Unrecognized, lang: String) -> String {
+    cleaner_core::unrecognized::issue_url("nethero23/ai-disk-cleaner", &entry, &lang)
+}
+
 /// Deep clean: the catalogue with cheap estimates.
 #[tauri::command]
 fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
@@ -640,6 +660,8 @@ pub fn run() {
             compactable,
             vhdx_files,
             compact_vhdx,
+            unrecognized,
+            suggest_rule_url,
             deep_tasks,
             deep_analyze,
             deep_run,

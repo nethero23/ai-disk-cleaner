@@ -26,6 +26,7 @@ pub mod rules;
 pub mod scan;
 pub mod settings;
 pub mod system;
+pub mod unrecognized;
 pub mod vhdx;
 
 pub use model::{Category, SafetyLevel, ScanItem, ScanReport};

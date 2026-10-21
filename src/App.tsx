@@ -6,7 +6,8 @@ import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { DeepAnalysis, DeepSummary, DeepTask, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, Growth } from "./types";
+import { UnrecognizedPanel } from "./Unrecognized";
+import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
 import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
 import { DrivePicker } from "./DrivePicker";
 
@@ -1542,6 +1543,7 @@ export function App() {
                 )}
               </div>
             )}
+            <UnrecognizedPanel lang={lang} onError={setError} />
             {idleModels.length > 0 && (
               <div className="idle" title={s.idleHint}>
                 <div className="idle-head">
