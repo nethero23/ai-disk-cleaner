@@ -277,6 +277,12 @@ const ru: Partial<Strings> = {
   clear: "Очистить",
   language: "Язык",
   languageAuto: "Как в системе",
+  setAppearance: "Внешний вид и язык",
+  theme: "Тема",
+  themeSystem: "Как в системе",
+  themeLight: "Светлая",
+  themeDark: "Тёмная",
+  setScanSection: "Сканирование",
   listSep: ", ",
   sentenceEnd: ".",
 };
