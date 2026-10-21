@@ -7,7 +7,7 @@
 
 use cleaner_core::model::human_size;
 use cleaner_core::paths::PathContext;
-use cleaner_core::{dedup, relocate, scan_all, vhdx, RuleSet, ScanOptions};
+use cleaner_core::{bigfiles, dedup, relocate, scan_all, vhdx, RuleSet, ScanOptions};
 use std::path::Path;
 
 fn main() {
@@ -80,6 +80,40 @@ fn main() {
                 }
             }
             println!("{} duplicate group(s)", groups.len());
+        }
+        Some("big") => {
+            // aidc big [--min <MB>] [root...]
+            let mut min_mb = 500u64;
+            let mut roots = Vec::new();
+            let mut it = args[1..].iter();
+            while let Some(a) = it.next() {
+                if a == "--min" {
+                    min_mb = it.next().and_then(|v| v.parse().ok()).unwrap_or(min_mb);
+                } else {
+                    roots.push(std::path::PathBuf::from(a));
+                }
+            }
+            if roots.is_empty() {
+                roots = bigfiles::drives().into_iter().map(|d| d.path).collect();
+            }
+            let cancel = std::sync::atomic::AtomicBool::new(false);
+            let items = bigfiles::scan(
+                &roots,
+                min_mb * 1024 * 1024,
+                &[],
+                "en",
+                &cancel,
+                &mut |_, _, _| {},
+            );
+            for i in &items {
+                println!(
+                    "{:>10}  {:<14} {}",
+                    human_size(i.size_bytes),
+                    i.tool,
+                    i.path.display()
+                );
+            }
+            println!("{} file(s) over {min_mb} MB", items.len());
         }
         Some("compact") => {
             let Some(path) = args.get(1) else {

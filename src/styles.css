@@ -122,3 +122,10 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 ul.plain { list-style: none; padding: 0; margin: 8px 0; font-size: 13px; }
 ul.plain li { padding: 3px 0; word-break: break-all; }
 ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+
+.bigfiles { padding: 16px 24px 80px; }
+.bigfiles h2 { margin: 0 0 4px; font-size: 16px; }
+.bigfiles .groups { padding: 0; margin-top: 8px; }
+.big-controls { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin: 12px 0; }
+.big-controls label.drive { display: block; padding: 2px 0; }
+.big-progress { word-break: break-all; }

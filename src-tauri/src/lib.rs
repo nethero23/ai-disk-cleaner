@@ -1,6 +1,7 @@
 //! Tauri shell: exposes the core engine to the web UI as commands.
 //! All heavy work runs off the main thread so the window stays responsive.
 
+use cleaner_core::bigfiles::{self, Drive};
 use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
 use cleaner_core::export::{self, ExportResult};
@@ -319,6 +320,60 @@ async fn export_items(
     .map_err(|e| e.to_string())?
 }
 
+static BIG_SCAN_CANCEL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[derive(Clone, Serialize)]
+struct BigScanProgress {
+    seen: u64,
+    bytes: u64,
+    dir: String,
+}
+
+#[tauri::command]
+fn drives() -> Vec<Drive> {
+    bigfiles::drives()
+}
+
+/// Whole-drive big-file scan; emits `bigfiles-progress` while walking.
+#[tauri::command]
+async fn scan_big_files(
+    app: AppHandle,
+    roots: Vec<PathBuf>,
+    min_bytes: u64,
+    lang: String,
+) -> Result<Vec<ScanItem>, String> {
+    use std::sync::atomic::Ordering;
+    let settings = Settings::load(&settings_path(&app));
+    BIG_SCAN_CANCEL.store(false, Ordering::Relaxed);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut progress = |seen: u64, bytes: u64, dir: &std::path::Path| {
+            let _ = app.emit(
+                "bigfiles-progress",
+                BigScanProgress {
+                    seen,
+                    bytes,
+                    dir: dir.to_string_lossy().to_string(),
+                },
+            );
+        };
+        bigfiles::scan(
+            &roots,
+            min_bytes,
+            &settings.excluded_paths,
+            &lang,
+            &BIG_SCAN_CANCEL,
+            &mut progress,
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn cancel_big_scan() {
+    BIG_SCAN_CANCEL.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
 #[tauri::command]
 async fn find_duplicates(items: Vec<ScanItem>) -> Result<Vec<DuplicateGroup>, String> {
     tauri::async_runtime::spawn_blocking(move || dedup::find_duplicates(&items))
@@ -358,6 +413,9 @@ pub fn run() {
             compact_vhdx,
             exportable,
             export_items,
+            drives,
+            scan_big_files,
+            cancel_big_scan,
             find_duplicates,
             merge_duplicates
         ])
