@@ -27,7 +27,7 @@ const CATEGORY_ORDER: Category[] = [
 
 /** Ticked by default: pure caches whose owning tool is not running. */
 function isDefaultTicked(i: ScanItem): boolean {
-  return i.safety === "safe" && !i.in_use_by;
+  return i.safety === "safe" && !i.in_use_by && i.auto_clean !== false;
 }
 
 export function App() {

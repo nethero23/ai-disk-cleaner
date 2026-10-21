@@ -11,6 +11,7 @@ name_en = "Project build artifacts (node_modules / .venv / target …)"
 paths = ["${USERPROFILE}"]
 safety = "review"
 inspector = "project_artifacts"
+auto_clean = false
 min_bytes = 52428800
 consequence_zh = "下次安装或构建时会重建"
 consequence_en = "Rebuilt on next install or build"

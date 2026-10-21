@@ -265,6 +265,7 @@ mod tests {
             windows_only: false,
             require: vec![],
             processes: vec![],
+            auto_clean: false,
         };
         let mut vars = HashMap::new();
         vars.insert("USERPROFILE".to_string(), home.to_path_buf());
