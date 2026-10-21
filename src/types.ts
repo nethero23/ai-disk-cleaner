@@ -125,6 +125,7 @@ export interface Settings {
   last_background_scan: string | null;
   auto_clean_safe: boolean;
   auto_update_check: boolean;
+  scan_drives: string[];
 }
 
 export interface RuleInfo {
@@ -165,4 +166,5 @@ export interface Drive {
   name: string;
   total_bytes: number;
   free_bytes: number;
+  system: boolean;
 }

@@ -103,7 +103,7 @@ const SKIP_DIRS: &[&str] = &[
 const MAX_DEPTH: usize = 7;
 pub const STALE_DAYS: i64 = 90;
 
-fn is_artifact_dir(entry: &DirEntry) -> bool {
+pub(crate) fn is_artifact_dir(entry: &DirEntry) -> bool {
     if !entry.file_type().is_dir() {
         return false;
     }
@@ -116,7 +116,7 @@ fn is_artifact_dir(entry: &DirEntry) -> bool {
         .any(|(n, markers)| *n == name && markers.iter().any(|m| parent.join(m).exists()))
 }
 
-fn should_skip(entry: &DirEntry) -> bool {
+pub(crate) fn should_skip(entry: &DirEntry) -> bool {
     if !entry.file_type().is_dir() || entry.file_type().is_symlink() {
         return false;
     }
@@ -174,42 +174,51 @@ pub fn artifacts(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> 
         }
         // Found one: size it, don't descend into it.
         it.skip_current_dir();
-        let path = entry.path().to_path_buf();
-        let project = path.parent().unwrap_or(&path).to_path_buf();
-        let project_name = project
-            .file_name()
-            .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_else(|| project.to_string_lossy().to_string());
-        let artifact_name = entry.file_name().to_string_lossy().to_string();
-        let mut stats = tree_stats(&path);
-        let last_edit = project_last_edit(&project);
-        stats.newest = last_edit.or(stats.newest);
-        let stale = last_edit
-            .map(|t| Utc::now() - t > Duration::days(STALE_DAYS))
-            .unwrap_or(false);
-        let name = format!("{project_name}/{artifact_name}");
-        let detail = Some(if opts.lang == "en" {
-            format!("Project: {}", project.display())
-        } else {
-            format!("项目：{}", project.display())
-        });
-        let mut item = make_item(rule, &path, name, stats, opts, detail);
-        item.safety = if stale {
-            SafetyLevel::Safe
-        } else {
-            SafetyLevel::Review
-        };
-        item.consequence = match (stale, opts.lang.as_str()) {
-            (true, "en") => {
-                format!("Project untouched for {STALE_DAYS}+ days; rebuilds on next install/build")
-            }
-            (true, _) => format!("项目 {STALE_DAYS} 天以上没改过；下次安装或构建时会重建"),
-            (false, "en") => "Project edited recently; you probably still need this".into(),
-            (false, _) => "项目最近改过，可能还在用".into(),
-        };
-        items.push(item);
+        items.push(item_for(rule, entry.path(), opts));
     }
     items
+}
+
+/// Builds the item for one artifact folder: named after its project,
+/// Safe when the project is stale, Review when edited recently.
+pub(crate) fn item_for(rule: &Rule, path: &Path, opts: &ScanOptions) -> ScanItem {
+    let path = path.to_path_buf();
+    let project = path.parent().unwrap_or(&path).to_path_buf();
+    let project_name = project
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| project.to_string_lossy().to_string());
+    let artifact_name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let mut stats = tree_stats(&path);
+    let last_edit = project_last_edit(&project);
+    stats.newest = last_edit.or(stats.newest);
+    let stale = last_edit
+        .map(|t| Utc::now() - t > Duration::days(STALE_DAYS))
+        .unwrap_or(false);
+    let name = format!("{project_name}/{artifact_name}");
+    let detail = Some(if opts.lang == "en" {
+        format!("Project: {}", project.display())
+    } else {
+        format!("项目：{}", project.display())
+    });
+    let mut item = make_item(rule, &path, name, stats, opts, detail);
+    item.safety = if stale {
+        SafetyLevel::Safe
+    } else {
+        SafetyLevel::Review
+    };
+    item.consequence = match (stale, opts.lang.as_str()) {
+        (true, "en") => {
+            format!("Project untouched for {STALE_DAYS}+ days; rebuilds on next install/build")
+        }
+        (true, _) => format!("项目 {STALE_DAYS} 天以上没改过；下次安装或构建时会重建"),
+        (false, "en") => "Project edited recently; you probably still need this".into(),
+        (false, _) => "项目最近改过，可能还在用".into(),
+    };
+    item
 }
 
 #[cfg(test)]
@@ -265,6 +274,7 @@ mod tests {
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),
+            extra_roots: Vec::new(),
         };
         let items = artifacts(&rule, home, &opts);
         assert_eq!(items.len(), 1, "{items:?}");
