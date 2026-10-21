@@ -47,7 +47,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 
 .banner { margin: 12px 24px 0; padding: 10px 14px; border-radius: 8px; }
 .banner.ok { background: var(--safe-bg); color: var(--safe); }
-.banner.update { display: flex; align-items: center; gap: 10px; background: var(--redownload-bg, #fff7e6); }
+.banner.update { display: flex; align-items: center; gap: 10px; background: var(--redl-bg); }
 .banner.error { background: var(--review-bg); color: var(--review); }
 
 .empty { text-align: center; padding: 80px 24px; color: var(--muted); }
@@ -166,7 +166,7 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .scan-took { font-size: 12px; cursor: help; }
 
 .growth { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 10px; }
-.growth-chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; background: var(--redownload-bg, #fff7e6); }
+.growth-chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; background: var(--redl-bg); }
 .growth-chip.down { background: var(--safe-bg); color: var(--safe); }
 .summary-line { margin: 4px 0 8px; font-size: 15px; }
 .modal.onboarding p { line-height: 1.6; }
