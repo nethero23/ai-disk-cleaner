@@ -84,7 +84,7 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 2. 下载 `*_x64-setup.exe`（推荐，支持应用内自动更新）或 `*.msi`
 3. 安装后打开，点「扫描」
 
-**便携版**：下载 `*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹，不写注册表；便携版不自动更新。
+**便携版**：下载 `*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹；便携版不自动更新。
 
 系统要求：Windows 10 / 11 x64，需要 WebView2（Windows 11 自带，Windows 10 安装程序会自动处理）。
 
