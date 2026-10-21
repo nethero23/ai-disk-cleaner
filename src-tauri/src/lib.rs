@@ -83,6 +83,7 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
             lang,
             global_min_bytes: settings.min_item_bytes,
             excluded: settings.excluded_paths,
+            extra_roots: settings.scan_drives,
             ..ScanOptions::default()
         };
         scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {

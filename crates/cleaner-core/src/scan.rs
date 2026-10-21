@@ -21,6 +21,8 @@ pub struct ScanOptions {
     pub running: std::collections::HashSet<String>,
     /// Folders the user asked to leave alone; items at or under them are dropped.
     pub excluded: Vec<PathBuf>,
+    /// Whole drives (or folders) to walk for caches by shape, on top of the rules.
+    pub extra_roots: Vec<PathBuf>,
 }
 
 impl Default for ScanOptions {
@@ -31,6 +33,7 @@ impl Default for ScanOptions {
             global_min_bytes: 1024 * 1024,
             running: crate::process::running_names(),
             excluded: Vec::new(),
+            extra_roots: Vec::new(),
         }
     }
 }
@@ -100,6 +103,12 @@ const WORKERS: usize = 4;
 /// Like [`scan_all`], but walks rules in parallel, reports each finished
 /// rule through `progress`, and stops early when `cancel` is set (the
 /// report then holds what was found so far and `cancelled` is true).
+/// One unit of parallel work: a rule, or a whole drive walked by shape.
+enum Task<'a> {
+    Rule(&'a Rule),
+    Drive(&'a Path),
+}
+
 pub fn scan_all_with(
     rules: &RuleSet,
     opts: &ScanOptions,
@@ -110,11 +119,14 @@ pub fn scan_all_with(
         started_at: Some(Utc::now()),
         ..Default::default()
     };
-    let todo: Vec<&Rule> = rules
+    let todo: Vec<Task> = rules
         .rules
         .iter()
         .filter(|r| !(r.windows_only && !cfg!(windows)))
+        .map(Task::Rule)
+        .chain(opts.extra_roots.iter().map(|r| Task::Drive(r.as_path())))
         .collect();
+    let artifacts_rule = rules.get("projects.artifacts");
     let total = todo.len();
     let next = AtomicUsize::new(0);
     let (tx, rx) = mpsc::channel::<(usize, ScanReport, u64)>();
@@ -129,10 +141,17 @@ pub fn scan_all_with(
                     break;
                 }
                 let i = next.fetch_add(1, Ordering::Relaxed);
-                let Some(rule) = todo.get(i) else { break };
+                let Some(task) = todo.get(i) else { break };
                 let started = std::time::Instant::now();
                 let mut part = ScanReport::default();
-                scan_rule(rule, opts, &mut part);
+                match task {
+                    Task::Rule(rule) => scan_rule(rule, opts, &mut part),
+                    Task::Drive(root) => {
+                        for item in inspect::drives::scan_drive(root, artifacts_rule, opts) {
+                            part.push(item);
+                        }
+                    }
+                }
                 if tx
                     .send((i, part, started.elapsed().as_millis() as u64))
                     .is_err()
@@ -144,17 +163,27 @@ pub fn scan_all_with(
         drop(tx);
         for (n, (i, part, millis)) in rx.into_iter().enumerate() {
             let done = n + 1;
-            let rule = todo[i];
+            let (rule_id, name) = match todo[i] {
+                Task::Rule(rule) => (rule.id.clone(), rule_name(rule, opts)),
+                Task::Drive(root) => (
+                    format!("drive::{}", root.display()),
+                    if opts.lang == "en" {
+                        format!("Scanning {} by shape", root.display())
+                    } else {
+                        format!("特征扫描 {}", root.display())
+                    },
+                ),
+            };
             for item in part.items {
                 report.push(item);
             }
             report.unreadable.extend(part.unreadable);
-            report.timings.push((rule.id.clone(), millis));
+            report.timings.push((rule_id.clone(), millis));
             progress(ScanProgress {
                 done,
                 total,
-                rule_id: rule.id.clone(),
-                rule_name: rule_name(rule, opts),
+                rule_id,
+                rule_name: name,
                 millis,
             });
         }
@@ -301,6 +330,7 @@ mod tests {
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),
+            extra_roots: Vec::new(),
         }
     }
 

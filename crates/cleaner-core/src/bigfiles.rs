@@ -129,10 +129,22 @@ pub struct Drive {
     pub name: String,
     pub total_bytes: u64,
     pub free_bytes: u64,
+    /// The drive Windows (and the rule scanner's default paths) live on.
+    #[serde(default)]
+    pub system: bool,
 }
 
 pub fn drives() -> Vec<Drive> {
     let disks = sysinfo::Disks::new_with_refreshed_list();
+    let sys = std::env::var_os("SYSTEMDRIVE")
+        .map(|d| d.to_string_lossy().to_ascii_uppercase())
+        .unwrap_or_else(|| {
+            if cfg!(windows) {
+                "C:".into()
+            } else {
+                "/".into()
+            }
+        });
     let mut out: Vec<Drive> = disks
         .iter()
         .filter(|d| d.total_space() > 0)
@@ -141,6 +153,12 @@ pub fn drives() -> Vec<Drive> {
             name: d.name().to_string_lossy().to_string(),
             total_bytes: d.total_space(),
             free_bytes: d.available_space(),
+            system: d
+                .mount_point()
+                .to_string_lossy()
+                .to_ascii_uppercase()
+                .trim_end_matches(['\\', '/'])
+                == sys.trim_end_matches(['\\', '/']),
         })
         .collect();
     out.sort_by(|a, b| a.path.cmp(&b.path));
