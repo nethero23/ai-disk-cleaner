@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
+import AiTools from "./pages/AiTools";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
@@ -17,7 +18,7 @@ import { ResultItem } from "./pages/Clean/ResultItem";
 import { ScanProgress } from "./pages/Clean/ScanProgress";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
-type Page = "clean" | "space" | "history" | "settings";
+type Page = "clean" | "space" | "history" | "aitools" | "settings";
 
 const CATEGORY_ORDER: Category[] = [
   "models",
@@ -55,7 +56,7 @@ export function App() {
   const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
-  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview" | "deep">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview" | "deep" | "aitools">("scan");
   const page: Page = view === "scan" || view === "deep" ? "clean" : view === "overview" || view === "bigfiles" ? "space" : view;
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -811,6 +812,7 @@ export function App() {
           { value: "clean", label: s.navClean, icon: "cleaning_services" },
           { value: "space", label: s.navSpace, icon: "donut_large" },
           { value: "history", label: s.navHistory, icon: "history" },
+          { value: "aitools", label: s.aiTools, icon: "hub" },
         ]}
         bottom={[{ value: "settings", label: s.settings, icon: "settings", badge: update !== null }]}
         value={page}
@@ -818,12 +820,13 @@ export function App() {
           if (p === "clean") setView("scan");
           else if (p === "space") openOverview();
           else if (p === "history") openHistory();
+          else if (p === "aitools") setView("aitools");
           else openSettings();
         }}
       />
       <div className="app-main">
       <header className="topbar">
-        <h1>{{ clean: s.navClean, space: s.navSpace, history: s.navHistory, settings: s.settings }[page]}</h1>
+        <h1>{{ clean: s.navClean, space: s.navSpace, history: s.navHistory, aitools: s.aiTools, settings: s.settings }[page]}</h1>
         <div className="topbar-actions">
           <LanguageSelect value={langPref} onChange={setLangPref} label={s.language} autoLabel={s.languageAuto} />
         </div>
@@ -972,6 +975,8 @@ export function App() {
           </div>
         </div>
       )}
+
+      {view === "aitools" && <AiTools lang={lang} />}
 
       {view === "overview" && (
         <section className="bigfiles overview">
