@@ -166,18 +166,11 @@ pub fn find_duplicates(items: &[ScanItem]) -> Vec<DuplicateGroup> {
     groups
 }
 
-#[cfg(unix)]
-fn file_identity(p: &Path) -> Option<(u64, u64)> {
-    use std::os::unix::fs::MetadataExt;
-    let md = std::fs::metadata(p).ok()?;
-    Some((md.dev(), md.ino()))
-}
-
-#[cfg(windows)]
-fn file_identity(_p: &Path) -> Option<(u64, u64)> {
-    // Stable std exposes no file index on Windows; treat copies as distinct
-    // and let a merge of already-linked files be a harmless no-op.
-    None
+/// Volume + file id, so two names for one file (hard links) compare equal.
+/// `same_file::Handle` does that on Unix (dev/ino) and Windows (volume
+/// serial + file index) alike.
+fn file_identity(p: &Path) -> Option<same_file::Handle> {
+    same_file::Handle::from_path(p).ok()
 }
 
 fn dedupe_already_linked(files: Vec<DupFile>) -> Vec<DupFile> {
