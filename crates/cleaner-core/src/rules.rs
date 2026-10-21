@@ -21,6 +21,8 @@ pub enum Inspector {
     CursorWorkspaces,
     CondaEnvs,
     ClaudeProjects,
+    /// Walks the user's folders for node_modules / .venv / target next to a manifest.
+    ProjectArtifacts,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,6 +51,10 @@ pub struct Rule {
     /// Windows-only rule (skipped on other platforms even if the path exists).
     #[serde(default)]
     pub windows_only: bool,
+    /// Executable names (without path; `.exe` optional) that own this data.
+    /// While one is running the items are marked in use and not deleted.
+    #[serde(default)]
+    pub processes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -69,6 +75,7 @@ const BUILTIN: &[(&str, &str)] = &[
     ("gpu.toml", include_str!("../rules/gpu.toml")),
     ("browsers.toml", include_str!("../rules/browsers.toml")),
     ("system.toml", include_str!("../rules/system.toml")),
+    ("projects.toml", include_str!("../rules/projects.toml")),
 ];
 
 impl RuleSet {

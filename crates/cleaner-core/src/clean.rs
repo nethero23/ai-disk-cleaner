@@ -71,6 +71,12 @@ pub fn guard(path: &Path) -> Result<()> {
 
 /// Moves one item to the Recycle Bin.
 pub fn delete_item(item: &ScanItem) -> Result<()> {
+    if let Some(proc_name) = &item.in_use_by {
+        return Err(Error::Refused(
+            item.path.clone(),
+            format!("{proc_name} is running; close it first"),
+        ));
+    }
     guard(&item.path)?;
     trash::delete(&item.path)?;
     Ok(())

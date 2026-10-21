@@ -17,6 +17,7 @@ trash.workspace = true
 dirs.workspace = true
 regex.workspace = true
 log.workspace = true
+sysinfo.workspace = true
 
 [dev-dependencies]
 tempfile = "3"

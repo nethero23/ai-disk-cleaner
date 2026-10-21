@@ -15,6 +15,8 @@ pub struct ScanOptions {
     pub lang: String,
     /// Skip rules below this size even if the rule itself has no floor.
     pub global_min_bytes: u64,
+    /// Lower-cased names of running processes, sampled once per scan.
+    pub running: std::collections::HashSet<String>,
 }
 
 impl Default for ScanOptions {
@@ -23,6 +25,7 @@ impl Default for ScanOptions {
             ctx: PathContext::from_env(),
             lang: "zh".into(),
             global_min_bytes: 1024 * 1024,
+            running: crate::process::running_names(),
         }
     }
 }
@@ -120,6 +123,7 @@ pub fn scan_rule(rule: &Rule, opts: &ScanOptions, report: &mut ScanReport) {
             Inspector::CursorWorkspaces => inspect::cursor::workspaces(rule, &root, opts),
             Inspector::CondaEnvs => inspect::conda::envs(rule, &root, opts),
             Inspector::ClaudeProjects => inspect::claude::projects(rule, &root, opts),
+            Inspector::ProjectArtifacts => inspect::artifacts::artifacts(rule, &root, opts),
         };
         let floor = rule.min_bytes.max(opts.global_min_bytes);
         for item in items.into_iter().filter(|i| i.size_bytes >= floor) {
@@ -169,6 +173,8 @@ pub fn make_item(
         safety: rule.safety,
         consequence: consequence.replace("{size}", &human_size(stats.bytes)),
         detail,
+        in_use_by: crate::process::first_running(&rule.processes, &opts.running)
+            .map(str::to_string),
     }
 }
 
@@ -194,6 +200,7 @@ mod tests {
             consequence_en: "rebuilds {size}".into(),
             min_bytes: 0,
             windows_only: false,
+            processes: vec![],
         }
     }
 
@@ -204,6 +211,7 @@ mod tests {
             ctx: PathContext::with_vars(vars),
             lang: "zh".into(),
             global_min_bytes: 0,
+            running: Default::default(),
         }
     }
 

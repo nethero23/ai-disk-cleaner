@@ -28,6 +28,7 @@ export interface ScanItem {
   safety: SafetyLevel;
   consequence: string;
   detail: string | null;
+  in_use_by: string | null;
 }
 
 export interface ScanReport {

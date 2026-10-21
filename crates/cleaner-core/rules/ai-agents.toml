@@ -11,6 +11,7 @@ safety = "review"
 inspector = "claude_projects"
 consequence_zh = "该项目的对话历史会丢失，--resume 将找不到旧会话"
 consequence_en = "That project's conversation history is lost; --resume won't find old sessions"
+processes = ["claude"]
 
 [[rule]]
 id = "claude_code.cache"
@@ -34,6 +35,7 @@ paths = ["${USERPROFILE}/.codex/sessions"]
 safety = "review"
 consequence_zh = "Codex 的对话历史会丢失"
 consequence_en = "Codex conversation history is lost"
+processes = ["codex"]
 
 [[rule]]
 id = "codex.log"

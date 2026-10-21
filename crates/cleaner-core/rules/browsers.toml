@@ -12,6 +12,7 @@ safety = "safe"
 consequence_zh = "网页会重新缓存；登录状态不受影响"
 consequence_en = "Pages re-cache; logins are unaffected"
 windows_only = true
+processes = ["chrome"]
 
 [[rule]]
 id = "edge.cache"
@@ -25,6 +26,7 @@ safety = "safe"
 consequence_zh = "网页会重新缓存；登录状态不受影响"
 consequence_en = "Pages re-cache; logins are unaffected"
 windows_only = true
+processes = ["msedge"]
 
 [[rule]]
 id = "firefox.cache"
@@ -38,3 +40,5 @@ inspector = "children"
 consequence_zh = "网页会重新缓存；登录状态不受影响"
 consequence_en = "Pages re-cache; logins are unaffected"
 windows_only = true
+processes = ["firefox"]
+

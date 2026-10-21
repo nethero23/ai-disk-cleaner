@@ -35,9 +35,21 @@ async fn scan(lang: String) -> Result<ScanReport, String> {
 #[tauri::command]
 async fn clean_items(app: AppHandle, items: Vec<ScanItem>) -> Result<CleanSummary, String> {
     let log = log_path(&app);
-    tauri::async_runtime::spawn_blocking(move || clean::clean(&items, &log))
-        .await
-        .map_err(|e| e.to_string())
+    tauri::async_runtime::spawn_blocking(move || {
+        // The scan may be minutes old: re-check which owning tools are running now.
+        let rules = RuleSet::builtin();
+        let running = cleaner_core::process::running_names();
+        let mut items = items;
+        for item in &mut items {
+            if let Some(rule) = rules.get(&item.rule_id) {
+                item.in_use_by = cleaner_core::process::first_running(&rule.processes, &running)
+                    .map(str::to_string);
+            }
+        }
+        clean::clean(&items, &log)
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

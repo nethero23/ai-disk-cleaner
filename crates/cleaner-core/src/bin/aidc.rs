@@ -33,12 +33,16 @@ fn main() {
             }
             for it in &report.items {
                 println!(
-                    "{:>9}  {:<10}  {:<16} {:<40} {}",
+                    "{:>9}  {:<10}  {:<16} {:<40} {}{}",
                     human_size(it.size_bytes),
                     format!("{:?}", it.safety),
                     it.tool,
                     it.name,
-                    it.path.display()
+                    it.path.display(),
+                    it.in_use_by
+                        .as_deref()
+                        .map(|p| format!("  [in use: {p}]"))
+                        .unwrap_or_default()
                 );
             }
             println!(
