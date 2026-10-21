@@ -16,9 +16,12 @@ export type { IconName };
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
+// Icons that point along the reading direction; mirrored when dir="rtl".
+const DIRECTIONAL = new Set<IconName>(["arrow_back", "arrow_forward", "chevron_right", "undo", "trending_up", "drive_file_move"]);
+
 export function Icon({ name, filled, className }: { name: IconName; filled?: boolean; className?: string }) {
   return (
-    <svg className={cx("md-icon", className)} viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+    <svg className={cx("md-icon", DIRECTIONAL.has(name) && "md-icon-dir", className)} viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
       <path d={ICONS[name][filled ? 1 : 0]} />
     </svg>
   );
