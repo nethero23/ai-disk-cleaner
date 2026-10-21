@@ -231,6 +231,8 @@ export interface DeepResult {
 export interface DeepSummary {
   results: DeepResult[];
   freed_bytes: number;
+}
+
 export interface Growth {
   tool: string;
   now_bytes: number;
