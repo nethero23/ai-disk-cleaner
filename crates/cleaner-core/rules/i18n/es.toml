@@ -1,0 +1,505 @@
+# Rule names and consequences in es, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "Transcripciones de sesiones de Claude Code"
+consequence = "Se pierde el historial de conversación de ese proyecto; --resume no encontrará las sesiones antiguas"
+
+["claude_code.cache"]
+name = "Caché y registros de depuración de Claude Code"
+consequence = "Se reconstruye sola"
+
+["codex.sessions"]
+name = "Registros de sesiones de Codex"
+consequence = "Se pierde el historial de conversación de Codex"
+
+["codex.log"]
+name = "Registros de Codex"
+consequence = "Solo registros"
+
+["gemini_cli.sessions"]
+name = "Sesiones y puntos de control de Gemini CLI"
+consequence = "Se pierden el historial de chat y las ediciones preparadas de Gemini CLI"
+
+["continue.index"]
+name = "Índice de código de Continue"
+consequence = "Se vuelve a indexar la próxima vez que se abra el proyecto"
+
+["aider.cache"]
+name = "Caché de Aider"
+consequence = "Se reconstruye sola"
+
+["copilot_cli.cache"]
+name = "Caché de Copilot CLI"
+consequence = "Se reconstruye sola"
+
+["qwen_code.sessions"]
+name = "Temporales y sesiones de Qwen Code"
+consequence = "Se pierden las sesiones y puntos de control anteriores"
+
+["opencode.data"]
+name = "Registros y caché de OpenCode"
+consequence = "Registros y caché; se recrean automáticamente"
+
+["cline.tasks"]
+name = "Historial de tareas de Cline"
+consequence = "Se pierden la conversación y las instantáneas de archivos de cada tarea"
+
+["roo_code.tasks"]
+name = "Historial de tareas de Roo Code"
+consequence = "Se pierden la conversación y las instantáneas de archivos de cada tarea"
+
+["claude_code.file_history"]
+name = "Instantáneas de archivos de Claude Code (file-history)"
+consequence = "Respaldan /rewind; las sesiones antiguas ya no se podrán rebobinar, la actual no se ve afectada"
+
+["codex.archived_sessions"]
+name = "Sesiones archivadas de Codex"
+consequence = "Se pierden las conversaciones archivadas"
+
+["kilo_code.tasks"]
+name = "Historial de tareas de Kilo Code"
+consequence = "Se pierden la conversación y las instantáneas de archivos de cada tarea"
+
+["goose.sessions"]
+name = "Sesiones y registros de Goose"
+consequence = "Se pierden las sesiones anteriores"
+
+["claude_desktop.cache"]
+name = "Caché de Claude para escritorio"
+consequence = "La aplicación la reconstruye"
+
+["chatgpt_desktop.cache"]
+name = "Caché de ChatGPT para escritorio"
+consequence = "La aplicación la reconstruye"
+
+["jan.cache"]
+name = "Caché y registros de Jan"
+consequence = "La aplicación la reconstruye"
+
+["jan.models"]
+name = "Modelos de Jan"
+consequence = "Volver a descargar {size} en Jan"
+
+["anythingllm.cache"]
+name = "Caché de AnythingLLM"
+consequence = "La aplicación la reconstruye"
+
+["comfyui.temp"]
+name = "Salidas temporales y registros de ComfyUI Desktop"
+consequence = "Imágenes de vista previa y registros; se reconstruye sola"
+
+["msty.cache"]
+name = "Caché de Msty"
+consequence = "La aplicación la reconstruye"
+
+["lmstudio.cache"]
+name = "Caché y registros de LM Studio"
+consequence = "La aplicación la reconstruye"
+
+["cherry_studio.cache"]
+name = "Caché de Cherry Studio"
+consequence = "La aplicación la reconstruye"
+
+["chatbox.cache"]
+name = "Caché de Chatbox"
+consequence = "La aplicación la reconstruye"
+
+["open_webui.cache"]
+name = "Caché de Open WebUI"
+consequence = "Cachés de embeddings y audio; se recrean cuando hacen falta"
+
+["gradio.cache"]
+name = "Caché de subidas y salidas de Gradio"
+consequence = "Copias de subidas y salidas de interfaces Gradio como SD WebUI"
+
+["sd_webui.temp"]
+name = "Temporales de Stable Diffusion WebUI"
+consequence = "Imágenes temporales y registros; la generación no se ve afectada"
+
+["cursor.cache"]
+name = "Caché de Cursor"
+consequence = "Cursor la reconstruye"
+
+["cursor.logs"]
+name = "Registros de Cursor"
+consequence = "Solo registros"
+
+["cursor.workspaces"]
+name = "Almacenamiento de espacios de trabajo de Cursor"
+consequence = "Se pierden el estado del editor y el historial de chat de ese proyecto en Cursor"
+
+["cursor.global_state"]
+name = "Base de estado global de Cursor (state.vscdb, todos los chats)"
+consequence = "Se pierden todos los chats y ajustes de Cursor. Mejor exporta o borra chats antiguos dentro de Cursor en lugar de eliminar esto"
+
+["windsurf.cache"]
+name = "Caché de Windsurf"
+consequence = "Windsurf la reconstruye"
+
+["windsurf.workspaces"]
+name = "Almacenamiento de espacios de trabajo de Windsurf"
+consequence = "Se pierden el estado del editor y el historial de chat de ese proyecto en Windsurf"
+
+["vscode.cache"]
+name = "Caché de VS Code"
+consequence = "VS Code la reconstruye"
+
+["vscode.workspaces"]
+name = "Almacenamiento de espacios de trabajo de VS Code"
+consequence = "Se pierde el estado del editor de ese proyecto (incluidos los chats de Copilot)"
+
+["antigravity.cache"]
+name = "Caché de Antigravity"
+consequence = "Antigravity la reconstruye"
+
+["jetbrains.caches"]
+name = "Cachés de índice de los IDE de JetBrains"
+consequence = "El IDE vuelve a indexar al abrirlo, lo que tarda unos minutos"
+
+["trae.cache"]
+name = "Caché y registros de Trae"
+consequence = "El editor la reconstruye"
+
+["trae.workspaces"]
+name = "Almacenamiento de espacios de trabajo de Trae"
+consequence = "Se pierden el historial y el índice de IA de ese proyecto"
+
+["kiro.cache"]
+name = "Caché y registros de Kiro"
+consequence = "El editor la reconstruye"
+
+["zed.cache"]
+name = "Caché y registros de Zed"
+consequence = "El editor la reconstruye"
+
+["cursor.extensions_cache"]
+name = "Caché de descargas de extensiones de Cursor"
+consequence = "El editor la reconstruye"
+
+["vscode.extensions_cache"]
+name = "Caché de descargas de extensiones de VS Code"
+consequence = "El editor la reconstruye"
+
+["chrome.cache"]
+name = "Caché de Chrome"
+consequence = "Las páginas se vuelven a almacenar en caché; las sesiones iniciadas no se ven afectadas"
+
+["edge.cache"]
+name = "Caché de Edge"
+consequence = "Las páginas se vuelven a almacenar en caché; las sesiones iniciadas no se ven afectadas"
+
+["firefox.cache"]
+name = "Caché de Firefox"
+consequence = "Las páginas se vuelven a almacenar en caché; las sesiones iniciadas no se ven afectadas"
+
+["docker.vhdx"]
+name = "Disco virtual de Docker Desktop"
+consequence = "Se pierden todas las imágenes, contenedores y volúmenes. Mejor: docker system prune y después compactar el disco"
+
+["wsl.distros"]
+name = "Discos virtuales de distribuciones de WSL"
+consequence = "Es un sistema Linux completo; borrarlo elimina todo lo que contiene"
+
+["docker.cli_cache"]
+name = "Caché de la CLI de Docker"
+consequence = "Registros y caché; se reconstruye sola"
+
+["nvidia.dxcache"]
+name = "Caché de sombreadores de NVIDIA"
+consequence = "El primer inicio de juegos y aplicaciones es algo más lento; se recrea automáticamente"
+
+["nvidia.compute_cache"]
+name = "Caché de compilación de kernels CUDA"
+consequence = "Los programas CUDA recompilan los kernels en la primera ejecución"
+
+["amd.shader_cache"]
+name = "Caché de sombreadores de AMD"
+consequence = "Se recrea automáticamente"
+
+["intel.shader_cache"]
+name = "Caché de sombreadores de Intel"
+consequence = "Se recrea automáticamente"
+
+["triton.cache"]
+name = "Caché de kernels de Triton / torch.compile"
+consequence = "Se recompila en el siguiente torch.compile"
+
+["nvidia.driver_downloads"]
+name = "Descargas de controladores de NVIDIA"
+consequence = "Instaladores de controladores ya instalados; NVIDIA App los vuelve a descargar si hace falta"
+
+["nvidia.installer_leftovers"]
+name = "Restos de la extracción de controladores de NVIDIA"
+consequence = "Reparar o desinstalar desde el panel de control puede requerir volver a descargar el controlador"
+
+["windows.d3d_shader_cache"]
+name = "Caché de sombreadores de DirectX"
+consequence = "Los juegos y aplicaciones de GPU arrancan algo más lento una vez"
+
+["torch.extensions"]
+name = "Caché de compilación de extensiones de PyTorch"
+consequence = "Las operaciones CUDA personalizadas se recompilan en el siguiente import"
+
+["npm.cache"]
+name = "Caché de npm"
+consequence = "npm vuelve a descargar en el siguiente install"
+
+["npx.cache"]
+name = "Paquetes temporales de npx (incluye servidores MCP)"
+consequence = "Los servidores MCP iniciados con npx se vuelven a descargar al iniciarse"
+
+["pnpm.store"]
+name = "Almacén de pnpm"
+consequence = "Como pnpm store prune y volver a descargar; los proyectos instalados siguen funcionando"
+
+["yarn.cache"]
+name = "Caché de Yarn"
+consequence = "Yarn vuelve a descargar en el siguiente install"
+
+["bun.cache"]
+name = "Caché de Bun"
+consequence = "Bun vuelve a descargar en el siguiente install"
+
+["playwright.browsers"]
+name = "Navegadores de Playwright"
+consequence = "Los proyectos o servidores MCP que lo usan necesitarán playwright install de nuevo ({size})"
+
+["puppeteer.browsers"]
+name = "Navegadores de Puppeteer"
+consequence = "Puppeteer vuelve a descargar {size} en la siguiente ejecución"
+
+["electron.cache"]
+name = "Caché de compilación de Electron"
+consequence = "Se vuelve a descargar en la siguiente compilación"
+
+["ollama.models"]
+name = "Modelos de Ollama"
+consequence = "Volver a descargar {size} con ollama pull"
+
+["ollama.logs"]
+name = "Registros de Ollama"
+consequence = "Solo registros; Ollama los vuelve a crear"
+
+["huggingface.hub"]
+name = "Caché del hub de Hugging Face"
+consequence = "Se volverá a descargar ({size}) en el siguiente uso"
+
+["huggingface.xet"]
+name = "Caché de fragmentos Xet de Hugging Face"
+consequence = "Caché de aceleración de descargas; se reconstruye sola"
+
+["modelscope.hub"]
+name = "Caché del hub de ModelScope"
+consequence = "Se vuelve a descargar de ModelScope ({size}) en el siguiente uso"
+
+["lmstudio.models"]
+name = "Modelos de LM Studio"
+consequence = "Volver a descargar {size} en LM Studio"
+
+["lmstudio.conversations"]
+name = "Conversaciones de LM Studio"
+consequence = "Se pierde tu historial de chat con los modelos"
+
+["torch.hub"]
+name = "Caché de PyTorch Hub"
+consequence = "Se vuelve a descargar ({size}) cuando torch.hub lo necesite"
+
+["whisper.models"]
+name = "Modelos de Whisper"
+consequence = "Se vuelven a descargar ({size}) en la siguiente transcripción"
+
+["chrome.ondevice_model"]
+name = "Modelo de IA local de Chrome"
+consequence = "La IA integrada de Chrome vuelve a descargar unos 4 GB"
+
+["edge.ondevice_model"]
+name = "Modelo de IA local de Edge"
+consequence = "La IA integrada de Edge lo vuelve a descargar"
+
+["comfyui.models"]
+name = "Modelos de ComfyUI"
+consequence = "Casi todos descargados a mano; tendrás que volver a descargar {size} tú mismo"
+
+["sd_webui.models"]
+name = "Modelos de Stable Diffusion WebUI"
+consequence = "Casi todos descargados a mano; tendrás que volver a descargar {size} tú mismo"
+
+["stability_matrix.models"]
+name = "Modelos compartidos de Stability Matrix"
+consequence = "Volver a descargar {size} en Stability Matrix"
+
+["msty.models"]
+name = "Modelos locales de Msty"
+consequence = "Volver a descargar {size} en Msty"
+
+["xinference.cache"]
+name = "Caché de modelos de Xinference"
+consequence = "Se vuelve a descargar ({size}) la próxima vez que se inicie el modelo"
+
+["vllm.cache"]
+name = "Caché de compilación de vLLM"
+consequence = "Cachés de torch.compile / grafos CUDA; se recrean al iniciar (la primera carga es más lenta)"
+
+["keras.models"]
+name = "Caché de modelos preentrenados de Keras"
+consequence = "Se vuelve a descargar ({size}) en el siguiente uso"
+
+["kagglehub.cache"]
+name = "Caché de kagglehub"
+consequence = "Se vuelve a descargar ({size}) en la siguiente llamada a kagglehub"
+
+["clip.cache"]
+name = "Caché de modelos CLIP"
+consequence = "SD WebUI y similares vuelven a descargar {size} en el siguiente uso"
+
+["paddle.models"]
+name = "Modelos de PaddleOCR / PaddleX"
+consequence = "Se vuelven a descargar ({size}) en la siguiente ejecución"
+
+["pinokio.cache"]
+name = "Caché de descargas de Pinokio"
+consequence = "Descargas de instaladores; se vuelven a obtener cuando hace falta"
+
+["huggingface.datasets"]
+name = "Caché de conjuntos de datos de Hugging Face"
+consequence = "Se vuelve a descargar ({size}) en el siguiente load_dataset"
+
+["huggingface.transformers_legacy"]
+name = "Caché antigua de transformers de Hugging Face"
+consequence = "Solo la usan versiones antiguas de transformers; las actuales usan la carpeta hub"
+
+["llamacpp.cache"]
+name = "Caché de descargas de llama.cpp"
+consequence = "Modelos obtenidos con -hf; se vuelven a descargar ({size}) en la siguiente ejecución"
+
+["gpt4all.models"]
+name = "Modelos de GPT4All"
+consequence = "Volver a descargar {size} en GPT4All"
+
+["projects.artifacts"]
+name = "Artefactos de compilación de proyectos (node_modules / .venv / target …)"
+consequence = "Se regeneran en el siguiente install o compilación"
+
+["pip.cache"]
+name = "Caché de pip"
+consequence = "pip vuelve a descargar los paquetes cuando hagan falta"
+
+["uv.cache"]
+name = "Caché de uv"
+consequence = "uv la reconstruye; los servidores MCP iniciados con uvx vuelven a obtener sus dependencias"
+
+["conda.pkgs"]
+name = "Caché de paquetes de conda"
+consequence = "Igual que conda clean --all; los entornos instalados no se tocan"
+
+["conda.envs"]
+name = "Entornos de conda"
+consequence = "Se elimina el entorno completo; los proyectos que lo usan dejan de funcionar hasta que se recree"
+
+["uv.python"]
+name = "Intérpretes de Python gestionados por uv"
+consequence = "Los proyectos fijados a esta versión vuelven a descargar el intérprete en la siguiente ejecución"
+
+["python.pycache_user"]
+name = "Caché de bytecode de Python (__pycache__)"
+consequence = "Python la regenera en el siguiente import"
+
+["jupyter.runtime"]
+name = "Restos de ejecución de Jupyter"
+consequence = "Archivos de conexión de kernels; Jupyter los vuelve a crear"
+
+["windows.user_temp"]
+name = "Archivos temporales del usuario"
+consequence = "Se omiten los archivos en uso"
+
+["windows.system_temp"]
+name = "Archivos temporales del sistema"
+consequence = "Se omiten los archivos en uso"
+
+["windows.update_download"]
+name = "Caché de descargas de Windows Update"
+consequence = "Las actualizaciones pendientes se vuelven a descargar"
+
+["windows.delivery_optimization"]
+name = "Caché de Optimización de distribución"
+consequence = "Caché para compartir actualizaciones con otros PC de la red local"
+
+["windows.thumbnails"]
+name = "Caché de miniaturas"
+consequence = "Las miniaturas de imágenes en las carpetas se regeneran"
+
+["windows.crash_dumps"]
+name = "Volcados de bloqueo"
+consequence = "Solo sirven para depurar bloqueos"
+
+["windows.error_reporting"]
+name = "Informe de errores de Windows"
+consequence = "Cola de informes de errores para Microsoft"
+
+["windows.prefetch_logs"]
+name = "Registros de Windows"
+consequence = "Registros del sistema; nada depende de ellos"
+
+["windows.installer_cache"]
+name = "Package Cache (restos de instaladores)"
+consequence = "Desinstalar o reparar Visual Studio / .NET puede requerir volver a descargar instaladores"
+
+["nuget.cache"]
+name = "Caché de paquetes NuGet"
+consequence = "Se vuelve a descargar en el siguiente restore"
+
+["cargo.registry"]
+name = "Caché del registro de Cargo"
+consequence = "Se vuelve a descargar en el siguiente cargo build"
+
+["gradle.caches"]
+name = "Cachés de Gradle"
+consequence = "Las dependencias se vuelven a descargar en la siguiente compilación"
+
+["go.modcache"]
+name = "Caché de módulos de Go"
+consequence = "Se vuelve a descargar en el siguiente go build"
+
+["windows.inetcache"]
+name = "Caché web del sistema (INetCache)"
+consequence = "Caché web que usan componentes del sistema y el antiguo IE"
+
+["windows.defender_scans"]
+name = "Historial de exámenes de Windows Defender"
+consequence = "Solo registros de exámenes; la protección no se ve afectada"
+
+["windows.store_cache"]
+name = "Caché de descargas de Microsoft Store"
+consequence = "La Store la reconstruye"
+
+["poetry.cache"]
+name = "Caché de paquetes de Poetry"
+consequence = "Se vuelve a descargar en el siguiente poetry install"
+
+["maven.repository"]
+name = "Repositorio local de Maven"
+consequence = "Las dependencias se vuelven a descargar en la siguiente compilación"
+
+["composer.cache"]
+name = "Caché de Composer"
+consequence = "Se vuelve a descargar en el siguiente composer install"
+
+["windows.old"]
+name = "Windows.old (Windows anterior)"
+consequence = "Ya no podrás volver al Windows anterior; Windows lo borra solo 10 días después de actualizar. Requiere permisos de administrador; si falla, usa el Liberador de espacio en disco"
+
+["office.file_cache"]
+name = "Caché de documentos de Office"
+consequence = "Caché local de documentos de OneDrive / SharePoint; se pierden las ediciones no sincronizadas, cierra Office primero"
+
+["teams.cache"]
+name = "Caché de Teams"
+consequence = "Teams la reconstruye"
+
+["onedrive.logs"]
+name = "Registros de OneDrive"
+consequence = "Solo registros de sincronización"
+
+["precommit.cache"]
+name = "Entornos de hooks de pre-commit"
+consequence = "Los entornos de hooks se reinstalan en el siguiente commit"

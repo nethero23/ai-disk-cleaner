@@ -1,0 +1,505 @@
+# Rule names and consequences in hi, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "Claude Code सत्र रिकॉर्ड"
+consequence = "उस प्रोजेक्ट का बातचीत इतिहास खो जाएगा; --resume पुराने सत्र नहीं ढूँढ पाएगा"
+
+["claude_code.cache"]
+name = "Claude Code कैश और डिबग लॉग"
+consequence = "अपने-आप फिर बन जाता है"
+
+["codex.sessions"]
+name = "Codex सत्र लॉग"
+consequence = "Codex का बातचीत इतिहास खो जाएगा"
+
+["codex.log"]
+name = "Codex लॉग"
+consequence = "केवल लॉग"
+
+["gemini_cli.sessions"]
+name = "Gemini CLI सत्र और चेकपॉइंट"
+consequence = "Gemini CLI का चैट इतिहास और तैयार किए गए बदलाव खो जाएँगे"
+
+["continue.index"]
+name = "Continue कोड इंडेक्स"
+consequence = "अगली बार प्रोजेक्ट खोलने पर फिर इंडेक्स होगा"
+
+["aider.cache"]
+name = "Aider कैश"
+consequence = "अपने-आप फिर बन जाता है"
+
+["copilot_cli.cache"]
+name = "Copilot CLI कैश"
+consequence = "अपने-आप फिर बन जाता है"
+
+["qwen_code.sessions"]
+name = "Qwen Code अस्थायी फ़ाइलें और सत्र"
+consequence = "पिछले सत्र और चेकपॉइंट खो जाएँगे"
+
+["opencode.data"]
+name = "OpenCode लॉग और कैश"
+consequence = "लॉग और कैश; अपने-आप फिर बनते हैं"
+
+["cline.tasks"]
+name = "Cline कार्य इतिहास"
+consequence = "हर कार्य की बातचीत और फ़ाइल स्नैपशॉट खो जाएँगे"
+
+["roo_code.tasks"]
+name = "Roo Code कार्य इतिहास"
+consequence = "हर कार्य की बातचीत और फ़ाइल स्नैपशॉट खो जाएँगे"
+
+["claude_code.file_history"]
+name = "Claude Code फ़ाइल स्नैपशॉट (file-history)"
+consequence = "/rewind इन्हीं पर चलता है; पुराने सत्र वापस नहीं घुमाए जा सकेंगे, मौजूदा सत्र पर असर नहीं"
+
+["codex.archived_sessions"]
+name = "Codex संग्रहीत सत्र"
+consequence = "संग्रहीत बातचीत खो जाएगी"
+
+["kilo_code.tasks"]
+name = "Kilo Code कार्य इतिहास"
+consequence = "हर कार्य की बातचीत और फ़ाइल स्नैपशॉट खो जाएँगे"
+
+["goose.sessions"]
+name = "Goose सत्र और लॉग"
+consequence = "पिछले सत्र खो जाएँगे"
+
+["claude_desktop.cache"]
+name = "Claude डेस्कटॉप कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["chatgpt_desktop.cache"]
+name = "ChatGPT डेस्कटॉप कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["jan.cache"]
+name = "Jan कैश और लॉग"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["jan.models"]
+name = "Jan मॉडल"
+consequence = "Jan में {size} फिर डाउनलोड करें"
+
+["anythingllm.cache"]
+name = "AnythingLLM कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["comfyui.temp"]
+name = "ComfyUI डेस्कटॉप अस्थायी आउटपुट और लॉग"
+consequence = "प्रीव्यू चित्र और लॉग; अपने-आप फिर बनते हैं"
+
+["msty.cache"]
+name = "Msty कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["lmstudio.cache"]
+name = "LM Studio कैश और लॉग"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["cherry_studio.cache"]
+name = "Cherry Studio कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["chatbox.cache"]
+name = "Chatbox कैश"
+consequence = "ऐप इसे फिर बना लेता है"
+
+["open_webui.cache"]
+name = "Open WebUI कैश"
+consequence = "एम्बेडिंग और ऑडियो कैश; ज़रूरत पड़ने पर फिर बनते हैं"
+
+["gradio.cache"]
+name = "Gradio अपलोड और आउटपुट कैश"
+consequence = "SD WebUI जैसे Gradio इंटरफ़ेस के अपलोड और आउटपुट की प्रतियाँ"
+
+["sd_webui.temp"]
+name = "Stable Diffusion WebUI अस्थायी फ़ाइलें"
+consequence = "अस्थायी चित्र और लॉग; जनरेशन पर असर नहीं"
+
+["cursor.cache"]
+name = "Cursor कैश"
+consequence = "Cursor इसे फिर बना लेता है"
+
+["cursor.logs"]
+name = "Cursor लॉग"
+consequence = "केवल लॉग"
+
+["cursor.workspaces"]
+name = "Cursor वर्कस्पेस स्टोरेज"
+consequence = "Cursor में उस प्रोजेक्ट की एडिटर स्थिति और चैट इतिहास खो जाएगा"
+
+["cursor.global_state"]
+name = "Cursor ग्लोबल स्टेट DB (state.vscdb, सभी चैट)"
+consequence = "Cursor की सभी चैट और सेटिंग्स खो जाएँगी। इसे हटाने के बजाय Cursor के अंदर पुरानी चैट निर्यात करें या हटाएँ"
+
+["windsurf.cache"]
+name = "Windsurf कैश"
+consequence = "Windsurf इसे फिर बना लेता है"
+
+["windsurf.workspaces"]
+name = "Windsurf वर्कस्पेस स्टोरेज"
+consequence = "Windsurf में उस प्रोजेक्ट की एडिटर स्थिति और चैट इतिहास खो जाएगा"
+
+["vscode.cache"]
+name = "VS Code कैश"
+consequence = "VS Code इसे फिर बना लेता है"
+
+["vscode.workspaces"]
+name = "VS Code वर्कस्पेस स्टोरेज"
+consequence = "उस प्रोजेक्ट की एडिटर स्थिति (Copilot चैट सहित) खो जाएगी"
+
+["antigravity.cache"]
+name = "Antigravity कैश"
+consequence = "Antigravity इसे फिर बना लेता है"
+
+["jetbrains.caches"]
+name = "JetBrains IDE इंडेक्स कैश"
+consequence = "अगली बार खोलने पर IDE फिर इंडेक्स करेगा, जिसमें कुछ मिनट लगते हैं"
+
+["trae.cache"]
+name = "Trae कैश और लॉग"
+consequence = "एडिटर इसे फिर बना लेता है"
+
+["trae.workspaces"]
+name = "Trae वर्कस्पेस स्टोरेज"
+consequence = "उस प्रोजेक्ट का इतिहास और AI इंडेक्स खो जाएगा"
+
+["kiro.cache"]
+name = "Kiro कैश और लॉग"
+consequence = "एडिटर इसे फिर बना लेता है"
+
+["zed.cache"]
+name = "Zed कैश और लॉग"
+consequence = "एडिटर इसे फिर बना लेता है"
+
+["cursor.extensions_cache"]
+name = "Cursor एक्सटेंशन डाउनलोड कैश"
+consequence = "एडिटर इसे फिर बना लेता है"
+
+["vscode.extensions_cache"]
+name = "VS Code एक्सटेंशन डाउनलोड कैश"
+consequence = "एडिटर इसे फिर बना लेता है"
+
+["chrome.cache"]
+name = "Chrome कैश"
+consequence = "पेज फिर से कैश होंगे; लॉगिन पर असर नहीं"
+
+["edge.cache"]
+name = "Edge कैश"
+consequence = "पेज फिर से कैश होंगे; लॉगिन पर असर नहीं"
+
+["firefox.cache"]
+name = "Firefox कैश"
+consequence = "पेज फिर से कैश होंगे; लॉगिन पर असर नहीं"
+
+["docker.vhdx"]
+name = "Docker Desktop वर्चुअल डिस्क"
+consequence = "सभी इमेज, कंटेनर और वॉल्यूम खो जाएँगे। बेहतर: docker system prune, फिर डिस्क संकुचित करें"
+
+["wsl.distros"]
+name = "WSL डिस्ट्रीब्यूशन वर्चुअल डिस्क"
+consequence = "यह पूरा Linux सिस्टम है; हटाने पर अंदर का सब कुछ खो जाएगा"
+
+["docker.cli_cache"]
+name = "Docker CLI कैश"
+consequence = "लॉग और कैश; अपने-आप फिर बन जाता है"
+
+["nvidia.dxcache"]
+name = "NVIDIA शेडर कैश"
+consequence = "गेम और ऐप पहली बार थोड़ा धीमे खुलेंगे; अपने-आप फिर बनता है"
+
+["nvidia.compute_cache"]
+name = "CUDA कर्नेल कंपाइल कैश"
+consequence = "CUDA प्रोग्राम पहली बार चलने पर कर्नेल फिर कंपाइल करते हैं"
+
+["amd.shader_cache"]
+name = "AMD शेडर कैश"
+consequence = "अपने-आप फिर बनता है"
+
+["intel.shader_cache"]
+name = "Intel शेडर कैश"
+consequence = "अपने-आप फिर बनता है"
+
+["triton.cache"]
+name = "Triton / torch.compile कर्नेल कैश"
+consequence = "अगले torch.compile पर फिर कंपाइल होगा"
+
+["nvidia.driver_downloads"]
+name = "NVIDIA ड्राइवर डाउनलोड"
+consequence = "पहले से इंस्टॉल ड्राइवरों के इंस्टॉलर; ज़रूरत पर NVIDIA App फिर डाउनलोड करता है"
+
+["nvidia.installer_leftovers"]
+name = "NVIDIA ड्राइवर एक्सट्रैक्शन के अवशेष"
+consequence = "कंट्रोल पैनल से मरम्मत/अनइंस्टॉल करने पर ड्राइवर फिर डाउनलोड करना पड़ सकता है"
+
+["windows.d3d_shader_cache"]
+name = "DirectX शेडर कैश"
+consequence = "गेम और GPU ऐप एक बार थोड़ा धीमे शुरू होंगे"
+
+["torch.extensions"]
+name = "PyTorch एक्सटेंशन बिल्ड कैश"
+consequence = "कस्टम CUDA ऑपरेशन अगले import पर फिर कंपाइल होंगे"
+
+["npm.cache"]
+name = "npm कैश"
+consequence = "अगले install पर npm फिर डाउनलोड करेगा"
+
+["npx.cache"]
+name = "npx अस्थायी पैकेज (MCP सर्वर सहित)"
+consequence = "npx से चलने वाले MCP सर्वर अगली बार शुरू होने पर फिर डाउनलोड होंगे"
+
+["pnpm.store"]
+name = "pnpm स्टोर"
+consequence = "pnpm store prune करके फिर डाउनलोड करने जैसा; इंस्टॉल किए प्रोजेक्ट चलते रहेंगे"
+
+["yarn.cache"]
+name = "Yarn कैश"
+consequence = "अगले install पर Yarn फिर डाउनलोड करेगा"
+
+["bun.cache"]
+name = "Bun कैश"
+consequence = "अगले install पर Bun फिर डाउनलोड करेगा"
+
+["playwright.browsers"]
+name = "Playwright ब्राउज़र"
+consequence = "इसका उपयोग करने वाले प्रोजेक्ट या MCP सर्वर को फिर से playwright install करना होगा ({size})"
+
+["puppeteer.browsers"]
+name = "Puppeteer ब्राउज़र"
+consequence = "अगली बार चलने पर Puppeteer {size} फिर डाउनलोड करेगा"
+
+["electron.cache"]
+name = "Electron बिल्ड कैश"
+consequence = "अगले बिल्ड पर फिर डाउनलोड होगा"
+
+["ollama.models"]
+name = "Ollama मॉडल"
+consequence = "ollama pull से {size} फिर डाउनलोड करें"
+
+["ollama.logs"]
+name = "Ollama लॉग"
+consequence = "केवल लॉग; Ollama इन्हें फिर बना लेता है"
+
+["huggingface.hub"]
+name = "Hugging Face हब कैश"
+consequence = "अगले उपयोग पर फिर डाउनलोड होगा ({size})"
+
+["huggingface.xet"]
+name = "Hugging Face Xet चंक कैश"
+consequence = "डाउनलोड तेज़ करने वाला कैश; अपने-आप फिर बनता है"
+
+["modelscope.hub"]
+name = "ModelScope हब कैश"
+consequence = "अगले उपयोग पर ModelScope से फिर डाउनलोड होगा ({size})"
+
+["lmstudio.models"]
+name = "LM Studio मॉडल"
+consequence = "LM Studio में {size} फिर डाउनलोड करें"
+
+["lmstudio.conversations"]
+name = "LM Studio बातचीत"
+consequence = "मॉडलों के साथ आपका चैट इतिहास खो जाएगा"
+
+["torch.hub"]
+name = "PyTorch Hub कैश"
+consequence = "अगली बार torch.hub को ज़रूरत होने पर फिर डाउनलोड होगा ({size})"
+
+["whisper.models"]
+name = "Whisper मॉडल"
+consequence = "अगले ट्रांसक्रिप्शन पर फिर डाउनलोड होंगे ({size})"
+
+["chrome.ondevice_model"]
+name = "Chrome ऑन-डिवाइस AI मॉडल"
+consequence = "Chrome का अंतर्निहित AI लगभग 4 GB फिर डाउनलोड करेगा"
+
+["edge.ondevice_model"]
+name = "Edge ऑन-डिवाइस AI मॉडल"
+consequence = "Edge का अंतर्निहित AI इसे फिर डाउनलोड करेगा"
+
+["comfyui.models"]
+name = "ComfyUI मॉडल"
+consequence = "ज़्यादातर हाथ से डाउनलोड किए गए; {size} आपको खुद फिर डाउनलोड करना होगा"
+
+["sd_webui.models"]
+name = "Stable Diffusion WebUI मॉडल"
+consequence = "ज़्यादातर हाथ से डाउनलोड किए गए; {size} आपको खुद फिर डाउनलोड करना होगा"
+
+["stability_matrix.models"]
+name = "Stability Matrix साझा मॉडल"
+consequence = "Stability Matrix में {size} फिर डाउनलोड करें"
+
+["msty.models"]
+name = "Msty स्थानीय मॉडल"
+consequence = "Msty में {size} फिर डाउनलोड करें"
+
+["xinference.cache"]
+name = "Xinference मॉडल कैश"
+consequence = "अगली बार मॉडल शुरू होने पर फिर डाउनलोड होगा ({size})"
+
+["vllm.cache"]
+name = "vLLM कंपाइल कैश"
+consequence = "torch.compile / CUDA ग्राफ़ कैश; अगली शुरुआत पर फिर बनते हैं (पहली लोडिंग धीमी)"
+
+["keras.models"]
+name = "Keras प्री-ट्रेंड मॉडल कैश"
+consequence = "अगले उपयोग पर फिर डाउनलोड होगा ({size})"
+
+["kagglehub.cache"]
+name = "kagglehub कैश"
+consequence = "अगली kagglehub कॉल पर फिर डाउनलोड होगा ({size})"
+
+["clip.cache"]
+name = "CLIP मॉडल कैश"
+consequence = "SD WebUI जैसे टूल अगले उपयोग पर {size} फिर डाउनलोड करेंगे"
+
+["paddle.models"]
+name = "PaddleOCR / PaddleX मॉडल"
+consequence = "अगली बार चलने पर फिर डाउनलोड होंगे ({size})"
+
+["pinokio.cache"]
+name = "Pinokio डाउनलोड कैश"
+consequence = "इंस्टॉलर डाउनलोड; ज़रूरत पर फिर लाए जाते हैं"
+
+["huggingface.datasets"]
+name = "Hugging Face डेटासेट कैश"
+consequence = "अगले load_dataset पर फिर डाउनलोड होगा ({size})"
+
+["huggingface.transformers_legacy"]
+name = "Hugging Face पुराना transformers कैश"
+consequence = "केवल पुराने transformers संस्करण इसका उपयोग करते हैं; मौजूदा संस्करण hub फ़ोल्डर का उपयोग करते हैं"
+
+["llamacpp.cache"]
+name = "llama.cpp डाउनलोड कैश"
+consequence = "-hf से लाए गए मॉडल; अगली बार चलने पर फिर डाउनलोड होंगे ({size})"
+
+["gpt4all.models"]
+name = "GPT4All मॉडल"
+consequence = "GPT4All में {size} फिर डाउनलोड करें"
+
+["projects.artifacts"]
+name = "प्रोजेक्ट बिल्ड आर्टिफ़ैक्ट (node_modules / .venv / target …)"
+consequence = "अगले install या बिल्ड पर फिर बनते हैं"
+
+["pip.cache"]
+name = "pip कैश"
+consequence = "ज़रूरत पड़ने पर pip पैकेज फिर डाउनलोड करेगा"
+
+["uv.cache"]
+name = "uv कैश"
+consequence = "uv इसे फिर बना लेता है; uvx से चलने वाले MCP सर्वर अपनी निर्भरताएँ फिर लाएँगे"
+
+["conda.pkgs"]
+name = "conda पैकेज कैश"
+consequence = "conda clean --all जैसा; इंस्टॉल किए एनवायरनमेंट पर असर नहीं"
+
+["conda.envs"]
+name = "conda एनवायरनमेंट"
+consequence = "पूरा एनवायरनमेंट हट जाएगा; इसका उपयोग करने वाले प्रोजेक्ट दोबारा बनाने तक नहीं चलेंगे"
+
+["uv.python"]
+name = "uv द्वारा प्रबंधित Python इंटरप्रेटर"
+consequence = "इस संस्करण पर टिके प्रोजेक्ट अगली बार चलने पर इंटरप्रेटर फिर डाउनलोड करेंगे"
+
+["python.pycache_user"]
+name = "Python बाइटकोड कैश (__pycache__)"
+consequence = "अगले import पर Python इसे फिर बना लेता है"
+
+["jupyter.runtime"]
+name = "Jupyter रनटाइम अवशेष"
+consequence = "कर्नेल कनेक्शन फ़ाइलें; Jupyter इन्हें फिर बना लेता है"
+
+["windows.user_temp"]
+name = "उपयोगकर्ता की अस्थायी फ़ाइलें"
+consequence = "उपयोग में चल रही फ़ाइलें छोड़ दी जाती हैं"
+
+["windows.system_temp"]
+name = "सिस्टम की अस्थायी फ़ाइलें"
+consequence = "उपयोग में चल रही फ़ाइलें छोड़ दी जाती हैं"
+
+["windows.update_download"]
+name = "Windows Update डाउनलोड कैश"
+consequence = "लंबित अपडेट फिर डाउनलोड होंगे"
+
+["windows.delivery_optimization"]
+name = "डिलीवरी ऑप्टिमाइज़ेशन कैश"
+consequence = "LAN पर अन्य PC के साथ अपडेट साझा करने वाला कैश"
+
+["windows.thumbnails"]
+name = "थंबनेल कैश"
+consequence = "फ़ोल्डरों में चित्रों के थंबनेल फिर बनेंगे"
+
+["windows.crash_dumps"]
+name = "क्रैश डंप"
+consequence = "केवल क्रैश डिबग करने के काम के"
+
+["windows.error_reporting"]
+name = "Windows त्रुटि रिपोर्टिंग"
+consequence = "Microsoft को भेजी जाने वाली त्रुटि रिपोर्टों की कतार"
+
+["windows.prefetch_logs"]
+name = "Windows लॉग"
+consequence = "सिस्टम लॉग; कुछ भी इन पर निर्भर नहीं"
+
+["windows.installer_cache"]
+name = "Package Cache (इंस्टॉलर अवशेष)"
+consequence = "Visual Studio / .NET को अनइंस्टॉल या मरम्मत करने पर इंस्टॉलर फिर डाउनलोड करने पड़ सकते हैं"
+
+["nuget.cache"]
+name = "NuGet पैकेज कैश"
+consequence = "अगले restore पर फिर डाउनलोड होगा"
+
+["cargo.registry"]
+name = "Cargo रजिस्ट्री कैश"
+consequence = "अगले cargo build पर फिर डाउनलोड होगा"
+
+["gradle.caches"]
+name = "Gradle कैश"
+consequence = "अगले बिल्ड पर निर्भरताएँ फिर डाउनलोड होंगी"
+
+["go.modcache"]
+name = "Go मॉड्यूल कैश"
+consequence = "अगले go build पर फिर डाउनलोड होगा"
+
+["windows.inetcache"]
+name = "सिस्टम वेब कैश (INetCache)"
+consequence = "सिस्टम घटकों और पुराने IE द्वारा उपयोग किया जाने वाला वेब कैश"
+
+["windows.defender_scans"]
+name = "Windows Defender स्कैन इतिहास"
+consequence = "केवल स्कैन रिकॉर्ड; सुरक्षा पर असर नहीं"
+
+["windows.store_cache"]
+name = "Microsoft Store डाउनलोड कैश"
+consequence = "Store इसे फिर बना लेता है"
+
+["poetry.cache"]
+name = "Poetry पैकेज कैश"
+consequence = "अगले poetry install पर फिर डाउनलोड होगा"
+
+["maven.repository"]
+name = "Maven स्थानीय रिपॉज़िटरी"
+consequence = "अगले बिल्ड पर निर्भरताएँ फिर डाउनलोड होंगी"
+
+["composer.cache"]
+name = "Composer कैश"
+consequence = "अगले composer install पर फिर डाउनलोड होगा"
+
+["windows.old"]
+name = "Windows.old (पिछला Windows)"
+consequence = "आप पिछले Windows पर वापस नहीं जा सकेंगे; अपग्रेड के 10 दिन बाद Windows इसे खुद हटा देता है। व्यवस्थापक अधिकार चाहिए; विफल हो तो डिस्क क्लीनअप का उपयोग करें"
+
+["office.file_cache"]
+name = "Office दस्तावेज़ कैश"
+consequence = "OneDrive / SharePoint दस्तावेज़ों का स्थानीय कैश; बिना सिंक हुए बदलाव खो जाएँगे, पहले Office बंद करें"
+
+["teams.cache"]
+name = "Teams कैश"
+consequence = "Teams इसे फिर बना लेता है"
+
+["onedrive.logs"]
+name = "OneDrive लॉग"
+consequence = "केवल सिंक लॉग"
+
+["precommit.cache"]
+name = "pre-commit हुक एनवायरनमेंट"
+consequence = "अगले commit पर हुक एनवायरनमेंट फिर इंस्टॉल होंगे"

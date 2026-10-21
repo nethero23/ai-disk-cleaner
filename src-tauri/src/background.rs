@@ -358,12 +358,8 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
     let (rules, _, settings) = effective_rules(app);
     let opts = ScanOptions {
         // The core only speaks zh and en; the UI may have stored e.g. "ja".
-        lang: if settings.lang.starts_with("zh") {
-            "zh"
-        } else {
-            "en"
-        }
-        .into(),
+        lang: cleaner_core::rule_i18n::core_lang(&settings.lang).into(),
+        ui_lang: settings.lang.clone(),
         global_min_bytes: settings.min_item_bytes,
         excluded: settings.excluded_paths.clone(),
         extra_roots: settings.scan_drives.clone(),
