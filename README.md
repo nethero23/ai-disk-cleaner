@@ -62,6 +62,8 @@ consequence_en = "…"
 
 推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建 NSIS/MSI 安装包并发布到 GitHub Releases。
 
+应用内自动更新走 Tauri updater 插件，更新源是 GitHub Releases 里的 `latest.json`（CI 由 `.github/latest_json.py` 生成）。更新包必须签名：仓库 Secrets 里需要 `TAURI_SIGNING_PRIVATE_KEY`（`tauri signer generate` 生成的私钥文件内容）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`（没有密码就留空）；公钥在 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`。没配 Secrets 时发布照常，只是不生成签名和 `latest.json`，应用不会提示这个版本。
+
 ## 设置
 
 应用内「设置」页可以：
@@ -82,7 +84,7 @@ consequence_en = "…"
 - v0.3 搬回来、ModelScope、WSL/Docker 虚拟磁盘压缩、清理前导出对话记录、设置页 + 在线规则更新、正式图标
 - v0.4 全盘大文件扫描、规则库扩到 110+ 条（ComfyUI / SD WebUI / Msty / vLLM / Xinference / Trae / Kiro / Cline …）、托盘常驻 + 定时扫描、清理记录统计
 - v0.5 规则并行扫描 + 进度 + 取消、清理前「看看里面」预览、一键清理安全项 + 定时自动清理、规则库 126 条
-- v0.6 结果页搜索 / 按工具分组 / 排序（当前）
+- v0.6 结果页搜索 / 分组 / 排序、多盘扫描、应用内自动更新（当前）
 - 下一步 安装包签名
 
 License: MIT

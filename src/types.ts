@@ -124,6 +124,7 @@ export interface Settings {
   notify_min_bytes: number;
   last_background_scan: string | null;
   auto_clean_safe: boolean;
+  auto_update_check: boolean;
 }
 
 export interface RuleInfo {

@@ -34,6 +34,8 @@ pub struct Settings {
     /// After a scheduled scan, move Safe items (whose tool is not running)
     /// to the Recycle Bin without asking. Off by default.
     pub auto_clean_safe: bool,
+    /// Look for a new release on GitHub when the app starts.
+    pub auto_update_check: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -55,6 +57,7 @@ impl Default for Settings {
             notify_min_bytes: 1024 * 1024 * 1024,
             last_background_scan: None,
             auto_clean_safe: false,
+            auto_update_check: true,
         }
     }
 }

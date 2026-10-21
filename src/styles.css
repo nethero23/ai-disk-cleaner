@@ -47,6 +47,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 
 .banner { margin: 12px 24px 0; padding: 10px 14px; border-radius: 8px; }
 .banner.ok { background: var(--safe-bg); color: var(--safe); }
+.banner.update { display: flex; align-items: center; gap: 10px; background: var(--redownload-bg, #fff7e6); }
 .banner.error { background: var(--review-bg); color: var(--review); }
 
 .empty { text-align: center; padding: 80px 24px; color: var(--muted); }
