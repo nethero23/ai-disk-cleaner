@@ -277,6 +277,12 @@ const ko: Partial<Strings> = {
   clear: "지우기",
   language: "표시 언어",
   languageAuto: "시스템 설정 따르기",
+  setAppearance: "화면 및 언어",
+  theme: "테마",
+  themeSystem: "시스템",
+  themeLight: "라이트",
+  themeDark: "다크",
+  setScanSection: "스캔",
   listSep: ", ",
   sentenceEnd: ".",
 };

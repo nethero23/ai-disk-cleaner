@@ -277,6 +277,12 @@ const es: Partial<Strings> = {
   clear: "Borrar",
   language: "Idioma",
   languageAuto: "Igual que el sistema",
+  setAppearance: "Apariencia e idioma",
+  theme: "Tema",
+  themeSystem: "Sistema",
+  themeLight: "Claro",
+  themeDark: "Oscuro",
+  setScanSection: "Análisis",
   listSep: ", ",
   sentenceEnd: ".",
 };

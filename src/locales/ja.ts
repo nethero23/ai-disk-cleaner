@@ -277,6 +277,12 @@ const ja: Partial<Strings> = {
   clear: "クリア",
   language: "表示言語",
   languageAuto: "システムに合わせる",
+  setAppearance: "外観と言語",
+  theme: "テーマ",
+  themeSystem: "システム",
+  themeLight: "ライト",
+  themeDark: "ダーク",
+  setScanSection: "スキャン",
   listSep: "、",
   sentenceEnd: "。",
 };

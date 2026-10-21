@@ -277,6 +277,12 @@ const de: Partial<Strings> = {
   clear: "Leeren",
   language: "Sprache",
   languageAuto: "Wie System",
+  setAppearance: "Darstellung & Sprache",
+  theme: "Design",
+  themeSystem: "System",
+  themeLight: "Hell",
+  themeDark: "Dunkel",
+  setScanSection: "Scannen",
   listSep: ", ",
   sentenceEnd: ".",
 };

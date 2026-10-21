@@ -277,6 +277,12 @@ const hi: Partial<Strings> = {
   clear: "साफ़ करें",
   language: "भाषा",
   languageAuto: "सिस्टम के अनुसार",
+  setAppearance: "रूप और भाषा",
+  theme: "थीम",
+  themeSystem: "सिस्टम",
+  themeLight: "हल्की",
+  themeDark: "गहरी",
+  setScanSection: "स्कैन",
   listSep: ", ",
   sentenceEnd: "।",
 };

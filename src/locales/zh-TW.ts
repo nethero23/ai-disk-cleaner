@@ -277,6 +277,12 @@ const zhTW: Partial<Strings> = {
   clear: "清除",
   language: "介面語言",
   languageAuto: "跟隨系統",
+  setAppearance: "外觀與語言",
+  theme: "主題",
+  themeSystem: "跟隨系統",
+  themeLight: "淺色",
+  themeDark: "深色",
+  setScanSection: "掃描",
   listSep: "，",
   sentenceEnd: "。",
 };
