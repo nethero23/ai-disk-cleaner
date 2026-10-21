@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const ru: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "Сначала узнайте, что такое каждый ГБ, потом решайте",
   scan: "Сканировать",
   rescan: "Сканировать снова",

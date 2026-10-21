@@ -32,7 +32,7 @@ export type Lang = (typeof LANGS)[number]["code"];
 
 const strings = {
   zh: {
-    appName: "AI Disk Cleaner",
+    appName: "Clearwisp",
     tagline: "先看清每一 GB 是什么，再决定删不删",
     scan: "开始扫描",
     rescan: "重新扫描",
@@ -318,7 +318,7 @@ const strings = {
     sentenceEnd: "。",
   },
   en: {
-    appName: "AI Disk Cleaner",
+    appName: "Clearwisp",
     tagline: "See what every GB is before you decide",
     scan: "Scan",
     rescan: "Rescan",

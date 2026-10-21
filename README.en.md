@@ -1,10 +1,12 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner icon">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Clearwisp icon">
 
-# AI Disk Cleaner: the disk cleaner that understands AI tools
+# Clearwisp: the disk cleaner that understands AI tools
 
 **Free, open-source Windows disk cleaner for AI developers, for C:, D: and every other drive. Finds and frees the space taken by Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / VS Code caches, pip / conda / npm caches and WSL / Docker virtual disks. Scan first, you choose, every delete can be undone.**
+
+<sub>Formerly AI Disk Cleaner</sub>
 
 [![Latest release](https://img.shields.io/github/v/release/nethero23/ai-disk-cleaner?label=download&color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nethero23/ai-disk-cleaner/total?color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases)
@@ -20,16 +22,16 @@
 </div>
 
 <!-- Screenshot placeholder: uncomment once docs/images/hero.gif exists
-<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner scanning drives for AI model caches and cleaning them"></p>
+<p align="center"><img src="docs/images/hero.gif" width="900" alt="Clearwisp scanning drives for AI model caches and cleaning them"></p>
 -->
 
 ## Why
 
 On a PC used for AI work, the C: drive rarely fills up with classic system junk. It fills up with **local LLM weights, Python environments, AI code editor caches and WSL/Docker virtual disks**, often hundreds of GB. CCleaner and similar tools don't look there; WizTree shows which folder is big but not what it is or whether it is safe to delete.
 
-And it is not only C:. Model libraries, conda environments, Docker disks and project `node_modules` end up on D: and E: too. AI Disk Cleaner scans every drive you select.
+And it is not only C:. Model libraries, conda environments, Docker disks and project `node_modules` end up on D: and E: too. Clearwisp scans every drive you select.
 
-AI Disk Cleaner explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
+Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
 ## Features
 
@@ -99,7 +101,7 @@ CLI for developers: `cargo run -p cleaner-core --bin aidc -- scan` (also `scan -
 
 ## Comparison
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Ollama / HF / LM Studio models | ✅ by model name | ❌ | ❌ | ❌ | ❌ size only |
 | Cursor / Claude Code / VS Code caches | ✅ | ❌ | ✅ (since 6.0) | ❌ | ❌ |

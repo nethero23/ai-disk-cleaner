@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const zhTW: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "先看清每一 GB 是什麼，再決定刪不刪",
   scan: "開始掃描",
   rescan: "重新掃描",

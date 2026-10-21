@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner アイコン">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Clearwisp アイコン">
 
-# AI Disk Cleaner：AI ツールを理解するディスククリーナー
+# Clearwisp：AI ツールを理解するディスククリーナー
 
 **AI 開発者のための無料・オープンソースの Windows ディスククリーナー。C ドライブも D ドライブも、すべてのドライブを対象に、Ollama / Hugging Face / LM Studio のモデル、Cursor / Claude Code / VS Code のキャッシュ、pip / conda / npm のキャッシュ、WSL / Docker の仮想ディスクが使っている容量を見つけて解放します。まずスキャン、選ぶのはあなた、削除はすべて元に戻せます。**
 
@@ -23,9 +23,9 @@
 
 AI の作業に使う PC では、ディスクを埋めるのは従来のシステムゴミではありません。**ローカル LLM の重み、Python 環境、AI コードエディタのキャッシュ、WSL / Docker の仮想ディスク**で、数百 GB になることもよくあります。CCleaner などはそこを見ません。WizTree はどのフォルダが大きいかは教えてくれますが、それが何なのか、消してよいのかは教えてくれません。
 
-しかも C ドライブだけではありません。モデルライブラリ、conda 環境、Docker のディスク、プロジェクトの `node_modules` は D や E ドライブにもたまります。AI Disk Cleaner は選んだすべてのドライブをスキャンします。
+しかも C ドライブだけではありません。モデルライブラリ、conda 環境、Docker のディスク、プロジェクトの `node_modules` は D や E ドライブにもたまります。Clearwisp は選んだすべてのドライブをスキャンします。
 
-AI Disk Cleaner は 1 GB ごとに説明します。**どのモデルか、どの conda 環境か、どのツールのキャッシュか、最後に使ったのはいつか、消すとどうなるか**。各項目に安全レベルが付き、チェックを入れるまで何も削除されず、削除はごみ箱へ移動し、直前のクリーンアップはワンクリックで元に戻せます。
+Clearwisp は 1 GB ごとに説明します。**どのモデルか、どの conda 環境か、どのツールのキャッシュか、最後に使ったのはいつか、消すとどうなるか**。各項目に安全レベルが付き、チェックを入れるまで何も削除されず、削除はごみ箱へ移動し、直前のクリーンアップはワンクリックで元に戻せます。
 
 <a id="features"></a>
 ## 機能
@@ -94,7 +94,7 @@ Ollama のマニフェスト、Hugging Face のキャッシュ構造、conda 環
 <a id="comparison"></a>
 ## 他ツールとの比較
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Ollama / HF / LM Studio のモデル | ✅ モデル名まで | ❌ | ❌ | ❌ | ❌ サイズのみ |
 | Cursor / Claude Code / VS Code のキャッシュ | ✅ | ❌ | ✅（6.0 以降） | ❌ | ❌ |
