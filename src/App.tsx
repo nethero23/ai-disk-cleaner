@@ -43,6 +43,7 @@ export function App() {
   const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
   const [bigScanning, setBigScanning] = useState(false);
   const [bigProgress, setBigProgress] = useState<{ seen: number; bytes: number; dir: string } | null>(null);
+  const [scanStep, setScanStep] = useState<{ done: number; total: number; rule_name: string } | null>(null);
   const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
   const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
   const [bigConfirm, setBigConfirm] = useState(false);
@@ -342,6 +343,10 @@ export function App() {
     setPhase("scanning");
     setError(null);
     setResult(null);
+    setScanStep(null);
+    const unlisten = await listen<{ done: number; total: number; rule_name: string }>("scan-progress", (e) => {
+      setScanStep(e.payload);
+    });
     try {
       const r = await invoke<ScanReport>("scan", { lang });
       setReport(r);
@@ -351,6 +356,9 @@ export function App() {
     } catch (e) {
       setError(String(e));
       setPhase("idle");
+    } finally {
+      unlisten();
+      setScanStep(null);
     }
   }
 
@@ -857,6 +865,15 @@ export function App() {
         <section className="empty">
           <div className="spinner" />
           <p>{s.scanning}</p>
+          {scanStep && (
+            <>
+              <progress className="scan-bar" value={scanStep.done} max={scanStep.total} />
+              <p className="muted">{s.scanStep(scanStep.done, scanStep.total, scanStep.rule_name)}</p>
+            </>
+          )}
+          <p>
+            <button className="ghost" onClick={() => invoke("cancel_scan")}>{s.scanCancel}</button>
+          </p>
         </section>
       )}
 
@@ -865,7 +882,13 @@ export function App() {
           <section className="summary">
             <div className="stat">
               <span className="stat-label">{s.found(report.items.length, humanSize(report.total_bytes))}</span>
+              {report.started_at && report.finished_at && (
+                <span className="muted scan-took" title={report.timings ? `${s.slowest} ${report.timings.slice(0, 5).map(([id, ms]) => `${id} ${(ms / 1000).toFixed(1)}s`).join(", ")}` : undefined}>
+                  {" "}{s.scanTook(((new Date(report.finished_at).getTime() - new Date(report.started_at).getTime()) / 1000).toFixed(1))}
+                </span>
+              )}
             </div>
+            {report.cancelled && <div className="banner">{s.scanPartial}</div>}
             <div className="stat-row">
               <Pill level="safe" label={s.safety.safe} size={humanSize(report.safe_bytes)} hint={s.safetyHint.safe} />
               <Pill level="redownload" label={s.safety.redownload} size={humanSize(report.redownload_bytes)} hint={s.safetyHint.redownload} />
