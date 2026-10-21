@@ -67,6 +67,12 @@ pub struct ScanReport {
     pub finished_at: Option<DateTime<Utc>>,
     /// Locations a rule pointed at that could not be read (permissions). Shown, not hidden.
     pub unreadable: Vec<PathBuf>,
+    /// How long each rule took, slowest first (rule id, milliseconds).
+    #[serde(default)]
+    pub timings: Vec<(String, u64)>,
+    /// True when the scan was cancelled; the report holds what was done so far.
+    #[serde(default)]
+    pub cancelled: bool,
 }
 
 impl ScanReport {

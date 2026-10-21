@@ -8,6 +8,7 @@ use cleaner_core::export::{self, ExportResult};
 use cleaner_core::paths::PathContext;
 use cleaner_core::preview::{self, Preview};
 use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
+use cleaner_core::scan::{scan_all_with, ScanProgress};
 use cleaner_core::settings::Settings;
 use cleaner_core::vhdx::{self, CompactResult, Vhdx};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
@@ -61,9 +62,22 @@ pub(crate) fn effective_rules(app: &AppHandle) -> (RuleSet, Vec<(PathBuf, String
     (set, errors, settings)
 }
 
+static SCAN_CANCEL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[derive(Serialize, Clone)]
+struct ScanStep {
+    done: usize,
+    total: usize,
+    rule_id: String,
+    rule_name: String,
+    millis: u64,
+}
+
+/// Full rule scan; emits `scan-progress` after every rule.
 #[tauri::command]
 async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
     let (rules, _, settings) = effective_rules(&app);
+    SCAN_CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
     tauri::async_runtime::spawn_blocking(move || {
         let opts = ScanOptions {
             lang,
@@ -71,10 +85,26 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
             excluded: settings.excluded_paths,
             ..ScanOptions::default()
         };
-        scan_all(&rules, &opts)
+        scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
+            let _ = app.emit(
+                "scan-progress",
+                ScanStep {
+                    done: p.done,
+                    total: p.total,
+                    rule_id: p.rule_id,
+                    rule_name: p.rule_name,
+                    millis: p.millis,
+                },
+            );
+        })
     })
     .await
     .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn cancel_scan() {
+    SCAN_CANCEL.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[tauri::command]
@@ -444,6 +474,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan,
             preview_item,
+            cancel_scan,
             clean_items,
             clean_log,
             rules,
