@@ -6,8 +6,8 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, Growth } from "./types";
-import { humanSize, relativeDate, sinceDuration, t, type Lang } from "./i18n";
+import type { DeepAnalysis, DeepSummary, DeepTask, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, Growth } from "./types";
+import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 
@@ -43,7 +43,7 @@ export function App() {
   const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
-  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview" | "deep">("scan");
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [ovRoot, setOvRoot] = useState<string | null>(null);
@@ -319,6 +319,67 @@ export function App() {
       setError(String(e));
     }
     setUpdatingRules(false);
+  }
+
+  const [deepTasks, setDeepTasks] = useState<DeepTask[]>([]);
+  const [deepSel, setDeepSel] = useState<Set<string>>(new Set());
+  const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null);
+  const [deepBusy, setDeepBusy] = useState<"analyze" | "run" | "hiber" | null>(null);
+  const [deepConfirm, setDeepConfirm] = useState(false);
+  const [deepResult, setDeepResult] = useState<DeepSummary | null>(null);
+
+  async function openDeep() {
+    setError(null);
+    setView("deep");
+    try {
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  async function runDeepAnalyze() {
+    setDeepBusy("analyze");
+    setError(null);
+    try {
+      setDeepAnalysis(await invoke<DeepAnalysis>("deep_analyze"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
+  }
+
+  async function runDeep() {
+    setDeepConfirm(false);
+    setDeepBusy("run");
+    setError(null);
+    try {
+      const sum = await invoke<DeepSummary>("deep_run", { ids: [...deepSel] });
+      setDeepResult(sum);
+      const failed = sum.results.filter((r) => !r.ok);
+      setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
+      if (failed.length) setError(failed.map((r) => `${r.id}: ${r.message}`).join("\n"));
+      setDeepSel(new Set());
+      setDeepAnalysis(null);
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
+  }
+
+  async function runHibernateOn() {
+    setDeepBusy("hiber");
+    setError(null);
+    try {
+      const r = await invoke<{ ok: boolean; message: string }>("hibernate_on");
+      if (r.ok) setNotice(s.hiberOnDone);
+      else setError(r.message);
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
   }
 
   async function openOverview() {
@@ -732,6 +793,7 @@ export function App() {
               <button className="ghost" onClick={openHistory}>{s.history}</button>
               <button className="ghost" onClick={openBigFiles}>{s.bigFiles}</button>
               <button className="ghost" onClick={openOverview}>{s.overview}</button>
+              <button className="ghost" onClick={openDeep}>{s.deep}</button>
               <button className="ghost" onClick={openSettings}>{s.settings}</button>
             </>
           )}
@@ -780,6 +842,86 @@ export function App() {
               {restoring ? s.restoring : s.undo}
             </button>
           )}
+        </div>
+      )}
+
+      {view === "deep" && (
+        <section className="bigfiles deep">
+          <h2>{s.deepTitle}</h2>
+          <p className="muted">{s.deepBody}</p>
+          <div className="big-controls">
+            <button className="ghost" disabled={deepBusy !== null} onClick={runDeepAnalyze}>
+              {deepBusy === "analyze" ? s.deepAnalyzing : s.deepAnalyze}
+            </button>
+            <button className="primary" disabled={deepBusy !== null || deepSel.size === 0} onClick={() => setDeepConfirm(true)}>
+              {deepBusy === "run" ? s.deepRunning : s.deepRun(deepSel.size)}
+            </button>
+          </div>
+          <ul className="deep-list">
+            {deepTasks.map((t) => {
+              const est =
+                t.id === "winsxs" && deepAnalysis?.winsxs_reclaimable_bytes != null
+                  ? s.deepWinsxs(humanSize(deepAnalysis.winsxs_actual_bytes ?? 0), humanSize(deepAnalysis.winsxs_reclaimable_bytes), !!deepAnalysis.winsxs_cleanup_recommended)
+                  : t.id === "restore_points" && deepAnalysis?.shadow_used_bytes != null
+                    ? s.deepShadow(deepAnalysis.shadow_count ?? 0, humanSize(deepAnalysis.shadow_used_bytes))
+                    : t.estimate_bytes != null
+                      ? s.deepEstimate(humanSize(t.estimate_bytes))
+                      : t.needs_analysis
+                        ? s.deepUnknown
+                        : "";
+              const hiberOff = t.id === "hibernation" && !t.applicable;
+              return (
+                <li key={t.id} className={`deep-item${t.applicable ? "" : " muted"}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      disabled={!t.applicable || deepBusy !== null}
+                      checked={deepSel.has(t.id)}
+                      onChange={(e) =>
+                        setDeepSel((prev) => {
+                          const n = new Set(prev);
+                          if (e.target.checked) n.add(t.id);
+                          else n.delete(t.id);
+                          return n;
+                        })
+                      }
+                    />
+                    <strong>{t.title}</strong>
+                    <span className="size">{hiberOff ? "" : est || (t.applicable ? "" : s.deepNotApplicable)}</span>
+                  </label>
+                  <p>{hiberOff ? s.hiberOff : t.body}</p>
+                  {!hiberOff && <p className="warn">{t.consequence}</p>}
+                  {hiberOff && (
+                    <button className="ghost" disabled={deepBusy !== null} onClick={runHibernateOn}>{s.hiberOn}</button>
+                  )}
+                  {deepResult?.results.find((r) => r.id === t.id && !r.ok) && (
+                    <p className="warn">{deepResult.results.find((r) => r.id === t.id)?.message}</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {deepConfirm && (
+        <div className="modal-backdrop" onClick={() => setDeepConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{s.deepConfirmTitle}</h3>
+            <p>{s.deepConfirmBody}</p>
+            <ul>
+              {deepTasks.filter((t) => deepSel.has(t.id)).map((t) => (
+                <li key={t.id}>
+                  <strong>{t.title}</strong>
+                  <span className="warn"> · {t.consequence}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setDeepConfirm(false)}>{s.cancel}</button>
+              <button className="primary" onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
+            </div>
+          </div>
         </div>
       )}
 
