@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "ai-disk-cleaner"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "chrono",
  "cleaner-core",
@@ -515,7 +515,7 @@ dependencies = [
 
 [[package]]
 name = "cleaner-core"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "chrono",
  "dirs 6.0.0",
