@@ -1,5 +1,6 @@
 import type { Drive, Settings } from "./types";
 import type { Strings } from "./i18n";
+import { FilterChip } from "./ui";
 
 /// The "scan range" checkboxes: the system drive is always on, other
 /// drives toggle `settings.scan_drives`. Shown on the home page, above
@@ -26,20 +27,20 @@ export function DrivePicker({
       {drives.map((d) => {
         const on = d.system || settings.scan_drives.includes(d.path);
         return (
-          <label key={d.path}>
-            <input
-              type="checkbox"
-              checked={on}
-              disabled={d.system}
-              onChange={() =>
-                onChange({
-                  ...settings,
-                  scan_drives: on ? settings.scan_drives.filter((p) => p !== d.path) : [...settings.scan_drives, d.path],
-                })
-              }
-            />
-            {d.path}{d.name ? ` ${d.name}` : ""}{d.system ? ` (${s.systemDrive})` : ""}
-          </label>
+          <FilterChip
+            key={d.path}
+            selected={on}
+            disabled={d.system}
+            title={d.system ? s.systemDrive : undefined}
+            onClick={() =>
+              onChange({
+                ...settings,
+                scan_drives: on ? settings.scan_drives.filter((p) => p !== d.path) : [...settings.scan_drives, d.path],
+              })
+            }
+          >
+            {d.path.replace(/\\$/, "")}{d.name ? ` ${d.name}` : ""}
+          </FilterChip>
         );
       })}
       {note && <span className="muted">{note}</span>}
