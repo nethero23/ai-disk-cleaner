@@ -1,97 +1,173 @@
-# AI Disk Cleaner
+<div align="center">
 
-最懂 AI 的 Windows C 盘瘦身工具。先扫描，把每一 GB 翻译成人能看懂的东西（哪个模型、哪个环境、多久没用），标出安全等级，你勾选后再移入回收站，可还原。
+<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner 图标">
 
-A Windows disk cleaner that understands AI tools: Ollama / Hugging Face / ModelScope / LM Studio models, pip / uv / conda caches, Cursor / Windsurf / Claude Code / Codex leftovers, plus ordinary Windows junk. Scan first, decide second, delete reversibly.
+# AI Disk Cleaner · 最懂 AI 的 C 盘瘦身工具
 
-## 为什么
+**免费开源的 Windows C 盘清理工具，专清 AI 工具留下的垃圾：Ollama / Hugging Face / LM Studio 模型，Cursor / Claude Code / VS Code 缓存，pip / conda / npm 缓存，WSL / Docker 虚拟磁盘。先扫描、你来选、删了能撤销。**
 
-CCleaner、360、电脑管家不扫模型和 Python 环境；WizTree 只告诉你哪个文件夹大，不告诉你是什么、能不能删。一台做 AI 的电脑里这些动辄几百 GB。
+[![最新版本](https://img.shields.io/github/v/release/nethero23/ai-disk-cleaner?label=%E4%B8%8B%E8%BD%BD&color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
+[![下载量](https://img.shields.io/github/downloads/nethero23/ai-disk-cleaner/total?color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/nethero23/ai-disk-cleaner/ci.yml?branch=main)](https://github.com/nethero23/ai-disk-cleaner/actions)
+![平台](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows)
+![Rust](https://img.shields.io/badge/Rust-Tauri%202-orange?logo=rust)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## 原则
+**中文** · [English](README.en.md)
+
+[⬇️ 下载最新版](https://github.com/nethero23/ai-disk-cleaner/releases/latest) · [功能](#功能) · [和 CCleaner / BleachBit / Dism++ 比](#和其他清理软件比) · [常见问题](#常见问题)
+
+</div>
+
+<!-- 截图占位：把 docs/images/hero.gif 放好后取消下面这行的注释
+<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner 扫描 C 盘 AI 模型缓存并一键清理的演示"></p>
+-->
+
+## 一句话
+
+C 盘又红了？在一台跑 AI 的电脑上，真正占地方的往往不是系统垃圾，而是 **几十上百 GB 的大模型、Python 环境、AI 编辑器缓存和 WSL/Docker 虚拟磁盘**。CCleaner、360、电脑管家不扫这些；WizTree 只告诉你哪个文件夹大，不告诉你那是什么、能不能删。
+
+AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
+
+## 功能
+
+### 🧠 认得 AI 工具的垃圾（126 条规则，90+ 个工具）
+
+| 类别 | 覆盖 |
+|---|---|
+| 本地大模型 | Ollama、Hugging Face（hub / datasets）、LM Studio、ModelScope、GPT4All、Jan、Msty、llama.cpp、vLLM、Xinference、Open WebUI、AnythingLLM、Cherry Studio、Chatbox |
+| AI 绘画 / 语音 | ComfyUI、Stable Diffusion WebUI、Stability Matrix、Pinokio、Whisper、OpenAI CLIP |
+| AI 编程工具 | Cursor、Windsurf、Claude Code、Codex、Gemini CLI、Qwen Code、GitHub Copilot、Cline、Roo Code、Kilo Code、Continue、Aider、Trae、Kiro、Zed、OpenCode、Antigravity、Goose |
+| Python / 深度学习 | pip、uv、conda、Poetry、PyTorch、Keras、Triton、PaddlePaddle、Jupyter、Kaggle、Gradio |
+| 前端 / 通用开发 | npm、pnpm、Yarn、Bun、Cargo、Go、Maven、Gradle、NuGet、Composer、Playwright、Puppeteer、Electron、JetBrains、VS Code |
+| 容器 / 虚拟磁盘 | Docker Desktop、WSL（ext4.vhdx 压缩） |
+| Windows 系统 | Windows 更新缓存、Windows.old、临时文件、NVIDIA / AMD / Intel 驱动缓存、Edge / Chrome / Firefox 缓存、Office、Teams、OneDrive |
+
+不只看路径：会解析 Ollama manifest、Hugging Face 缓存结构、conda 环境、LM Studio 模型目录、Cursor 工作区，告诉你**具体是哪个模型、哪个环境**。
+
+### 🛡️ 安全第一
 
 - **只读扫描**：扫描过程不写任何文件。
-- **三级安全标签**：安全（纯缓存，自动重建）／可重下（删了要重新下载）／需确认（含用户数据或可能在用）。默认只勾「安全」。
-- **可撤销**：删除一律进回收站，并写清理日志；清理后可一键撤销，清理记录里也能逐项还原。
-- **不做**：注册表清理、后台常驻、弹窗、捆绑、上传文件列表。
+- **三级安全标签**：🟢 安全（纯缓存，会自动重建）／🟡 可重下（删了要重新下载）／🔴 需确认（含用户数据或可能在用）。默认只勾「安全」。
+- **保护对话记录**：Cursor 的 `state.vscdb`、Claude Code 的 `~/.claude/projects` 里存着你的全部对话，标为「需确认」，清理前可先导出备份。
+- **运行中检测**：工具正在运行时提醒你，不去动它正在用的文件。
+- **删了能反悔**：删除一律进回收站并写清理日志，可一键撤销上次清理，清理记录里也能逐项还原。
+- **清理前看看里面**：每一项都能预览里面有什么。
 
-## 结构
+### 💾 不删也能腾空间
 
-```
-crates/cleaner-core/   扫描引擎（纯 Rust，可在任何平台测试）
-  rules/*.toml         规则库：每条规则 = 路径模板 + 安全等级 + 删除后果
-  src/inspect/         按工具解析内容：Ollama manifest、HF hub、conda env、Cursor workspace…
-  src/bin/aidc.rs      命令行：aidc scan [--json] [--en] / dupes / move / compact
-src-tauri/             Tauri 2 应用壳（Windows 需要 WebView2）
-src/                   React 界面
-```
+- **搬到其他盘**：把 Ollama 模型、Hugging Face 缓存等整体搬到 D 盘，自动设置 `OLLAMA_MODELS` / `HF_HUB_CACHE` / `PIP_CACHE_DIR` 等环境变量，或在原位置留目录联接，工具照常用。先复制并校验，再删原件；随时能搬回来。
+- **跨工具模型去重**：同一份模型权重在 HF 缓存、LM Studio、ComfyUI 里各存一份？用硬链接合并，每个工具都照常用，只占一份空间。
+- **压缩 WSL / Docker 虚拟磁盘**：`ext4.vhdx` 只涨不缩，一键压缩回实际大小。
 
-## 开发
+### ⚡ 好用
 
-```bash
-# 引擎测试（任何平台）
-cargo test -p cleaner-core
-cargo run -p cleaner-core --bin aidc -- scan
+- 「空间去哪儿了」概览：一眼看清 C 盘被谁占了
+- 增长监控：看哪个目录最近在长，一周涨幅超过阈值就通知
+- 闲置模型建议：按最后使用时间找出很久没用的模型
+- 系统深度清理：WinSxS 组件存储、系统还原点、休眠文件、传递优化缓存、Windows 更新缓存
+- 未识别的大目录：规则库还不认识的大文件夹也会列出来，可一键提交规则建议
+- 多盘扫描、全盘大文件扫描、项目构建产物（`node_modules`、`target`、`.venv`…）扫描
+- 结果按工具分组、搜索、排序；并行扫描，带进度可取消
+- 托盘常驻、定时后台扫描、垃圾超阈值通知、可选自动清理安全项（默认关）
+- 首次运行引导、扫描后一句话总结
+- 应用内自动更新；规则库可在线更新，也能自己写规则
+- 中英双语界面
 
-# 桌面应用（Windows；需要 Rust、Node 22、WebView2）
-npm install
-npm run tauri dev
-npm run tauri build   # 生成 NSIS / MSI 安装包
-```
+### 🚫 不做
 
-## 添加规则
+注册表清理、后台弹窗、捆绑软件、上传你的文件列表。完全离线工作（仅检查更新时联网）。
 
-在 `crates/cleaner-core/rules/` 里加一段：
+## 下载安装
 
-```toml
-[[rule]]
-id = "tool.what"
-tool = "Tool"
-category = "package_cache"
-name_zh = "……"
-name_en = "…"
-paths = ["${LOCALAPPDATA}/Tool/Cache"]   # 第一个存在的路径生效；all_paths = true 则全部
-safety = "safe"                           # safe | redownload | review
-consequence_zh = "……"
-consequence_en = "…"
-```
+1. 打开 [Releases 最新版](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
+2. 下载 `*_x64-setup.exe`（推荐，支持应用内自动更新）或 `*.msi`
+3. 安装后打开，点「扫描」
 
-`cargo test` 会校验所有规则文件。
+**便携版**：下载 `*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹；便携版不自动更新。
 
-## 安装方式
+系统要求：Windows 10 / 11 x64，需要 WebView2（Windows 11 自带，Windows 10 安装程序会自动处理）。
 
-- **安装包**：Releases 里的 `*-setup.exe`（NSIS，推荐，支持应用内自动更新）或 `*.msi`。
-- **便携版**：`*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹；不自动更新。
-- **winget / Scoop**：每次发布会附带 `*_manifests.zip`，里面是 `nethero23.AIDiskCleaner` 的 winget 清单（三份 YAML）和 Scoop 的 `aidc.json`，哈希已填好。提交到 [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) 和自己的 Scoop bucket 后，就能 `winget install nethero23.AIDiskCleaner` / `scoop install aidc`。
+> 安装包暂未做代码签名，首次运行 Windows SmartScreen 可能提示「已保护你的电脑」，点「更多信息 → 仍要运行」即可。代码全部开源，可自行审查或从源码构建。
 
-## 发布
+**即将支持**：`winget install nethero23.AIDiskCleaner` 和 `scoop install aidc`（清单已随每次发布生成，正在提交到官方仓库）。
 
-推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建 NSIS/MSI 安装包并发布到 GitHub Releases。
+命令行版（开发者）：`cargo run -p cleaner-core --bin aidc -- scan`，支持 `scan --json`、`dupes`、`move`、`compact`。
 
-应用内自动更新走 Tauri updater 插件，更新源是 GitHub Releases 里的 `latest.json`（CI 由 `.github/latest_json.py` 生成）。更新包必须签名：仓库 Secrets 里需要 `TAURI_SIGNING_PRIVATE_KEY`（`tauri signer generate` 生成的私钥文件内容）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`（没有密码就留空）；公钥在 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`。没配 Secrets 时发布照常，只是不生成签名和 `latest.json`，应用不会提示这个版本。
+## 和其他清理软件比
 
-## 设置
+| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+|---|:-:|:-:|:-:|:-:|:-:|
+| 识别 Ollama / HF / LM Studio 模型 | ✅ 具体到模型名 | ❌ | ❌ | ❌ | ❌ 只显示大小 |
+| Cursor / Claude Code / VS Code 缓存 | ✅ | ❌ | ✅（6.0 起） | ❌ | ❌ |
+| pip / conda / npm / uv 缓存 | ✅ | ❌ | 部分 | ❌ | ❌ |
+| 区分缓存和对话记录 | ✅ 标「需确认」+ 可导出 | ❌ | ❌ | ❌ | ❌ |
+| 搬到其他盘（自动改环境变量） | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 跨工具模型去重 | ✅ 硬链接 | ❌ | ❌ | ❌ | ❌ |
+| WSL / Docker vhdx 压缩 | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 删除可撤销 | ✅ 回收站 + 一键撤销 | ❌ | ❌ | ❌ | ❌ |
+| Windows 系统垃圾 | ✅ 常见项 | ✅ 很全 | ✅ | ✅ 很全 | ❌ |
+| 注册表清理 | ❌ 故意不做 | ✅ | ✅ | ✅ | ❌ |
+| 免费开源 | ✅ MIT | ❌ 免费版有限制 | ✅ GPL | 免费，已停更 | 个人免费 |
+| 中文界面 | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-应用内「设置」页可以：
+一句话：**系统垃圾，用哪个都行；AI 和开发工具的垃圾，这是目前专门做这件事的工具。** 两者可以一起用。
 
-- 排除目录（扫描结果里每一项也有「排除此目录」）
-- 关闭某条规则
-- 指定自定义规则目录：放入你自己的 `.toml`（格式同 `crates/cleaner-core/rules/`），同 id 覆盖内置规则
-- 在线更新规则：从 `rules_update_url`（默认指向本仓库 main 分支）下载规则文件到应用数据目录。先全部解析成功才写盘。
+## 常见问题
 
-后台运行：可选「关闭窗口缩到托盘」「开机自启（缩在托盘）」「定时后台扫描」「定时扫描后自动清理安全项」（默认关，只动安全级且工具未运行的项）。后台扫描完成后，垃圾超过阈值就弹系统通知，打开窗口直接看到结果；托盘菜单里也有「立即扫描」。
+### C 盘满了，怎么看是被什么占满的？
+打开 AI Disk Cleaner 的「空间去哪儿了」，会列出 C 盘每个顶层文件夹的占用，`Users\<你>` 下的 `AppData\Local`、`Downloads` 等也单独列出。再点「扫描」，结果会具体到每个工具、每个模型。
 
-加载顺序：内置 → 在线更新 → 自定义目录 → 去掉关闭的规则。设置保存在应用数据目录的 `settings.json`。
+### Ollama 的模型存在哪里？怎么移到 D 盘？
+默认在 `C:\Users\<你>\.ollama\models`。在扫描结果里找到 Ollama 模型，点「搬到其他盘」，选 D 盘目录即可。程序会复制、校验、设置 `OLLAMA_MODELS` 环境变量，之后 Ollama 自动从新位置读取。重启 Ollama 生效。
 
-## 路线
+### Hugging Face 缓存（`.cache\huggingface`）可以删吗？
+可以，标为「可重下」：删了之后用到时会重新下载。不想重下的话，用「搬到其他盘」移走（自动设置 `HF_HUB_CACHE`），比删更合适。同一个模型在 LM Studio、ComfyUI 里还有一份的话，用「模型去重」合并。
 
-- v0.1 扫描 + 勾选 + 回收站删除
-- v0.2 运行中检测、项目构建产物扫描、清理记录、模型搬家到其他盘、跨工具重复模型去重
-- v0.3 搬回来、ModelScope、WSL/Docker 虚拟磁盘压缩、清理前导出对话记录、设置页 + 在线规则更新、正式图标
-- v0.4 全盘大文件扫描、规则库扩到 110+ 条（ComfyUI / SD WebUI / Msty / vLLM / Xinference / Trae / Kiro / Cline …）、托盘常驻 + 定时扫描、清理记录统计
-- v0.5 规则并行扫描 + 进度 + 取消、清理前「看看里面」预览、一键清理安全项 + 定时自动清理、规则库 126 条
-- v0.6 结果页搜索 / 分组 / 排序、多盘扫描、应用内自动更新、「空间去哪儿了」概览
-- v0.7 一键撤销、增长监控、闲置模型建议、系统深度清理、未识别大目录、便携版 + winget/Scoop、首次运行引导（当前）
-- 下一步 安装包签名
+### Cursor 占了几十 GB 怎么办？`state.vscdb` 能删吗？
+Cursor 的缓存、日志、扩展下载缓存可以放心删（标「安全」）。但 `state.vscdb` 里是你**全部的 AI 对话记录**，有人报告涨到 77 GB。我们把它标为「需确认」，默认不勾，清理前可先导出对话记录。
 
-License: MIT
+### Claude Code 的 `.claude` 文件夹能删吗？
+`~/.claude/projects` 里是会话记录（jsonl），标「需确认」，可以先导出再清。其他缓存类文件可以安全清理。
+
+### pip / conda / npm 缓存怎么清理？
+扫描后它们会出现在「Python / 开发缓存」分组里，都是「安全」级：删了下次安装时会自动重新下载。conda 环境会显示环境名和最后使用时间，没用的整个环境也可以清掉。
+
+### WSL 或 Docker 的 `ext4.vhdx` 越来越大怎么缩小？
+虚拟磁盘只会变大不会自动缩小。在 AI Disk Cleaner 里找到对应的 vhdx，点「压缩」，程序会先 `wsl --shutdown` 再用 diskpart 压缩（需要管理员权限，Windows 家庭版也能用），不会删除里面的数据。
+
+### 删错了怎么办？
+所有删除都进回收站。清理完成后可以「一键撤销」，也可以去「清理记录」里逐项还原。
+
+### 会不会删掉系统文件、把电脑搞坏？
+扫描只读，不写文件；只清理规则库里明确列出的缓存目录，每一项都写了删除后果；默认只勾「安全」级；不碰注册表。正在运行的工具会提示你先关闭。
+
+### 和 CCleaner 比有什么不同？能替代吗？
+CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境和 AI 编辑器缓存。AI Disk Cleaner 专门清这些，同时也清常见的系统垃圾。两者可以一起用。
+
+### 免费吗？有广告吗？会上传数据吗？
+免费、MIT 开源、无广告、无捆绑。所有扫描和清理都在本地完成，只有检查更新和（可选的）在线更新规则时会访问 GitHub。
+
+### 支持 Mac / Linux 吗？
+目前只支持 Windows 10 / 11。扫描引擎是跨平台 Rust，未来可能扩展。
+
+## 路线图
+
+- [x] v0.1–v0.3 扫描、安全等级、回收站删除、运行中检测、搬到其他盘 / 搬回来、模型去重、vhdx 压缩、导出对话记录、在线规则更新
+- [x] v0.4–v0.5 全盘大文件、托盘 + 定时扫描、并行扫描、清理前预览、一键清理安全项、规则库 126 条
+- [x] v0.6 搜索 / 分组 / 排序、多盘扫描、应用内自动更新、「空间去哪儿了」概览
+- [x] v0.7 一键撤销、首次运行引导、增长监控、闲置模型建议、系统深度清理（WinSxS 等）、未识别大目录上报、便携版
+- [ ] 上架 winget / Scoop、安装包代码签名
+- [ ] v0.8 Material Design 3 新界面、AI 工具配置管理（skills / MCP / 插件去重整理）
+
+## 参与贡献
+
+缺了你常用的 AI 工具？欢迎 [提 Issue](https://github.com/nethero23/ai-disk-cleaner/issues) 或直接加一条规则（一段 TOML 就行）。开发、构建、规则格式见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。
+
+觉得有用的话，点个 ⭐ Star，让更多 C 盘告急的人找到它。
+
+## License
+
+[MIT](LICENSE)
+
+<sub>关键词：C盘清理 · C盘瘦身 · C盘满了怎么清理 · 磁盘清理工具 · 垃圾清理软件 · 大模型缓存清理 · Ollama 模型迁移 · Hugging Face 缓存清理 · Cursor 缓存清理 · conda 环境清理 · pip 缓存清理 · WSL vhdx 压缩 · Docker 磁盘占用 · CCleaner 替代 · Windows disk cleaner for AI developers</sub>
