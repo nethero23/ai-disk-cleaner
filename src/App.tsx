@@ -6,7 +6,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
+import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -67,6 +67,8 @@ export function App() {
   const [history, setHistory] = useState<CleanRecord[]>([]);
   const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
   const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
+  const [whereabouts, setWhereabouts] = useState<Map<string, Whereabouts>>(new Map());
+  const [restoring, setRestoring] = useState(false);
   const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
   const [compactable, setCompactable] = useState<Set<string>>(new Set());
   const [compacting, setCompacting] = useState<{ item: ScanItem; disks: Vhdx[]; busy?: string; results: CompactResult[] } | null>(null);
@@ -437,14 +439,46 @@ export function App() {
   }
 
   async function openHistory() {
+    setView("history");
     try {
-      setHistory(await invoke<CleanRecord[]>("clean_log"));
+      const log = await invoke<CleanRecord[]>("clean_log");
+      setHistory(log);
       setRelocations(await invoke<RelocateRecord[]>("relocations"));
       if (!library) setLibrary(await invoke<RuleLibrary>("rules"));
+      const paths = [...new Set(log.filter((r) => r.ok).map((r) => r.path))];
+      const st = await invoke<RestoreStatus[]>("restore_status", { paths });
+      setWhereabouts(new Map(st.map((x) => [x.path, x.state])));
     } catch (e) {
       setError(String(e));
     }
-    setView("history");
+  }
+
+  // Records of the most recent clean that are still in the Recycle Bin.
+  const lastBatch = useMemo(() => {
+    const ok = history.filter((r) => r.ok);
+    if (ok.length === 0) return [];
+    const last = ok[ok.length - 1];
+    const same = last.batch
+      ? ok.filter((r) => r.batch === last.batch)
+      : ok.filter((r) => r.at.slice(0, 19) === last.at.slice(0, 19));
+    return same.filter((r) => whereabouts.get(r.path) === "in_bin");
+  }, [history, whereabouts]);
+
+  async function restoreRecords(records: CleanRecord[]) {
+    if (records.length === 0 || restoring) return;
+    setRestoring(true);
+    setError(null);
+    try {
+      const sum = await invoke<RestoreSummary>("restore_items", { records });
+      const failed = sum.results.filter((r) => !r.ok).length;
+      setNotice(s.restored(sum.restored, humanSize(sum.restored_bytes)) + (failed ? ` · ${s.restoreFailed(failed)}` : ""));
+      if (failed) setError(sum.results.filter((r) => !r.ok).map((r) => `${r.path}: ${r.error}`).join("\n"));
+      setResult(null);
+      if (view === "history") await openHistory();
+    } catch (e) {
+      setError(String(e));
+    }
+    setRestoring(false);
   }
 
   // Freed bytes per owning tool and per month, for the history page.
@@ -704,6 +738,11 @@ export function App() {
           {s.done(humanSize(result.freed_bytes))}
           {result.records.some((r) => !r.ok) && (
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
+          )}
+          {result.records.some((r) => r.ok) && (
+            <button className="ghost linkish" disabled={restoring} onClick={() => restoreRecords(result.records.filter((r) => r.ok))}>
+              {restoring ? s.restoring : s.undo}
+            </button>
           )}
         </div>
       )}
@@ -1106,6 +1145,16 @@ export function App() {
                   history.filter((r) => r.ok).length,
                   humanSize(history.filter((r) => r.ok).reduce((a, r) => a + r.size_bytes, 0)),
                 )}
+                {lastBatch.length > 0 && (
+                  <button
+                    className="ghost"
+                    disabled={restoring}
+                    title={s.undoLastHint(lastBatch.length, humanSize(lastBatch.reduce((a, r) => a + r.size_bytes, 0)))}
+                    onClick={() => restoreRecords(lastBatch)}
+                  >
+                    {restoring ? s.restoring : s.undoLast}
+                  </button>
+                )}
               </p>
               <div className="stats">
                 <div className="stat-panel">
@@ -1137,7 +1186,11 @@ export function App() {
                       <td>{r.name}</td>
                       <td className="muted" title={r.path}>{r.path}</td>
                       <td className="size">{humanSize(r.size_bytes)}</td>
-                      <td className="muted">{r.ok ? "" : r.error}</td>
+                      <td className="muted">
+                        {!r.ok ? r.error : whereabouts.get(r.path) === "in_bin" ? (
+                          <button className="ghost" disabled={restoring} onClick={() => restoreRecords([r])}>{s.restore}</button>
+                        ) : whereabouts.get(r.path) === "present" ? s.statePresent : whereabouts.has(r.path) ? s.stateGone : ""}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
