@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, DuplicateGroup, RelocateRecord, RelocateResult, ScanItem, ScanReport } from "./types";
+import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, RelocateRecord, RelocateResult, ScanItem, ScanReport, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -42,6 +42,8 @@ export function App() {
   const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
   const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
   const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
+  const [compactable, setCompactable] = useState<Set<string>>(new Set());
+  const [compacting, setCompacting] = useState<{ item: ScanItem; disks: Vhdx[]; busy?: string; results: CompactResult[] } | null>(null);
   const [moving, setMoving] = useState<{ item: ScanItem; dest: string; source: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
@@ -49,6 +51,7 @@ export function App() {
 
   useEffect(() => {
     invoke<string[]>("relocatable").then((ids) => setRelocatable(new Set(ids))).catch(() => {});
+    invoke<string[]>("compactable").then((ids) => setCompactable(new Set(ids))).catch(() => {});
   }, []);
 
   async function pickMoveTarget(item: ScanItem) {
@@ -103,6 +106,31 @@ export function App() {
       setDups((prev) => (prev ? prev.filter((g) => g !== group) : prev));
     } catch (e) {
       setError(String(e));
+    }
+  }
+
+  async function openCompact(item: ScanItem) {
+    try {
+      const disks = await invoke<Vhdx[]>("vhdx_files", { path: item.path });
+      setCompacting({ item, disks, results: [] });
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  async function runCompact() {
+    if (!compacting) return;
+    setError(null);
+    for (const d of compacting.disks) {
+      setCompacting((c) => (c ? { ...c, busy: d.path } : c));
+      try {
+        const r = await invoke<CompactResult>("compact_vhdx", { path: d.path });
+        setCompacting((c) => (c ? { ...c, busy: undefined, results: [...c.results, r] } : c));
+      } catch (e) {
+        setError(String(e));
+        setCompacting((c) => (c ? { ...c, busy: undefined } : c));
+        return;
+      }
     }
   }
 
@@ -463,6 +491,11 @@ export function App() {
                                   {s.move}
                                 </button>
                               )}
+                              {compactable.has(it.rule_id) && (
+                                <button className="link" onClick={() => openCompact(it)}>
+                                  {s.compact}
+                                </button>
+                              )}
                             </div>
                           </div>
                           <div className="item-meta">
@@ -522,6 +555,59 @@ export function App() {
                 <div className="modal-actions">
                   <button className="ghost" onClick={() => setMoving(null)}>{s.cancel}</button>
                   <button className="primary" onClick={runMove}>{s.moveTitle}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {compacting && (
+        <div className="modal-backdrop" onClick={() => !compacting.busy && setCompacting(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{s.compactTitle}</h3>
+            {compacting.disks.length === 0 ? (
+              <>
+                <p>{s.compactNone}</p>
+                <div className="modal-actions">
+                  <button className="primary" onClick={() => setCompacting(null)}>OK</button>
+                </div>
+              </>
+            ) : compacting.results.length === compacting.disks.length ? (
+              <>
+                {compacting.results.map((r) => (
+                  <p key={r.path}>
+                    <span className="muted">{r.path}</span>
+                    <br />
+                    {r.after < r.before
+                      ? s.compactDone(humanSize(r.before), humanSize(r.after), humanSize(r.before - r.after))
+                      : s.compactNoGain}
+                  </p>
+                ))}
+                <div className="modal-actions">
+                  <button className="primary" onClick={() => setCompacting(null)}>OK</button>
+                </div>
+              </>
+            ) : compacting.busy ? (
+              <>
+                <p>{s.compacting}</p>
+                <p className="muted">{compacting.busy}</p>
+              </>
+            ) : (
+              <>
+                <p>{s.compactBody}</p>
+                <p className="warn">{s.compactSteps}</p>
+                <p className="muted">{s.compactTip}</p>
+                <ul className="plain">
+                  {compacting.disks.map((d) => (
+                    <li key={d.path}>
+                      <span className="muted">{d.path}</span> · {humanSize(d.size_bytes)}
+                    </li>
+                  ))}
+                </ul>
+                <div className="modal-actions">
+                  <button className="ghost" onClick={() => setCompacting(null)}>{s.cancel}</button>
+                  <button className="primary" onClick={runCompact}>{s.compactTitle}</button>
                 </div>
               </>
             )}
