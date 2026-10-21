@@ -19,6 +19,18 @@ pub struct Settings {
     pub rules_updated_at: Option<chrono::DateTime<chrono::Utc>>,
     /// Items smaller than this are not shown.
     pub min_item_bytes: u64,
+    /// UI language ("zh" / "en"); also used for tray menu and notifications.
+    pub lang: String,
+    /// Closing the window hides it to the tray instead of quitting.
+    pub close_to_tray: bool,
+    /// Start hidden in the tray when Windows starts.
+    pub autostart: bool,
+    /// Run a background scan every N hours; 0 = never.
+    pub scheduled_scan_hours: u32,
+    /// Only notify when the scan finds at least this much junk.
+    pub notify_min_bytes: u64,
+    /// When the last background scan finished.
+    pub last_background_scan: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -33,6 +45,12 @@ impl Default for Settings {
             rules_update_url: DEFAULT_RULES_URL.into(),
             rules_updated_at: None,
             min_item_bytes: 0,
+            lang: "zh".into(),
+            close_to_tray: false,
+            autostart: false,
+            scheduled_scan_hours: 0,
+            notify_min_bytes: 1024 * 1024 * 1024,
+            last_background_scan: None,
         }
     }
 }

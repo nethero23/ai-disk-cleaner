@@ -13,6 +13,8 @@ use serde::Serialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
 
+mod background;
+
 /// Where the clean log lives: the app's own data folder, never the user's documents.
 fn log_path(app: &AppHandle) -> PathBuf {
     let dir = app.path().app_data_dir().unwrap_or_else(|_| {
@@ -39,7 +41,7 @@ fn progress_emitter(app: AppHandle, event: &'static str) -> impl FnMut(u64, u64)
     }
 }
 
-fn settings_path(app: &AppHandle) -> PathBuf {
+pub(crate) fn settings_path(app: &AppHandle) -> PathBuf {
     log_path(app).with_file_name("settings.json")
 }
 
@@ -50,7 +52,7 @@ fn downloaded_rules_dir(app: &AppHandle) -> PathBuf {
 
 /// The rule set the scan actually uses: builtin + downloaded + custom, minus
 /// disabled. Parse errors in user files come back so the UI can show them.
-fn effective_rules(app: &AppHandle) -> (RuleSet, Vec<(PathBuf, String)>, Settings) {
+pub(crate) fn effective_rules(app: &AppHandle) -> (RuleSet, Vec<(PathBuf, String)>, Settings) {
     let settings = Settings::load(&settings_path(app));
     let dir = downloaded_rules_dir(app);
     let (set, errors) = RuleSet::effective(dir.is_dir().then_some(dir.as_path()), &settings);
@@ -153,9 +155,28 @@ fn get_settings(app: AppHandle) -> Settings {
 
 #[tauri::command]
 fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+    let before = Settings::load(&settings_path(&app));
     settings
         .save(&settings_path(&app))
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    if before.autostart != settings.autostart {
+        background::apply_autostart(&app, settings.autostart);
+    }
+    Ok(())
+}
+
+/// The UI's language, remembered so tray menu and notifications match it.
+#[tauri::command]
+fn set_lang(app: AppHandle, lang: String) -> Result<(), String> {
+    let mut settings = Settings::load(&settings_path(&app));
+    if settings.lang != lang {
+        settings.lang = lang.clone();
+        settings
+            .save(&settings_path(&app))
+            .map_err(|e| e.to_string())?;
+        background::relabel(&app, &lang);
+    }
+    Ok(())
 }
 
 #[derive(Serialize)]
@@ -340,6 +361,16 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
+        .setup(|app| {
+            background::setup(app.handle())?;
+            Ok(())
+        })
+        .on_window_event(background::on_window_event)
         .invoke_handler(tauri::generate_handler![
             scan,
             clean_items,
@@ -347,6 +378,7 @@ pub fn run() {
             rules,
             get_settings,
             save_settings,
+            set_lang,
             update_rules,
             relocatable,
             move_source,
