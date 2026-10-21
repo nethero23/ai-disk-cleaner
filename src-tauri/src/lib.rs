@@ -5,6 +5,7 @@ use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
 use cleaner_core::paths::PathContext;
 use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
+use cleaner_core::vhdx::{self, CompactResult, Vhdx};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
 use std::path::PathBuf;
