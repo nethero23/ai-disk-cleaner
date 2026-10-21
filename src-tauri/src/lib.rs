@@ -428,6 +428,21 @@ fn suggest_rule_url(entry: cleaner_core::unrecognized::Unrecognized, lang: Strin
     cleaner_core::unrecognized::issue_url("nethero23/ai-disk-cleaner", &entry, &lang)
 }
 
+/// AI tools: what each one has configured (MCP servers, skills, plugins,
+/// extensions) and what overlaps or is broken. Read-only; keys are masked
+/// inside the engine, so nothing secret reaches the UI.
+#[tauri::command]
+async fn ai_inventory() -> Result<cleaner_core::aiconfig::Inventory, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        cleaner_core::aiconfig::inventory(
+            &cleaner_core::aiconfig::Catalog::builtin(),
+            &cleaner_core::paths::PathContext::from_env(),
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Deep clean: the catalogue with cheap estimates.
 #[tauri::command]
 fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
@@ -678,6 +693,7 @@ pub fn run() {
             compact_vhdx,
             unrecognized,
             suggest_rule_url,
+            ai_inventory,
             deep_tasks,
             deep_analyze,
             deep_run,
