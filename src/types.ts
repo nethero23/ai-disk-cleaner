@@ -121,6 +121,7 @@ export interface Settings {
   scheduled_scan_hours: number;
   notify_min_bytes: number;
   last_background_scan: string | null;
+  auto_clean_safe: boolean;
 }
 
 export interface RuleInfo {

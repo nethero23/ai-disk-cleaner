@@ -35,6 +35,10 @@ const strings = {
     openFolder: "打开所在文件夹",
     unreadable: (n: number) => `${n} 个位置无法读取（权限不足）`,
     selectAllSafe: "只选安全项",
+    cleanSafeNow: "一键清理安全项",
+    scanAndCleanSafe: "扫描并清理安全项",
+    setAutoClean: "定时扫描后自动清理安全项（正在使用的除外），不再询问",
+    bgCleaned: (n: number, size: string) => `后台已自动清理 ${n} 项，释放 ${size}。`,
     selectNone: "全不选",
     safety: {
       safe: "安全",
@@ -176,6 +180,10 @@ const strings = {
     openFolder: "Open folder",
     unreadable: (n: number) => `${n} locations unreadable (permissions)`,
     selectAllSafe: "Select safe only",
+    cleanSafeNow: "Clean all safe items",
+    scanAndCleanSafe: "Scan and clean safe items",
+    setAutoClean: "After a scheduled scan, clean Safe items automatically (except ones in use)",
+    bgCleaned: (n: number, size: string) => `Cleaned ${n} items (${size}) in the background.`,
     selectNone: "Select none",
     safety: {
       safe: "Safe",

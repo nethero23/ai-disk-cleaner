@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -43,6 +43,7 @@ export function App() {
   const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
   const [bigScanning, setBigScanning] = useState(false);
   const [bigProgress, setBigProgress] = useState<{ seen: number; bytes: number; dir: string } | null>(null);
+  const autoConfirmRef = useRef(false);
   const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
   const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
   const [bigConfirm, setBigConfirm] = useState(false);
@@ -327,6 +328,11 @@ export function App() {
   }, [lang]);
 
   useEffect(() => {
+    const c = listen<{ cleaned: number; freed_bytes: number }>("background-clean", (e) => {
+      if (e.payload.cleaned > 0) {
+        setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgCleaned(e.payload.cleaned, humanSize(e.payload.freed_bytes)));
+      }
+    });
     const p = listen<ScanReport>("background-scan", (e) => {
       setReport(e.payload);
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
@@ -335,6 +341,7 @@ export function App() {
     });
     return () => {
       p.then((un) => un());
+      c.then((un) => un());
     };
   }, []);
 
@@ -346,9 +353,13 @@ export function App() {
       const r = await invoke<ScanReport>("scan", { lang });
       setReport(r);
       // Default selection: only what is safe. The user opts into everything else.
-      setSelected(new Set(r.items.filter(isDefaultTicked).map((i) => i.id)));
+      const safe = r.items.filter(isDefaultTicked).map((i) => i.id);
+      setSelected(new Set(safe));
       setPhase("ready");
+      if (autoConfirmRef.current && safe.length > 0) setConfirming(true);
+      autoConfirmRef.current = false;
     } catch (e) {
+      autoConfirmRef.current = false;
       setError(String(e));
       setPhase("idle");
     }
@@ -693,6 +704,12 @@ export function App() {
               <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
             </select>
           </p>
+          <p>
+            <label>
+              <input type="checkbox" checked={settings.auto_clean_safe} onChange={(e) => saveSettings({ ...settings, auto_clean_safe: e.target.checked })} />{" "}
+              {s.setAutoClean}
+            </label>
+          </p>
           {settings.last_background_scan && (
             <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
           )}
@@ -851,6 +868,17 @@ export function App() {
         <section className="empty">
           <h2>{s.emptyTitle}</h2>
           <p>{s.emptyBody}</p>
+          <p>
+            <button
+              className="ghost"
+              onClick={() => {
+                autoConfirmRef.current = true;
+                runScan();
+              }}
+            >
+              {s.scanAndCleanSafe}
+            </button>
+          </p>
         </section>
       )}
       {view === "scan" && phase === "scanning" && (
@@ -875,6 +903,18 @@ export function App() {
               <button className="ghost" onClick={() => setSelected(new Set(report.items.filter(isDefaultTicked).map((i) => i.id)))}>
                 {s.selectAllSafe}
               </button>
+              {report.items.some(isDefaultTicked) && (
+                <button
+                  className="primary"
+                  disabled={phase === "cleaning"}
+                  onClick={() => {
+                    setSelected(new Set(report.items.filter(isDefaultTicked).map((i) => i.id)));
+                    setConfirming(true);
+                  }}
+                >
+                  {s.cleanSafeNow}
+                </button>
+              )}
               <button className="ghost" onClick={() => setSelected(new Set())}>
                 {s.selectNone}
               </button>
