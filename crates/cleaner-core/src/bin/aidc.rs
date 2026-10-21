@@ -1,6 +1,7 @@
 //! Tiny CLI over the engine, for development and for scripting:
 //!   aidc scan            # table of what a scan finds
 //!   aidc scan --json     # the same as JSON
+//!   aidc scan --drive D:\\  # also walk a whole drive for caches by shape
 //!   aidc rules           # the rule library
 //!   aidc dupes           # duplicate model files across tools (read only)
 //!   aidc move <rule_id> <path> <dest_folder>   # move a cache to another drive
@@ -26,8 +27,14 @@ fn main() {
         }
         Some("scan") | None => {
             let rules = RuleSet::builtin();
+            let extra_roots = args
+                .windows(2)
+                .filter(|w| w[0] == "--drive")
+                .map(|w| std::path::PathBuf::from(&w[1]))
+                .collect();
             let opts = ScanOptions {
                 lang: lang.into(),
+                extra_roots,
                 ..ScanOptions::default()
             };
             let report = scan_all(&rules, &opts);

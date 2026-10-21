@@ -39,6 +39,7 @@ export function App() {
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
   const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles">("scan");
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
+  const [allDrives, setAllDrives] = useState<Drive[]>([]);
   const [bigPick, setBigPick] = useState<Set<string>>(new Set());
   const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
   const [bigScanning, setBigScanning] = useState(false);
@@ -146,6 +147,11 @@ export function App() {
     }
     setView("settings");
   }
+
+  useEffect(() => {
+    invoke<Drive[]>("drives").then(setAllDrives).catch(() => {});
+    invoke<Settings>("get_settings").then(setSettings).catch(() => {});
+  }, []);
 
   async function saveSettings(next: Settings) {
     setSettings(next);
@@ -900,6 +906,30 @@ export function App() {
         <section className="empty">
           <h2>{s.emptyTitle}</h2>
           <p>{s.emptyBody}</p>
+          {allDrives.length > 1 && settings && (
+            <div className="drive-pick" title={s.scanDrivesHint}>
+              <span className="muted">{s.scanDrives}</span>
+              {allDrives.map((d) => {
+                const on = d.system || settings.scan_drives.includes(d.path);
+                return (
+                  <label key={d.path}>
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={d.system}
+                      onChange={() =>
+                        saveSettings({
+                          ...settings,
+                          scan_drives: on ? settings.scan_drives.filter((p) => p !== d.path) : [...settings.scan_drives, d.path],
+                        })
+                      }
+                    />
+                    {d.path}{d.name ? ` ${d.name}` : ""}{d.system ? ` (${s.systemDrive})` : ""}
+                  </label>
+                );
+              })}
+            </div>
+          )}
           <p>
             <button
               className="ghost"
