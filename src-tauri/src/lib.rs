@@ -19,7 +19,7 @@ use tauri::{AppHandle, Emitter, Manager};
 mod background;
 
 /// Where the clean log lives: the app's own data folder, never the user's documents.
-fn log_path(app: &AppHandle) -> PathBuf {
+pub(crate) fn log_path(app: &AppHandle) -> PathBuf {
     let dir = app.path().app_data_dir().unwrap_or_else(|_| {
         dirs::data_local_dir()
             .unwrap_or_else(std::env::temp_dir)

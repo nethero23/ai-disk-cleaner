@@ -31,6 +31,9 @@ pub struct Settings {
     pub notify_min_bytes: u64,
     /// When the last background scan finished.
     pub last_background_scan: Option<chrono::DateTime<chrono::Utc>>,
+    /// After a scheduled scan, move Safe items (whose tool is not running)
+    /// to the Recycle Bin without asking. Off by default.
+    pub auto_clean_safe: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -51,6 +54,7 @@ impl Default for Settings {
             scheduled_scan_hours: 0,
             notify_min_bytes: 1024 * 1024 * 1024,
             last_background_scan: None,
+            auto_clean_safe: false,
         }
     }
 }

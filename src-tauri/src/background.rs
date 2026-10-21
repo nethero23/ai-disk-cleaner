@@ -2,9 +2,12 @@
 //! Everything here reads `settings.json` fresh so a change in the settings
 //! page takes effect without a restart.
 
-use crate::{effective_rules, settings_path};
+use crate::{effective_rules, log_path, settings_path};
+use cleaner_core::clean;
 use cleaner_core::settings::Settings;
+use cleaner_core::SafetyLevel;
 use cleaner_core::{scan_all, ScanOptions};
+use serde::Serialize;
 use std::time::Duration;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -23,6 +26,8 @@ struct Labels {
     found_body: &'static str,
     clean_title: &'static str,
     clean_body: &'static str,
+    auto_title: &'static str,
+    auto_body: &'static str,
 }
 
 fn labels(lang: &str) -> Labels {
@@ -35,6 +40,8 @@ fn labels(lang: &str) -> Labels {
             found_body: "{size} can be cleaned safely. Open AI Disk Cleaner to review.",
             clean_title: "Scan finished",
             clean_body: "Nothing worth cleaning right now.",
+            auto_title: "Cleaned automatically",
+            auto_body: "{n} items ({size}) moved to the Recycle Bin.",
         }
     } else {
         Labels {
@@ -45,6 +52,8 @@ fn labels(lang: &str) -> Labels {
             found_body: "有 {size} 可以安全清理，打开 AI Disk Cleaner 查看。",
             clean_title: "扫描完成",
             clean_body: "目前没有值得清理的东西。",
+            auto_title: "已自动清理",
+            auto_body: "{n} 项（{size}）已移入回收站。",
         }
     }
 }
@@ -164,6 +173,12 @@ fn scheduler(app: AppHandle) {
 /// Scan with the user's rules, remember when, notify, and hand the report to
 /// the window so it shows the result when opened. `forced` (tray "scan now")
 /// always notifies; a scheduled scan only when above the threshold.
+#[derive(Serialize, Clone)]
+struct BackgroundClean {
+    cleaned: usize,
+    freed_bytes: u64,
+}
+
 pub fn run_background_scan(app: &AppHandle, forced: bool) {
     let (rules, _, settings) = effective_rules(app);
     let opts = ScanOptions {
@@ -172,7 +187,66 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         excluded: settings.excluded_paths.clone(),
         ..ScanOptions::default()
     };
-    let report = scan_all(&rules, &opts);
+    let mut report = scan_all(&rules, &opts);
+
+    // Unattended clean: only Safe items whose owning tool is not running,
+    // only for scheduled scans (a tray "scan now" is a request to look).
+    if settings.auto_clean_safe && !forced {
+        let (safe, rest): (Vec<_>, Vec<_>) = report
+            .items
+            .drain(..)
+            .partition(|i| i.safety == SafetyLevel::Safe && i.in_use_by.is_none());
+        if !safe.is_empty() {
+            let summary = clean::clean(&safe, &log_path(app));
+            let failed: Vec<_> = summary
+                .records
+                .iter()
+                .filter(|r| !r.ok)
+                .map(|r| r.path.clone())
+                .collect();
+            let cleaned = summary.records.iter().filter(|r| r.ok).count();
+            let l = labels(&settings.lang);
+            if cleaned > 0 {
+                let body = l.auto_body.replace("{n}", &cleaned.to_string()).replace(
+                    "{size}",
+                    &cleaner_core::model::human_size(summary.freed_bytes),
+                );
+                let _ = app
+                    .notification()
+                    .builder()
+                    .title(l.auto_title)
+                    .body(body)
+                    .show();
+            }
+            let _ = app.emit(
+                "background-clean",
+                BackgroundClean {
+                    cleaned,
+                    freed_bytes: summary.freed_bytes,
+                },
+            );
+            // Rebuild the report from what is left so the window shows the truth.
+            let mut left = cleaner_core::ScanReport {
+                started_at: report.started_at,
+                finished_at: report.finished_at,
+                unreadable: std::mem::take(&mut report.unreadable),
+                ..Default::default()
+            };
+            for item in safe
+                .into_iter()
+                .filter(|i| failed.contains(&i.path))
+                .chain(rest)
+            {
+                left.push(item);
+            }
+            left.sort_by_size();
+            report = left;
+        } else {
+            for item in rest {
+                report.push(item);
+            }
+        }
+    }
 
     let mut latest = Settings::load(&settings_path(app));
     latest.last_background_scan = Some(chrono::Utc::now());
