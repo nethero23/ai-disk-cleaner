@@ -142,6 +142,7 @@ export interface Settings {
   auto_update_check: boolean;
   scan_drives: string[];
   idle_model_days: number;
+  growth_notify_bytes: number;
   onboarded: boolean;
 }
 
@@ -202,4 +203,12 @@ export interface Drive {
   total_bytes: number;
   free_bytes: number;
   system: boolean;
+}
+
+export interface Growth {
+  tool: string;
+  now_bytes: number;
+  before_bytes: number;
+  delta_bytes: number;
+  since: string;
 }
