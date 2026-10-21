@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="Icono de AI Disk Cleaner">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Icono de Clearwisp">
 
-# AI Disk Cleaner: el limpiador de disco que entiende las herramientas de IA
+# Clearwisp: el limpiador de disco que entiende las herramientas de IA
 
 **Limpiador de disco para Windows, gratuito y de código abierto, pensado para desarrolladores de IA, para C:, D: y cualquier otra unidad. Encuentra y libera el espacio que ocupan los modelos de Ollama / Hugging Face / LM Studio, las cachés de Cursor / Claude Code / VS Code, las cachés de pip / conda / npm y los discos virtuales de WSL / Docker. Primero analiza, después decides tú, y cada borrado se puede deshacer.**
 
@@ -23,9 +23,9 @@
 
 En un PC que se usa para IA, lo que llena el disco rara vez es la basura clásica del sistema. Son **los pesos de LLM locales, los entornos de Python, las cachés de los editores de código con IA y los discos virtuales de WSL / Docker**, a menudo cientos de GB. CCleaner y herramientas parecidas no miran ahí; WizTree te dice qué carpeta es grande, pero no qué es ni si se puede borrar.
 
-Y no es solo C:. Las bibliotecas de modelos, los entornos de conda, los discos de Docker y los `node_modules` de los proyectos también acaban en D: y E:. AI Disk Cleaner analiza todas las unidades que elijas.
+Y no es solo C:. Las bibliotecas de modelos, los entornos de conda, los discos de Docker y los `node_modules` de los proyectos también acaban en D: y E:. Clearwisp analiza todas las unidades que elijas.
 
-AI Disk Cleaner explica cada gigabyte: **qué modelo, qué entorno de conda, qué caché de qué herramienta, cuándo se usó por última vez y qué pasa si lo borras**. Cada elemento tiene un nivel de seguridad, no se borra nada hasta que lo marcas, lo borrado va a la Papelera de reciclaje y la última limpieza se deshace con un clic.
+Clearwisp explica cada gigabyte: **qué modelo, qué entorno de conda, qué caché de qué herramienta, cuándo se usó por última vez y qué pasa si lo borras**. Cada elemento tiene un nivel de seguridad, no se borra nada hasta que lo marcas, lo borrado va a la Papelera de reciclaje y la última limpieza se deshace con un clic.
 
 <a id="features"></a>
 ## Funciones
@@ -94,7 +94,7 @@ Requisitos: Windows 10 / 11 x64 con WebView2 (incluido en Windows 11; en Windows
 <a id="comparison"></a>
 ## Comparativa
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Modelos de Ollama / HF / LM Studio | ✅ por nombre de modelo | ❌ | ❌ | ❌ | ❌ solo tamaño |
 | Cachés de Cursor / Claude Code / VS Code | ✅ | ❌ | ✅ (desde 6.0) | ❌ | ❌ |

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="Ícone do AI Disk Cleaner">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Ícone do Clearwisp">
 
-# AI Disk Cleaner: o limpador de disco que entende as ferramentas de IA
+# Clearwisp: o limpador de disco que entende as ferramentas de IA
 
 **Limpador de disco gratuito e de código aberto para Windows, feito para desenvolvedores de IA, para C:, D: e qualquer outra unidade. Encontra e libera o espaço ocupado por modelos do Ollama / Hugging Face / LM Studio, caches do Cursor / Claude Code / VS Code, caches do pip / conda / npm e discos virtuais do WSL / Docker. Primeiro ele analisa, depois você escolhe, e toda exclusão pode ser desfeita.**
 
@@ -23,9 +23,9 @@
 
 Em um PC usado para IA, o que enche o disco raramente é o lixo clássico do sistema. São **pesos de LLMs locais, ambientes Python, caches de editores de código com IA e discos virtuais do WSL / Docker**, muitas vezes centenas de GB. O CCleaner e ferramentas parecidas não olham ali; o WizTree mostra qual pasta é grande, mas não diz o que ela é nem se pode ser apagada.
 
-E não é só o C:. Bibliotecas de modelos, ambientes conda, discos do Docker e `node_modules` de projetos também vão parar no D: e no E:. O AI Disk Cleaner analisa todas as unidades que você selecionar.
+E não é só o C:. Bibliotecas de modelos, ambientes conda, discos do Docker e `node_modules` de projetos também vão parar no D: e no E:. O Clearwisp analisa todas as unidades que você selecionar.
 
-O AI Disk Cleaner explica cada gigabyte: **qual modelo, qual ambiente conda, qual cache de qual ferramenta, quando foi usado pela última vez e o que acontece se você apagar**. Cada item tem um nível de segurança, nada é apagado antes de você marcar, as exclusões vão para a Lixeira e a última limpeza pode ser desfeita com um clique.
+O Clearwisp explica cada gigabyte: **qual modelo, qual ambiente conda, qual cache de qual ferramenta, quando foi usado pela última vez e o que acontece se você apagar**. Cada item tem um nível de segurança, nada é apagado antes de você marcar, as exclusões vão para a Lixeira e a última limpeza pode ser desfeita com um clique.
 
 <a id="features"></a>
 ## Recursos
@@ -94,7 +94,7 @@ Requisitos: Windows 10 / 11 x64 com WebView2 (já vem no Windows 11; no Windows 
 <a id="comparison"></a>
 ## Comparação
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Modelos do Ollama / HF / LM Studio | ✅ pelo nome do modelo | ❌ | ❌ | ❌ | ❌ só tamanho |
 | Caches do Cursor / Claude Code / VS Code | ✅ | ❌ | ✅ (desde a 6.0) | ❌ | ❌ |

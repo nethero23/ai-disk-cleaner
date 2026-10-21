@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="Icône AI Disk Cleaner">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Icône Clearwisp">
 
-# AI Disk Cleaner : le nettoyeur de disque qui comprend les outils d’IA
+# Clearwisp : le nettoyeur de disque qui comprend les outils d’IA
 
 **Nettoyeur de disque Windows gratuit et open source pour les développeurs IA, pour C:, D: et tous les autres lecteurs. Il trouve et libère l’espace occupé par les modèles Ollama / Hugging Face / LM Studio, les caches de Cursor / Claude Code / VS Code, les caches pip / conda / npm et les disques virtuels WSL / Docker. D’abord l’analyse, ensuite c’est vous qui choisissez, et chaque suppression peut être annulée.**
 
@@ -23,9 +23,9 @@
 
 Sur un PC utilisé pour l’IA, ce ne sont pas les fichiers inutiles classiques qui remplissent le disque. Ce sont **les poids des LLM locaux, les environnements Python, les caches des éditeurs de code IA et les disques virtuels WSL / Docker**, souvent des centaines de Go. CCleaner et les outils similaires n’y regardent pas ; WizTree montre quel dossier est gros, mais pas ce qu’il contient ni s’il peut être supprimé.
 
-Et ce n’est pas seulement C:. Les bibliothèques de modèles, les environnements conda, les disques Docker et les `node_modules` des projets finissent aussi sur D: et E:. AI Disk Cleaner analyse tous les lecteurs que vous sélectionnez.
+Et ce n’est pas seulement C:. Les bibliothèques de modèles, les environnements conda, les disques Docker et les `node_modules` des projets finissent aussi sur D: et E:. Clearwisp analyse tous les lecteurs que vous sélectionnez.
 
-AI Disk Cleaner explique chaque gigaoctet : **quel modèle, quel environnement conda, quel cache d’outil, quand il a été utilisé pour la dernière fois et ce qui se passe si vous le supprimez**. Chaque élément a un niveau de sécurité, rien n’est supprimé avant que vous le cochiez, les suppressions vont dans la Corbeille, et le dernier nettoyage s’annule en un clic.
+Clearwisp explique chaque gigaoctet : **quel modèle, quel environnement conda, quel cache d’outil, quand il a été utilisé pour la dernière fois et ce qui se passe si vous le supprimez**. Chaque élément a un niveau de sécurité, rien n’est supprimé avant que vous le cochiez, les suppressions vont dans la Corbeille, et le dernier nettoyage s’annule en un clic.
 
 <a id="features"></a>
 ## Fonctionnalités
@@ -94,7 +94,7 @@ Configuration requise : Windows 10 / 11 x64 avec WebView2 (inclus dans Windows 1
 <a id="comparison"></a>
 ## Comparaison
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Modèles Ollama / HF / LM Studio | ✅ par nom de modèle | ❌ | ❌ | ❌ | ❌ taille seulement |
 | Caches Cursor / Claude Code / VS Code | ✅ | ❌ | ✅ (depuis 6.0) | ❌ | ❌ |
