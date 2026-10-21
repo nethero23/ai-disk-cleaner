@@ -7,7 +7,7 @@ import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
 import type { DeepAnalysis, DeepSummary, DeepTask, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, Growth } from "./types";
-import { humanSize, relativeDate, t, type Lang } from "./i18n";
+import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 
@@ -213,6 +213,15 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Models nobody has touched for a while: the AI-specific "what can go" list.
+  const idleModels = useMemo(() => {
+    if (!report) return [];
+    const days = settings?.idle_model_days ?? 90;
+    const cutoff = Date.now() - days * 86_400_000;
+    return report.items
+      .filter((i) => i.category === "models" && i.last_used && new Date(i.last_used).getTime() < cutoff)
+      .sort((a, b) => b.size_bytes - a.size_bytes);
+  }, [report, settings]);
   function finishOnboarding() {
     setObStep(null);
     if (settings && !settings.onboarded) saveSettings({ ...settings, onboarded: true });
@@ -1189,6 +1198,14 @@ export function App() {
             </label>
           </p>
           <p>
+            {s.setIdleDays}{" "}
+            <select value={settings.idle_model_days} onChange={(e) => saveSettings({ ...settings, idle_model_days: Number(e.target.value) })}>
+              {[30, 60, 90, 180, 365].map((d) => (
+                <option key={d} value={d}>{s.days(d)}</option>
+              ))}
+            </select>
+          </p>
+          <p>
             {s.setGrowthNotify}{" "}
             <select
               value={settings.growth_notify_bytes}
@@ -1528,6 +1545,46 @@ export function App() {
                     ))}
                   </>
                 )}
+              </div>
+            )}
+            {idleModels.length > 0 && (
+              <div className="idle" title={s.idleHint}>
+                <div className="idle-head">
+                  <strong>{s.idleTitle(idleModels.length, humanSize(idleModels.reduce((a, i) => a + i.size_bytes, 0)))}</strong>
+                  <button className="link" onClick={() => setSelected((prev) => new Set([...prev, ...idleModels.map((i) => i.id)]))}>{s.idleTickAll}</button>
+                </div>
+                <p className="muted">{s.idleHint}</p>
+                <table className="log">
+                  <tbody>
+                    {idleModels.slice(0, 10).map((it) => (
+                      <tr key={it.id}>
+                        <td>{it.name}</td>
+                        <td className="muted">{it.tool}</td>
+                        <td className="size">{humanSize(it.size_bytes)}</td>
+                        <td className="muted">{it.last_used && s.idleSince(sinceDuration(it.last_used, lang))}</td>
+                        <td>
+                          <button
+                            className="link"
+                            onClick={() =>
+                              setSelected((prev) => {
+                                const n = new Set(prev);
+                                if (n.has(it.id)) n.delete(it.id);
+                                else n.add(it.id);
+                                return n;
+                              })
+                            }
+                          >
+                            {selected.has(it.id) ? s.idleUntick : s.idleTick}
+                          </button>
+                          {relocatable.has(it.rule_id) && !it.in_use_by && (
+                            <button className="link" onClick={() => pickMoveTarget(it)}>{s.move}</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {idleModels.length > 10 && <p className="muted">{s.idleMore(idleModels.length - 10)}</p>}
               </div>
             )}
             {report.unreadable.length > 0 && (

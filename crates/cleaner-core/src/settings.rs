@@ -38,6 +38,8 @@ pub struct Settings {
     pub auto_update_check: bool,
     /// Extra drives (roots) to walk for caches by shape, e.g. `D:\\`.
     pub scan_drives: Vec<PathBuf>,
+    /// A model not touched for this many days is suggested as idle.
+    pub idle_model_days: u32,
     /// Notify when one tool grows by at least this much within a week; 0 = never.
     pub growth_notify_bytes: u64,
     /// The first-run walkthrough has been shown (or skipped).
@@ -65,6 +67,7 @@ impl Default for Settings {
             auto_clean_safe: false,
             auto_update_check: true,
             scan_drives: Vec::new(),
+            idle_model_days: 90,
             growth_notify_bytes: 2 * 1024 * 1024 * 1024,
             onboarded: false,
         }
