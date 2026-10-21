@@ -201,6 +201,15 @@ const strings = {
     compactDone: (before: string, after: string, freed: string) => `${before} → ${after}，释放 ${freed}`,
     compactNoGain: "大小没有变化。可能是磁盘里没有可回收空间，或者 diskpart 没能拿到管理员权限。",
     findDups: "查找重复模型",
+    idleTitle: (n: number, size: string) => `闲置模型：${n} 个，共 ${size}`,
+    idleHint: "按文件的最后修改/访问时间估算（Windows 默认不更新访问时间，所以是「约」）。删掉要重新下载，搬到其他盘则不影响使用。",
+    idleSince: (d: string) => `约 ${d} 没用过`,
+    idleTick: "勾选",
+    idleUntick: "取消勾选",
+    idleTickAll: "全部勾选",
+    idleMore: (n: number) => `还有 ${n} 个，在下方列表里按「最近使用」排序可见`,
+    setIdleDays: "模型多久没用算闲置",
+    days: (n: number) => `${n} 天`,
     findingDups: "正在比对模型文件…",
     dupsTitle: (n: number, size: string) => `发现 ${n} 组重复模型文件，可释放 ${size}`,
     dupsNone: "没有发现跨工具重复的模型文件。",
@@ -408,6 +417,15 @@ const strings = {
     compactDone: (before: string, after: string, freed: string) => `${before} → ${after}, freed ${freed}`,
     compactNoGain: "The size did not change. Either nothing was reclaimable or diskpart did not get administrator rights.",
     findDups: "Find duplicate models",
+    idleTitle: (n: number, size: string) => `Idle models: ${n}, ${size}`,
+    idleHint: "Estimated from file modified/access times (Windows does not update access time by default, hence \"about\"). Deleting means re-downloading; moving to another drive keeps them usable.",
+    idleSince: (d: string) => `unused for about ${d}`,
+    idleTick: "Tick",
+    idleUntick: "Untick",
+    idleTickAll: "Tick all",
+    idleMore: (n: number) => `${n} more; sort the list below by recent use to see them`,
+    setIdleDays: "A model counts as idle after",
+    days: (n: number) => `${n} days`,
     findingDups: "Comparing model files…",
     dupsTitle: (n: number, size: string) => `${n} groups of duplicate model files, ${size} reclaimable`,
     dupsNone: "No duplicate model files across tools.",
@@ -434,6 +452,14 @@ export function humanSize(bytes: number): string {
     i++;
   }
   return i === 0 ? `${bytes} B` : `${v.toFixed(1)} ${units[i]}`;
+}
+
+/// "3 个月" / "3mo": how long ago, without the "ago".
+export function sinceDuration(iso: string, lang: Lang): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days < 30) return lang === "zh" ? `${days} 天` : `${days}d`;
+  if (days < 365) return lang === "zh" ? `${Math.floor(days / 30)} 个月` : `${Math.floor(days / 30)}mo`;
+  return lang === "zh" ? `${Math.floor(days / 365)} 年` : `${Math.floor(days / 365)}y`;
 }
 
 export function relativeDate(iso: string | null, lang: Lang): string {

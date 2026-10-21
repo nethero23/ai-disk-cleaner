@@ -141,6 +141,7 @@ export interface Settings {
   auto_clean_safe: boolean;
   auto_update_check: boolean;
   scan_drives: string[];
+  idle_model_days: number;
 }
 
 export interface RuleInfo {

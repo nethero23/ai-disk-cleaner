@@ -167,3 +167,7 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 
 .banner .linkish { margin-left: 12px; text-decoration: underline; }
 .history .muted > button.ghost { margin-left: 12px; }
+
+.idle { margin: 10px 0; padding: 10px 14px; border-radius: 8px; background: var(--panel); }
+.idle-head { display: flex; gap: 12px; align-items: center; }
+.idle table { margin-top: 6px; }

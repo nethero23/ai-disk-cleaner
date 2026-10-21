@@ -38,6 +38,8 @@ pub struct Settings {
     pub auto_update_check: bool,
     /// Extra drives (roots) to walk for caches by shape, e.g. `D:\\`.
     pub scan_drives: Vec<PathBuf>,
+    /// A model not touched for this many days is suggested as idle.
+    pub idle_model_days: u32,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -61,6 +63,7 @@ impl Default for Settings {
             auto_clean_safe: false,
             auto_update_check: true,
             scan_drives: Vec::new(),
+            idle_model_days: 90,
         }
     }
 }
