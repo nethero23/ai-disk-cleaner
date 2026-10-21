@@ -304,7 +304,20 @@ export function App() {
   useEffect(() => {
     localStorage.setItem("lang", lang);
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    invoke("set_lang", { lang }).catch(() => {});
   }, [lang]);
+
+  useEffect(() => {
+    const p = listen<ScanReport>("background-scan", (e) => {
+      setReport(e.payload);
+      setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
+      setPhase("ready");
+      setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgBanner(humanSize(e.payload.total_bytes)));
+    });
+    return () => {
+      p.then((un) => un());
+    };
+  }, []);
 
   async function runScan() {
     setPhase("scanning");
@@ -616,6 +629,45 @@ export function App() {
               <option value={1024 * 1024 * 1024}>1 GB</option>
             </select>
           </p>
+
+          <h2>{s.setBackground}</h2>
+          <p>
+            <label>
+              <input type="checkbox" checked={settings.close_to_tray} onChange={(e) => saveSettings({ ...settings, close_to_tray: e.target.checked })} />{" "}
+              {s.setCloseToTray}
+            </label>
+          </p>
+          <p>
+            <label>
+              <input type="checkbox" checked={settings.autostart} onChange={(e) => saveSettings({ ...settings, autostart: e.target.checked })} />{" "}
+              {s.setAutostart}
+            </label>
+          </p>
+          <p>
+            {s.setSchedule}{" "}
+            <select
+              value={settings.scheduled_scan_hours}
+              onChange={(e) => saveSettings({ ...settings, scheduled_scan_hours: Number(e.target.value) })}
+            >
+              <option value={0}>{s.schedOff}</option>
+              {[6, 12, 24, 72, 168].map((h) => (
+                <option key={h} value={h}>{s.schedHours(h)}</option>
+              ))}
+            </select>{" "}
+            {s.setNotify}{" "}
+            <select
+              value={settings.notify_min_bytes}
+              onChange={(e) => saveSettings({ ...settings, notify_min_bytes: Number(e.target.value) })}
+            >
+              <option value={0}>0</option>
+              <option value={500 * 1024 * 1024}>500 MB</option>
+              <option value={1024 * 1024 * 1024}>1 GB</option>
+              <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
+            </select>
+          </p>
+          {settings.last_background_scan && (
+            <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
+          )}
 
           <h2>{s.setUpdate}</h2>
           <p className="muted">{s.setUpdateBody}</p>

@@ -114,6 +114,12 @@ export interface Settings {
   rules_update_url: string;
   rules_updated_at: string | null;
   min_item_bytes: number;
+  lang: string;
+  close_to_tray: boolean;
+  autostart: boolean;
+  scheduled_scan_hours: number;
+  notify_min_bytes: number;
+  last_background_scan: string | null;
 }
 
 export interface RuleInfo {
