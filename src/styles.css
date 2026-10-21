@@ -115,3 +115,5 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 
 ul.plain { list-style: none; padding: 0; margin: 8px 0; font-size: 13px; }
 ul.plain li { padding: 2px 0; word-break: break-all; }
+.export-opt { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 14px; }
+.export-opt p { margin: 6px 0 0; }

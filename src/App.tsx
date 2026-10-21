@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, RelocateRecord, RelocateResult, ScanItem, ScanReport, Vhdx } from "./types";
+import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, ScanItem, ScanReport, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -44,6 +44,10 @@ export function App() {
   const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
   const [compactable, setCompactable] = useState<Set<string>>(new Set());
   const [compacting, setCompacting] = useState<{ item: ScanItem; disks: Vhdx[]; busy?: string; results: CompactResult[] } | null>(null);
+  const [exportable, setExportable] = useState<Set<string>>(new Set());
+  const [exportDest, setExportDest] = useState<string | null>(null);
+  const [exportOn, setExportOn] = useState(true);
+  const [exporting, setExporting] = useState<[number, number] | null>(null);
   const [moving, setMoving] = useState<{ item: ScanItem; dest: string; source: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
@@ -52,6 +56,7 @@ export function App() {
   useEffect(() => {
     invoke<string[]>("relocatable").then((ids) => setRelocatable(new Set(ids))).catch(() => {});
     invoke<string[]>("compactable").then((ids) => setCompactable(new Set(ids))).catch(() => {});
+    invoke<string[]>("exportable").then((ids) => setExportable(new Set(ids))).catch(() => {});
   }, []);
 
   async function pickMoveTarget(item: ScanItem) {
@@ -203,6 +208,7 @@ export function App() {
   );
   const selectedBytes = selectedItems.reduce((a, i) => a + i.size_bytes, 0);
   const selectedReview = selectedItems.filter((i) => i.safety === "review").length;
+  const selectedExportable = selectedItems.filter((i) => exportable.has(i.rule_id));
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -225,12 +231,31 @@ export function App() {
     });
   }
 
+  async function pickExportDest() {
+    const dest = await openDialog({ directory: true, multiple: false, title: s.exportPick });
+    if (typeof dest === "string") setExportDest(dest);
+  }
+
   async function runClean() {
     setConfirming(false);
     setPhase("cleaning");
     try {
+      let exported: ExportResult | null = null;
+      if (exportOn && exportDest && selectedExportable.length > 0) {
+        setExporting([0, selectedExportable.reduce((a, i) => a + i.size_bytes, 0)]);
+        const unlisten = await listen<{ copied: number; total: number }>("export-progress", (e) => {
+          setExporting([e.payload.copied, e.payload.total]);
+        });
+        try {
+          exported = await invoke<ExportResult>("export_items", { items: selectedExportable, destDir: exportDest });
+        } finally {
+          unlisten();
+          setExporting(null);
+        }
+      }
       const summary = await invoke<CleanSummary>("clean_items", { items: selectedItems });
       setResult(summary);
+      if (exported) setNotice(s.exported(exported.files, exported.zip_path));
       // Drop what was deleted; keep what failed so the user sees it.
       const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
       setReport((prev) =>
@@ -521,7 +546,7 @@ export function App() {
               disabled={selectedItems.length === 0 || phase === "cleaning"}
               onClick={() => setConfirming(true)}
             >
-              {phase === "cleaning" ? s.cleaning : s.clean}
+              {phase === "cleaning" ? (exporting ? s.exporting : s.cleaning) : s.clean}
             </button>
           </footer>
         </>
@@ -621,11 +646,29 @@ export function App() {
             <h3>{s.confirmTitle}</h3>
             <p>{s.confirmBody(selectedItems.length, humanSize(selectedBytes))}</p>
             {selectedReview > 0 && <p className="warn">{s.confirmReview(selectedReview)}</p>}
+            {selectedExportable.length > 0 && (
+              <div className="export-opt">
+                <label>
+                  <input type="checkbox" checked={exportOn} onChange={(e) => setExportOn(e.target.checked)} />{" "}
+                  {s.exportFirst(selectedExportable.length)}
+                </label>
+                {exportOn && (
+                  <p className="muted">
+                    {exportDest ? s.exportTo(exportDest) : null}{" "}
+                    <button className="link" onClick={pickExportDest}>{s.exportPick}</button>
+                  </p>
+                )}
+              </div>
+            )}
             <div className="modal-actions">
               <button className="ghost" onClick={() => setConfirming(false)}>
                 {s.cancel}
               </button>
-              <button className="primary danger" onClick={runClean}>
+              <button
+                className="primary danger"
+                disabled={exportOn && selectedExportable.length > 0 && !exportDest}
+                onClick={runClean}
+              >
                 {s.confirm}
               </button>
             </div>
