@@ -129,3 +129,13 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .big-controls { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin: 12px 0; }
 .big-controls label.drive { display: block; padding: 2px 0; }
 .big-progress { word-break: break-all; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0 16px; }
+.stat-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.stat-panel h3 { margin: 0 0 8px; font-size: 13px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 72px; gap: 8px; align-items: center; font-size: 12px; padding: 2px 0; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+.bar-fill { display: block; height: 100%; background: var(--accent, #4f8cff); border-radius: 5px; }
+.bar-value { text-align: right; color: var(--muted, #888); }
+@media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
