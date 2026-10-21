@@ -277,11 +277,30 @@ export function App() {
     try {
       setHistory(await invoke<CleanRecord[]>("clean_log"));
       setRelocations(await invoke<RelocateRecord[]>("relocations"));
+      if (!library) setLibrary(await invoke<RuleLibrary>("rules"));
     } catch (e) {
       setError(String(e));
     }
     setView("history");
   }
+
+  // Freed bytes per owning tool and per month, for the history page.
+  const stats = useMemo(() => {
+    const ok = history.filter((r) => r.ok);
+    const toolOf = (ruleId: string) =>
+      ruleId === "bigfiles" ? s.bigFiles : (library?.rules.find((r) => r.id === ruleId)?.tool ?? ruleId.split(".")[0]);
+    const byTool = new Map<string, number>();
+    const byMonth = new Map<string, number>();
+    for (const r of ok) {
+      const tool = toolOf(r.rule_id);
+      byTool.set(tool, (byTool.get(tool) ?? 0) + r.size_bytes);
+      const m = r.at.slice(0, 7);
+      byMonth.set(m, (byMonth.get(m) ?? 0) + r.size_bytes);
+    }
+    const tools = [...byTool].sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const months = [...byMonth].sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+    return { tools, months, count: ok.length };
+  }, [history, library, s]);
 
   async function moveBack(rec: RelocateRecord) {
     setMovingBack({ rec });
@@ -727,6 +746,28 @@ export function App() {
                   humanSize(history.filter((r) => r.ok).reduce((a, r) => a + r.size_bytes, 0)),
                 )}
               </p>
+              <div className="stats">
+                <div className="stat-panel">
+                  <h3>{s.statByTool}</h3>
+                  {stats.tools.map(([tool, bytes]) => (
+                    <div key={tool} className="bar-row">
+                      <span className="bar-label" title={tool}>{tool}</span>
+                      <span className="bar"><span className="bar-fill" style={{ width: `${Math.max(2, (bytes / stats.tools[0][1]) * 100)}%` }} /></span>
+                      <span className="bar-value">{humanSize(bytes)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="stat-panel">
+                  <h3>{s.statByMonth}</h3>
+                  {stats.months.map(([month, bytes]) => (
+                    <div key={month} className="bar-row">
+                      <span className="bar-label">{month}</span>
+                      <span className="bar"><span className="bar-fill" style={{ width: `${Math.max(2, (bytes / Math.max(...stats.months.map((m) => m[1]))) * 100)}%` }} /></span>
+                      <span className="bar-value">{humanSize(bytes)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <table className="log">
                 <tbody>
                   {[...history].reverse().map((r, i) => (
