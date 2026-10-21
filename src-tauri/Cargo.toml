@@ -18,6 +18,8 @@ cleaner-core = { path = "../crates/cleaner-core" }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
+ureq = "3"
+chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 dirs.workspace = true

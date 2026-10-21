@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, ScanItem, ScanReport, Vhdx } from "./types";
+import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -37,7 +37,10 @@ export function App() {
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
-  const [view, setView] = useState<"scan" | "history">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings">("scan");
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [library, setLibrary] = useState<RuleLibrary | null>(null);
+  const [updatingRules, setUpdatingRules] = useState(false);
   const [history, setHistory] = useState<CleanRecord[]>([]);
   const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
   const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
@@ -123,6 +126,25 @@ export function App() {
     }
   }
 
+  async function openSettings() {
+    try {
+      setSettings(await invoke<Settings>("get_settings"));
+      setLibrary(await invoke<RuleLibrary>("rules"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setView("settings");
+  }
+
+  async function saveSettings(next: Settings) {
+    setSettings(next);
+    try {
+      await invoke("save_settings", { settings: next });
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   async function runCompact() {
     if (!compacting) return;
     setError(null);
@@ -137,6 +159,58 @@ export function App() {
         return;
       }
     }
+  }
+
+  async function excludeItem(it: ScanItem) {
+    const current = settings ?? (await invoke<Settings>("get_settings"));
+    if (!current.excluded_paths.includes(it.path)) {
+      await saveSettings({ ...current, excluded_paths: [...current.excluded_paths, it.path] });
+    }
+    setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !i.path.startsWith(it.path)) } : prev));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(it.id);
+      return next;
+    });
+    setNotice(s.excluded(it.path));
+  }
+
+  async function addExcludedFolder() {
+    if (!settings) return;
+    const dir = await openDialog({ directory: true, multiple: false, title: s.addFolder });
+    if (typeof dir !== "string" || settings.excluded_paths.includes(dir)) return;
+    await saveSettings({ ...settings, excluded_paths: [...settings.excluded_paths, dir] });
+  }
+
+  async function pickCustomRulesDir() {
+    if (!settings) return;
+    const dir = await openDialog({ directory: true, multiple: false, title: s.setCustomDir });
+    if (typeof dir !== "string") return;
+    await saveSettings({ ...settings, custom_rules_dir: dir });
+    setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+  }
+
+  async function toggleRule(id: string, enabled: boolean) {
+    if (!settings) return;
+    const disabled = enabled ? settings.disabled_rules.filter((r) => r !== id) : [...settings.disabled_rules, id];
+    await saveSettings({ ...settings, disabled_rules: disabled });
+    setLibrary((lib) => (lib ? { ...lib, rules: lib.rules.map((r) => (r.id === id ? { ...r, enabled } : r)) } : lib));
+  }
+
+  async function runRulesUpdate() {
+    if (!settings) return;
+    setUpdatingRules(true);
+    setError(null);
+    try {
+      await invoke("save_settings", { settings });
+      const r = await invoke<RulesUpdate>("update_rules");
+      setNotice(s.updateDone(r.files, r.rules));
+      setSettings({ ...settings, rules_updated_at: r.updated_at });
+      setLibrary(await invoke<RuleLibrary>("rules"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setUpdatingRules(false);
   }
 
   async function openHistory() {
@@ -284,9 +358,14 @@ export function App() {
           <button className="ghost" onClick={() => setLang(lang === "zh" ? "en" : "zh")}>
             {s.language}
           </button>
-          <button className="ghost" onClick={() => (view === "history" ? setView("scan") : openHistory())}>
-            {view === "history" ? s.backToScan : s.history}
-          </button>
+          {view !== "scan" ? (
+            <button className="ghost" onClick={() => setView("scan")}>{s.backToScan}</button>
+          ) : (
+            <>
+              <button className="ghost" onClick={openHistory}>{s.history}</button>
+              <button className="ghost" onClick={openSettings}>{s.settings}</button>
+            </>
+          )}
           <button
             className="primary"
             disabled={phase === "scanning" || phase === "cleaning"}
@@ -306,6 +385,108 @@ export function App() {
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
           )}
         </div>
+      )}
+
+      {view === "settings" && settings && (
+        <section className="settings">
+          <h2>{s.setExcluded}</h2>
+          <p className="muted">{s.setExcludedBody}</p>
+          {settings.excluded_paths.length === 0 ? (
+            <p className="empty">{s.setExcludedEmpty}</p>
+          ) : (
+            <ul className="plain">
+              {settings.excluded_paths.map((p) => (
+                <li key={p}>
+                  <span title={p}>{p}</span>
+                  <button className="link" onClick={() => saveSettings({ ...settings, excluded_paths: settings.excluded_paths.filter((x) => x !== p) })}>
+                    {s.remove}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p>
+            <button className="ghost" onClick={addExcludedFolder}>{s.addFolder}</button>
+          </p>
+          <p>
+            {s.setMinSize}{" "}
+            <select
+              value={settings.min_item_bytes}
+              onChange={(e) => saveSettings({ ...settings, min_item_bytes: Number(e.target.value) })}
+            >
+              <option value={0}>0</option>
+              <option value={10 * 1024 * 1024}>10 MB</option>
+              <option value={100 * 1024 * 1024}>100 MB</option>
+              <option value={1024 * 1024 * 1024}>1 GB</option>
+            </select>
+          </p>
+
+          <h2>{s.setUpdate}</h2>
+          <p className="muted">{s.setUpdateBody}</p>
+          <p>
+            <input
+              className="wide"
+              value={settings.rules_update_url}
+              onChange={(e) => setSettings({ ...settings, rules_update_url: e.target.value })}
+              onBlur={() => saveSettings(settings)}
+            />
+          </p>
+          <p>
+            <button className="ghost" disabled={updatingRules} onClick={runRulesUpdate}>
+              {updatingRules ? s.updating : s.updateNow}
+            </button>{" "}
+            <span className="muted">
+              {settings.rules_updated_at ? s.updatedAt(new Date(settings.rules_updated_at).toLocaleString()) : s.neverUpdated}
+            </span>
+          </p>
+
+          <h2>{s.setCustomDir}</h2>
+          <p className="muted">{s.setCustomDirBody}</p>
+          <p>
+            <span className="muted">{settings.custom_rules_dir ?? "—"}</span>{" "}
+            <button className="link" onClick={pickCustomRulesDir}>{s.chooseFolder}</button>
+            {settings.custom_rules_dir && (
+              <button
+                className="link"
+                onClick={async () => {
+                  await saveSettings({ ...settings, custom_rules_dir: null });
+                  setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+                }}
+              >
+                {s.clearFolder}
+              </button>
+            )}
+          </p>
+          {library && library.errors.length > 0 && (
+            <div className="banner error">
+              {s.setRuleErrors}
+              <ul className="plain">
+                {library.errors.map(([p, e]) => (
+                  <li key={p}>
+                    {p}: {e}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <h2>{s.setRules}</h2>
+          <p className="muted">{s.setRulesBody}</p>
+          {library && (
+            <ul className="plain rules">
+              {library.rules.map((r) => (
+                <li key={r.id}>
+                  <label>
+                    <input type="checkbox" checked={r.enabled} onChange={(e) => toggleRule(r.id, e.target.checked)} />{" "}
+                    <span className="tool">{r.tool}</span> {lang === "zh" ? r.name_zh : r.name_en}{" "}
+                    <span className={`tag ${r.safety}`}>{s.safety[r.safety]}</span>
+                    <span className="muted"> · {r.id}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
 
       {view === "history" && (
@@ -510,6 +691,9 @@ export function App() {
                               {it.path}
                               <button className="link" onClick={() => revealItemInDir(it.path)}>
                                 {s.openFolder}
+                              </button>
+                              <button className="link" onClick={() => excludeItem(it)}>
+                                {s.exclude}
                               </button>
                               {relocatable.has(it.rule_id) && !it.in_use_by && (
                                 <button className="link" onClick={() => pickMoveTarget(it)}>

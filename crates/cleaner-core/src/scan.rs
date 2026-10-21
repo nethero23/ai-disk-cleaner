@@ -17,6 +17,8 @@ pub struct ScanOptions {
     pub global_min_bytes: u64,
     /// Lower-cased names of running processes, sampled once per scan.
     pub running: std::collections::HashSet<String>,
+    /// Folders the user asked to leave alone; items at or under them are dropped.
+    pub excluded: Vec<PathBuf>,
 }
 
 impl Default for ScanOptions {
@@ -26,6 +28,7 @@ impl Default for ScanOptions {
             lang: "zh".into(),
             global_min_bytes: 1024 * 1024,
             running: crate::process::running_names(),
+            excluded: Vec::new(),
         }
     }
 }
@@ -105,7 +108,11 @@ pub fn resolve_paths(rule: &Rule, ctx: &PathContext) -> Vec<PathBuf> {
 }
 
 pub fn scan_rule(rule: &Rule, opts: &ScanOptions, report: &mut ScanReport) {
+    let excluded = |p: &Path| opts.excluded.iter().any(|ex| p.starts_with(ex));
     for root in resolve_paths(rule, &opts.ctx) {
+        if excluded(&root) {
+            continue;
+        }
         match readable_dir(&root) {
             Some(false) => {
                 report.unreadable.push(root);
@@ -126,7 +133,10 @@ pub fn scan_rule(rule: &Rule, opts: &ScanOptions, report: &mut ScanReport) {
             Inspector::ProjectArtifacts => inspect::artifacts::artifacts(rule, &root, opts),
         };
         let floor = rule.min_bytes.max(opts.global_min_bytes);
-        for item in items.into_iter().filter(|i| i.size_bytes >= floor) {
+        for item in items
+            .into_iter()
+            .filter(|i| i.size_bytes >= floor && !excluded(&i.path))
+        {
             report.push(item);
         }
     }
@@ -213,7 +223,29 @@ mod tests {
             lang: "zh".into(),
             global_min_bytes: 0,
             running: Default::default(),
+            excluded: Vec::new(),
         }
+    }
+
+    #[test]
+    fn excluded_folders_are_not_reported() {
+        let tmp = tempfile::tempdir().unwrap();
+        let home = tmp.path();
+        fs::create_dir_all(home.join("ws/a")).unwrap();
+        fs::create_dir_all(home.join("ws/b")).unwrap();
+        fs::write(home.join("ws/a/f"), [0u8; 10]).unwrap();
+        fs::write(home.join("ws/b/f"), [0u8; 10]).unwrap();
+        let r = rule("c.k", &["${USERPROFILE}/ws"], Inspector::Children);
+        let mut o = opts(home);
+        o.excluded = vec![home.join("ws/a")];
+        let mut report = ScanReport::default();
+        scan_rule(&r, &o, &mut report);
+        assert_eq!(report.items.len(), 1);
+        assert!(report.items[0].path.ends_with("b"));
+        o.excluded = vec![home.join("ws")];
+        let mut report = ScanReport::default();
+        scan_rule(&r, &o, &mut report);
+        assert!(report.items.is_empty());
     }
 
     #[test]

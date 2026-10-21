@@ -6,6 +6,7 @@ use cleaner_core::dedup::{self, DuplicateGroup};
 use cleaner_core::export::{self, ExportResult};
 use cleaner_core::paths::PathContext;
 use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
+use cleaner_core::settings::Settings;
 use cleaner_core::vhdx::{self, CompactResult, Vhdx};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
@@ -38,12 +39,32 @@ fn progress_emitter(app: AppHandle, event: &'static str) -> impl FnMut(u64, u64)
     }
 }
 
+fn settings_path(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("settings.json")
+}
+
+/// Where "update rules" stores the downloaded rule files.
+fn downloaded_rules_dir(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("rules")
+}
+
+/// The rule set the scan actually uses: builtin + downloaded + custom, minus
+/// disabled. Parse errors in user files come back so the UI can show them.
+fn effective_rules(app: &AppHandle) -> (RuleSet, Vec<(PathBuf, String)>, Settings) {
+    let settings = Settings::load(&settings_path(app));
+    let dir = downloaded_rules_dir(app);
+    let (set, errors) = RuleSet::effective(dir.is_dir().then_some(dir.as_path()), &settings);
+    (set, errors, settings)
+}
+
 #[tauri::command]
-async fn scan(lang: String) -> Result<ScanReport, String> {
+async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
+    let (rules, _, settings) = effective_rules(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let rules = RuleSet::builtin();
         let opts = ScanOptions {
             lang,
+            global_min_bytes: settings.min_item_bytes,
+            excluded: settings.excluded_paths,
             ..ScanOptions::default()
         };
         scan_all(&rules, &opts)
@@ -55,9 +76,10 @@ async fn scan(lang: String) -> Result<ScanReport, String> {
 #[tauri::command]
 async fn clean_items(app: AppHandle, items: Vec<ScanItem>) -> Result<CleanSummary, String> {
     let log = log_path(&app);
+    let (rules_for_check, _, _) = effective_rules(&app);
     tauri::async_runtime::spawn_blocking(move || {
         // The scan may be minutes old: re-check which owning tools are running now.
-        let rules = RuleSet::builtin();
+        let rules = rules_for_check;
         let running = cleaner_core::process::running_names();
         let mut items = items;
         for item in &mut items {
@@ -84,22 +106,112 @@ struct RuleInfo {
     name_zh: String,
     name_en: String,
     safety: cleaner_core::SafetyLevel,
+    enabled: bool,
 }
 
-/// The rule library, so the UI can show "we check N locations" and a settings page later.
+#[derive(Serialize)]
+struct RuleLibrary {
+    rules: Vec<RuleInfo>,
+    /// User rule files that failed to parse: (path, error).
+    errors: Vec<(PathBuf, String)>,
+}
+
+/// Every rule known to this install (builtin + downloaded + custom), with
+/// whether the user has it switched on, so the settings page can list them.
 #[tauri::command]
-fn rules() -> Vec<RuleInfo> {
-    RuleSet::builtin()
-        .rules
-        .into_iter()
-        .map(|r| RuleInfo {
-            id: r.id,
-            tool: r.tool,
-            name_zh: r.name_zh,
-            name_en: r.name_en,
-            safety: r.safety,
+fn rules(app: AppHandle) -> RuleLibrary {
+    let settings = Settings::load(&settings_path(&app));
+    let dir = downloaded_rules_dir(&app);
+    let (set, errors) = RuleSet::effective(
+        dir.is_dir().then_some(dir.as_path()),
+        &Settings {
+            disabled_rules: Vec::new(),
+            ..settings.clone()
+        },
+    );
+    RuleLibrary {
+        rules: set
+            .rules
+            .into_iter()
+            .map(|r| RuleInfo {
+                enabled: !settings.disabled_rules.contains(&r.id),
+                id: r.id,
+                tool: r.tool,
+                name_zh: r.name_zh,
+                name_en: r.name_en,
+                safety: r.safety,
+            })
+            .collect(),
+        errors,
+    }
+}
+
+#[tauri::command]
+fn get_settings(app: AppHandle) -> Settings {
+    Settings::load(&settings_path(&app))
+}
+
+#[tauri::command]
+fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+    settings
+        .save(&settings_path(&app))
+        .map_err(|e| e.to_string())
+}
+
+#[derive(Serialize)]
+struct RulesUpdate {
+    files: usize,
+    rules: usize,
+    updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// Downloads the rule files from `settings.rules_update_url` (a folder URL)
+/// into the app's rules dir. Every file is parsed before anything is written,
+/// so a broken download never replaces a working set.
+#[tauri::command]
+async fn update_rules(app: AppHandle) -> Result<RulesUpdate, String> {
+    let path = settings_path(&app);
+    let mut settings = Settings::load(&path);
+    let base = settings.rules_update_url.trim_end_matches('/').to_string();
+    if !base.starts_with("https://") {
+        return Err("rules URL must start with https://".into());
+    }
+    let dir = downloaded_rules_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let agent = ureq::Agent::config_builder()
+            .timeout_global(Some(std::time::Duration::from_secs(30)))
+            .build()
+            .new_agent();
+        let mut fetched = Vec::new();
+        let mut rules = 0;
+        for name in RuleSet::builtin_file_names() {
+            let url = format!("{base}/{name}");
+            let text = agent
+                .get(&url)
+                .call()
+                .map_err(|e| format!("{url}: {e}"))?
+                .body_mut()
+                .read_to_string()
+                .map_err(|e| format!("{url}: {e}"))?;
+            let set = RuleSet::parse(&text).map_err(|e| format!("{name}: {e}"))?;
+            rules += set.rules.len();
+            fetched.push((name, text));
+        }
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        for (name, text) in &fetched {
+            std::fs::write(dir.join(name), text).map_err(|e| e.to_string())?;
+        }
+        let updated_at = chrono::Utc::now();
+        settings.rules_updated_at = Some(updated_at);
+        settings.save(&path).map_err(|e| e.to_string())?;
+        Ok(RulesUpdate {
+            files: fetched.len(),
+            rules,
+            updated_at,
         })
-        .collect()
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[derive(Serialize, Clone)]
@@ -233,6 +345,9 @@ pub fn run() {
             clean_items,
             clean_log,
             rules,
+            get_settings,
+            save_settings,
+            update_rules,
             relocatable,
             move_source,
             relocate_item,

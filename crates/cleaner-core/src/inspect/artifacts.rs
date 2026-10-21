@@ -264,6 +264,7 @@ mod tests {
             lang: "zh".into(),
             global_min_bytes: 0,
             running: Default::default(),
+            excluded: Vec::new(),
         };
         let items = artifacts(&rule, home, &opts);
         assert_eq!(items.len(), 1, "{items:?}");
