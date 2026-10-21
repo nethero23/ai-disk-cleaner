@@ -10,15 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "AI Disk Cleaner",
-        "width": 1100,
-        "height": 740,
-        "minWidth": 860,
-        "minHeight": 560
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'"
     }
