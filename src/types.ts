@@ -29,6 +29,7 @@ export interface ScanItem {
   consequence: string;
   detail: string | null;
   in_use_by: string | null;
+  auto_clean: boolean;
 }
 
 export interface ScanReport {

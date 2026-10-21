@@ -260,6 +260,7 @@ pub fn make_item(
         detail,
         in_use_by: crate::process::first_running(&rule.processes, &opts.running)
             .map(str::to_string),
+        auto_clean: rule.auto_clean,
     }
 }
 
@@ -287,6 +288,7 @@ mod tests {
             windows_only: false,
             require: vec![],
             processes: vec![],
+            auto_clean: true,
         }
     }
 

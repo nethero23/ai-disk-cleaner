@@ -31,6 +31,10 @@ pub enum Category {
     System,
 }
 
+fn default_true() -> bool {
+    true
+}
+
 /// One thing the user can tick and delete.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanItem {
@@ -54,6 +58,10 @@ pub struct ScanItem {
     /// Name of a running process that owns this data; set means "close it first".
     #[serde(default)]
     pub in_use_by: Option<String>,
+    /// Copied from the rule: may "clean safe items" / scheduled auto-clean
+    /// take this without the user ticking it by hand?
+    #[serde(default = "default_true")]
+    pub auto_clean: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
