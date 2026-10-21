@@ -324,6 +324,7 @@ pub fn scan(
                 consequence,
                 detail: path.parent().map(|p| p.to_string_lossy().to_string()),
                 in_use_by: None,
+                auto_clean: false,
                 path,
             }
         })

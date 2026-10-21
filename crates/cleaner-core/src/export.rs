@@ -170,6 +170,7 @@ mod tests {
             consequence: String::new(),
             detail: None,
             in_use_by: None,
+            auto_clean: true,
         }
     }
 

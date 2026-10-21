@@ -300,6 +300,7 @@ mod tests {
             consequence: String::new(),
             detail: None,
             in_use_by: None,
+            auto_clean: true,
         };
         assert!(find_duplicates(&[item("a"), item("b")]).is_empty());
     }

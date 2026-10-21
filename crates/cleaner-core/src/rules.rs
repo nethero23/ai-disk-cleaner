@@ -63,6 +63,11 @@ pub struct Rule {
     /// of every Store app's package folder).
     #[serde(default)]
     pub require: Vec<String>,
+    /// False for things the app must never delete unattended (a project's
+    /// `.venv`, editor workspace state): still shown, never auto-cleaned and
+    /// not pre-ticked by "clean safe items".
+    #[serde(default = "default_true")]
+    pub auto_clean: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -170,9 +175,30 @@ impl RuleSet {
     }
 }
 
+fn default_true() -> bool {
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn project_and_workspace_rules_are_never_auto_cleaned() {
+        let set = RuleSet::builtin();
+        for id in [
+            "projects.artifacts",
+            "vscode.workspaces",
+            "cursor.workspaces",
+        ] {
+            assert!(!set.get(id).unwrap().auto_clean, "{id}");
+        }
+        assert!(set.get("pip.cache").unwrap().auto_clean);
+        assert!(!set
+            .rules
+            .iter()
+            .any(|r| r.paths.iter().any(|p| p.ends_with(".obsolete"))));
+    }
     use std::collections::HashSet;
 
     #[test]

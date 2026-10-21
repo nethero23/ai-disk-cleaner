@@ -196,7 +196,8 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         let (safe, rest): (Vec<_>, Vec<_>) = report
             .items
             .drain(..)
-            .partition(|i| i.safety == SafetyLevel::Safe && i.in_use_by.is_none());
+            .partition(|i| i.safety == SafetyLevel::Safe && i.in_use_by.is_none() && i.auto_clean);
+        let mut kept = rest;
         if !safe.is_empty() {
             let summary = clean::clean(&safe, &log_path(app));
             let failed: Vec<_> = summary
@@ -226,27 +227,23 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
                     freed_bytes: summary.freed_bytes,
                 },
             );
-            // Rebuild the report from what is left so the window shows the truth.
-            let mut left = cleaner_core::ScanReport {
-                started_at: report.started_at,
-                finished_at: report.finished_at,
-                unreadable: std::mem::take(&mut report.unreadable),
-                ..Default::default()
-            };
-            for item in safe
-                .into_iter()
-                .filter(|i| failed.contains(&i.path))
-                .chain(rest)
-            {
-                left.push(item);
-            }
-            left.sort_by_size();
-            report = left;
-        } else {
-            for item in rest {
-                report.push(item);
-            }
+            kept.extend(safe.into_iter().filter(|i| failed.contains(&i.path)));
         }
+        // Rebuild from scratch: `drain` left the totals behind, so pushing
+        // onto the old report would count every remaining item twice.
+        let mut left = cleaner_core::ScanReport {
+            started_at: report.started_at,
+            finished_at: report.finished_at,
+            unreadable: std::mem::take(&mut report.unreadable),
+            timings: std::mem::take(&mut report.timings),
+            cancelled: report.cancelled,
+            ..Default::default()
+        };
+        for item in kept {
+            left.push(item);
+        }
+        left.sort_by_size();
+        report = left;
     }
 
     let mut latest = Settings::load(&settings_path(app));

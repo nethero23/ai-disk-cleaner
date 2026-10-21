@@ -27,6 +27,7 @@ processes = ["Cursor"]
 
 [[rule]]
 id = "cursor.workspaces"
+auto_clean = false
 tool = "Cursor"
 category = "ai_editor"
 name_zh = "Cursor 工作区存储"
@@ -66,6 +67,7 @@ processes = ["Windsurf"]
 
 [[rule]]
 id = "windsurf.workspaces"
+auto_clean = false
 tool = "Windsurf"
 category = "ai_editor"
 name_zh = "Windsurf 工作区存储"
@@ -92,6 +94,7 @@ processes = ["Code"]
 
 [[rule]]
 id = "vscode.workspaces"
+auto_clean = false
 tool = "VS Code"
 category = "ai_editor"
 name_zh = "VS Code 工作区存储"
@@ -146,6 +149,7 @@ processes = ["Trae", "Trae CN"]
 
 [[rule]]
 id = "trae.workspaces"
+auto_clean = false
 tool = "Trae"
 category = "ai_editor"
 name_zh = "Trae 工作区状态"
@@ -190,7 +194,7 @@ tool = "Cursor"
 category = "ai_editor"
 name_zh = "Cursor 扩展下载缓存"
 name_en = "Cursor extension download cache"
-paths = ["${USERPROFILE}/.cursor/extensions/.obsolete", "${APPDATA}/Cursor/CachedExtensions", "${APPDATA}/Cursor/CachedProfilesData"]
+paths = ["${APPDATA}/Cursor/CachedExtensions", "${APPDATA}/Cursor/CachedProfilesData"]
 all_paths = true
 safety = "safe"
 consequence_zh = "编辑器会自动重建"
@@ -203,7 +207,7 @@ tool = "VS Code"
 category = "ai_editor"
 name_zh = "VS Code 扩展下载缓存"
 name_en = "VS Code extension download cache"
-paths = ["${USERPROFILE}/.vscode/extensions/.obsolete", "${APPDATA}/Code/CachedExtensions", "${APPDATA}/Code/CachedProfilesData"]
+paths = ["${APPDATA}/Code/CachedExtensions", "${APPDATA}/Code/CachedProfilesData"]
 all_paths = true
 safety = "safe"
 consequence_zh = "编辑器会自动重建"
