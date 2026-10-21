@@ -1,10 +1,12 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner 图标">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Clearwisp 图标">
 
-# AI Disk Cleaner · 最懂 AI 的硬盘清理工具
+# Clearwisp 清灵 · 最懂 AI 的硬盘清理工具
 
 **免费开源的 Windows 硬盘清理工具，C 盘、D 盘、所有盘一起扫，专清 AI 工具留下的垃圾：Ollama / Hugging Face / LM Studio 模型，Cursor / Claude Code / VS Code 缓存，pip / conda / npm 缓存，WSL / Docker 虚拟磁盘。先扫描、你来选、删了能撤销。**
+
+<sub>原名 AI Disk Cleaner</sub>
 
 [![最新版本](https://img.shields.io/github/v/release/nethero23/ai-disk-cleaner?label=%E4%B8%8B%E8%BD%BD&color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
 [![下载量](https://img.shields.io/github/downloads/nethero23/ai-disk-cleaner/total?color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases)
@@ -20,16 +22,16 @@
 </div>
 
 <!-- 截图占位：把 docs/images/hero.gif 放好后取消下面这行的注释
-<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner 扫描硬盘上 AI 模型缓存并一键清理的演示"></p>
+<p align="center"><img src="docs/images/hero.gif" width="900" alt="Clearwisp 扫描硬盘上 AI 模型缓存并一键清理的演示"></p>
 -->
 
 ## 一句话
 
 C 盘又红了，D 盘也快满了？在一台跑 AI 的电脑上，真正占地方的往往不是系统垃圾，而是 **几十上百 GB 的大模型、Python 环境、AI 编辑器缓存和 WSL/Docker 虚拟磁盘**。CCleaner、360、电脑管家不扫这些；WizTree 只告诉你哪个文件夹大，不告诉你那是什么、能不能删。
 
-而且这些东西不只在 C 盘：模型库、conda 环境、Docker 虚拟磁盘、项目里的 `node_modules` 经常散在 D 盘、E 盘。AI Disk Cleaner 会扫你勾选的所有盘。
+而且这些东西不只在 C 盘：模型库、conda 环境、Docker 虚拟磁盘、项目里的 `node_modules` 经常散在 D 盘、E 盘。Clearwisp 会扫你勾选的所有盘。
 
-AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
+Clearwisp 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
 
 ## 功能
 
@@ -99,7 +101,7 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 
 ## 和其他清理软件比
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | 识别 Ollama / HF / LM Studio 模型 | ✅ 具体到模型名 | ❌ | ❌ | ❌ | ❌ 只显示大小 |
 | Cursor / Claude Code / VS Code 缓存 | ✅ | ❌ | ✅（6.0 起） | ❌ | ❌ |
@@ -119,7 +121,7 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 ## 常见问题
 
 ### C 盘（或 D 盘）满了，怎么看是被什么占满的？
-打开 AI Disk Cleaner 的「空间去哪儿了」，选一个盘，会列出每个顶层文件夹的占用，`Users\<你>` 下的 `AppData\Local`、`Downloads` 等也单独列出。再点「扫描」，结果会具体到每个工具、每个模型。
+打开 Clearwisp 的「空间去哪儿了」，选一个盘，会列出每个顶层文件夹的占用，`Users\<你>` 下的 `AppData\Local`、`Downloads` 等也单独列出。再点「扫描」，结果会具体到每个工具、每个模型。
 
 ### Ollama 的模型存在哪里？怎么移到 D 盘？
 默认在 `C:\Users\<你>\.ollama\models`。在扫描结果里找到 Ollama 模型，点「搬到其他盘」，选 D 盘目录即可。程序会复制、校验、设置 `OLLAMA_MODELS` 环境变量，之后 Ollama 自动从新位置读取。重启 Ollama 生效。
@@ -137,7 +139,7 @@ Cursor 的缓存、日志、扩展下载缓存可以放心删（标「安全」�
 扫描后它们会出现在「Python / 开发缓存」分组里，都是「安全」级：删了下次安装时会自动重新下载。conda 环境会显示环境名和最后使用时间，没用的整个环境也可以清掉。
 
 ### WSL 或 Docker 的 `ext4.vhdx` 越来越大怎么缩小？
-虚拟磁盘只会变大不会自动缩小。在 AI Disk Cleaner 里找到对应的 vhdx，点「压缩」，程序会先 `wsl --shutdown` 再用 diskpart 压缩（需要管理员权限，Windows 家庭版也能用），不会删除里面的数据。
+虚拟磁盘只会变大不会自动缩小。在 Clearwisp 里找到对应的 vhdx，点「压缩」，程序会先 `wsl --shutdown` 再用 diskpart 压缩（需要管理员权限，Windows 家庭版也能用），不会删除里面的数据。
 
 ### 只能清 C 盘吗？D 盘、E 盘能扫吗？
 能。在「扫描范围」里勾选要扫的盘（设置页和扫描结果页顶部都能改）。其他盘上的模型库、缓存、虚拟磁盘、项目构建产物和大文件都会被找出来。C 盘空间紧张时，也可以把大模型「搬到其他盘」。
@@ -149,7 +151,7 @@ Cursor 的缓存、日志、扩展下载缓存可以放心删（标「安全」�
 扫描只读，不写文件；只清理规则库里明确列出的缓存目录，每一项都写了删除后果；默认只勾「安全」级；不碰注册表。正在运行的工具会提示你先关闭。
 
 ### 和 CCleaner 比有什么不同？能替代吗？
-CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境和 AI 编辑器缓存。AI Disk Cleaner 专门清这些，同时也清常见的系统垃圾。两者可以一起用。
+CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境和 AI 编辑器缓存。Clearwisp 专门清这些，同时也清常见的系统垃圾。两者可以一起用。
 
 ### 免费吗？有广告吗？会上传数据吗？
 免费、MIT 开源、无广告、无捆绑。所有扫描和清理都在本地完成，只有检查更新和（可选的）在线更新规则时会访问 GitHub。

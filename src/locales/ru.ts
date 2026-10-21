@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const ru: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "Сначала узнайте, что такое каждый ГБ, потом решайте",
   scan: "Сканировать",
   rescan: "Сканировать снова",
@@ -277,6 +277,12 @@ const ru: Partial<Strings> = {
   clear: "Очистить",
   language: "Язык",
   languageAuto: "Как в системе",
+  setAppearance: "Внешний вид и язык",
+  theme: "Тема",
+  themeSystem: "Как в системе",
+  themeLight: "Светлая",
+  themeDark: "Тёмная",
+  setScanSection: "Сканирование",
   listSep: ", ",
   sentenceEnd: ".",
 };

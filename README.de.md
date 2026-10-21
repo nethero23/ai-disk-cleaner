@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner Symbol">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Clearwisp Symbol">
 
-# AI Disk Cleaner: der Festplatten-Cleaner, der KI-Tools versteht
+# Clearwisp: der Festplatten-Cleaner, der KI-Tools versteht
 
 **Kostenloser Open-Source-Festplatten-Cleaner für Windows, gemacht für KI-Entwickler, für C:, D: und jedes andere Laufwerk. Findet und schafft den Platz frei, den Ollama-, Hugging-Face- und LM-Studio-Modelle, Caches von Cursor, Claude Code und VS Code, pip-, conda- und npm-Caches sowie virtuelle WSL- und Docker-Festplatten belegen. Erst scannen, dann entscheiden Sie, und jedes Löschen lässt sich rückgängig machen.**
 
@@ -23,9 +23,9 @@
 
 Auf einem PC für KI-Arbeit füllt selten klassischer Systemmüll die Festplatte. Es sind **lokale LLM-Gewichte, Python-Umgebungen, Caches von KI-Code-Editoren und virtuelle WSL-/Docker-Festplatten**, oft Hunderte GB. CCleaner und ähnliche Tools schauen dort nicht nach; WizTree zeigt, welcher Ordner groß ist, aber nicht, was er enthält und ob man ihn löschen darf.
 
-Und es betrifft nicht nur C:. Modellbibliotheken, conda-Umgebungen, Docker-Festplatten und `node_modules` aus Projekten landen auch auf D: und E:. AI Disk Cleaner scannt jedes Laufwerk, das Sie auswählen.
+Und es betrifft nicht nur C:. Modellbibliotheken, conda-Umgebungen, Docker-Festplatten und `node_modules` aus Projekten landen auch auf D: und E:. Clearwisp scannt jedes Laufwerk, das Sie auswählen.
 
-AI Disk Cleaner erklärt jedes Gigabyte: **welches Modell, welche conda-Umgebung, welcher Tool-Cache, wann zuletzt benutzt und was beim Löschen passiert**. Jeder Eintrag hat eine Sicherheitsstufe, nichts wird gelöscht, bevor Sie es anhaken, gelöscht wird in den Papierkorb, und die letzte Bereinigung lässt sich mit einem Klick rückgängig machen.
+Clearwisp erklärt jedes Gigabyte: **welches Modell, welche conda-Umgebung, welcher Tool-Cache, wann zuletzt benutzt und was beim Löschen passiert**. Jeder Eintrag hat eine Sicherheitsstufe, nichts wird gelöscht, bevor Sie es anhaken, gelöscht wird in den Papierkorb, und die letzte Bereinigung lässt sich mit einem Klick rückgängig machen.
 
 <a id="features"></a>
 ## Funktionen
@@ -94,7 +94,7 @@ Voraussetzungen: Windows 10 / 11 x64 mit WebView2 (in Windows 11 enthalten; unte
 <a id="comparison"></a>
 ## Vergleich
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Ollama- / HF- / LM-Studio-Modelle | ✅ mit Modellname | ❌ | ❌ | ❌ | ❌ nur Größe |
 | Caches von Cursor / Claude Code / VS Code | ✅ | ❌ | ✅ (ab 6.0) | ❌ | ❌ |

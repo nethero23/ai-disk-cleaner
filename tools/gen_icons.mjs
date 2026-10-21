@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const NAMES = [
   "add", "admin_panel_settings", "arrow_back", "arrow_drop_down", "arrow_forward", "arrow_upward", "wand_stars",
   "bedtime", "block", "chat", "check", "chevron_right", "close", "cleaning_services", "cloud_download",
-  "compress", "content_copy", "dark_mode", "delete", "description", "donut_large", "drive_file_move", "error", "extension", "hub", "flag",
+  "compress", "content_copy", "folder", "open_in_new", "palette", "rule", "update", "dark_mode", "delete", "description", "donut_large", "drive_file_move", "error", "extension", "hub", "flag",
   "folder_open", "help", "history", "info", "language", "light_mode", "lock", "more_vert", "radar", "refresh",
   "restore_from_trash", "schedule", "search", "settings", "shield", "sort", "trending_up", "undo", "verified",
   "verified_user", "visibility", "visibility_off", "warning",

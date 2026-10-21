@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const ko: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "지우기 전에, 그 1 GB가 무엇인지 먼저 확인하세요",
   scan: "검사",
   rescan: "다시 검사",
@@ -277,6 +277,12 @@ const ko: Partial<Strings> = {
   clear: "지우기",
   language: "표시 언어",
   languageAuto: "시스템 설정 따르기",
+  setAppearance: "화면 및 언어",
+  theme: "테마",
+  themeSystem: "시스템",
+  themeLight: "라이트",
+  themeDark: "다크",
+  setScanSection: "스캔",
   listSep: ", ",
   sentenceEnd: ".",
 };
