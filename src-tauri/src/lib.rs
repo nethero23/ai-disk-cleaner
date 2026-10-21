@@ -105,7 +105,7 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
             lang,
             global_min_bytes: settings.min_item_bytes,
             excluded: settings.excluded_paths,
-            extra_roots: settings.scan_drives,
+            extra_roots: settings.scan_drives.clone(),
             ..ScanOptions::default()
         };
         let report = scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
@@ -120,7 +120,7 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
                 },
             );
         });
-        cleaner_core::growth::record(&growth, &report);
+        cleaner_core::growth::record(&growth, &report, &settings.scan_drives);
         report
     })
     .await
@@ -633,6 +633,22 @@ pub fn run() {
             Some(vec!["--minimized"]),
         ))
         .setup(|app| {
+            // The main window is built here rather than in tauri.conf.json so
+            // the portable build can keep the WebView2 profile (cookies,
+            // localStorage, cache) in its own data folder instead of
+            // %LOCALAPPDATA%, where it would be shared with an installed copy.
+            let mut wb =
+                tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
+                    .title("AI Disk Cleaner")
+                    .inner_size(1100.0, 740.0)
+                    .min_inner_size(860.0, 560.0);
+            if let Some(dir) = portable_dir() {
+                wb = wb.data_directory(dir.join("webview"));
+            }
+            if let Some(icon) = app.default_window_icon() {
+                wb = wb.icon(icon.clone())?;
+            }
+            wb.build()?;
             background::setup(app.handle())?;
             Ok(())
         })

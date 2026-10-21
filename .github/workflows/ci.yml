@@ -88,7 +88,7 @@ jobs:
           rm -rf portable && mkdir -p portable/data
           cp "$exe" "portable/AI Disk Cleaner.exe"
           : > portable/portable
-          printf 'AI Disk Cleaner %s (portable)\n\nRun "AI Disk Cleaner.exe". Settings and logs stay in the "data" folder next to it.\nNeeds the WebView2 runtime, which Windows 10/11 already have.\nThe portable build does not auto-update: download a newer zip from\nhttps://github.com/%s/releases\n\n便携版：双击 "AI Disk Cleaner.exe" 即可，设置和日志放在旁边的 data 文件夹里。\n便携版不会自动更新，新版本请到上面的地址下载。\n' "$ver" "$GITHUB_REPOSITORY" > portable/README.txt
+          printf 'AI Disk Cleaner %s (portable)\n\nRun "AI Disk Cleaner.exe". Settings, logs and the browser profile stay in the "data" folder next to it.\nOnly one copy runs at a time: starting the portable build while the installed app is open (or the other way round) just brings the open window to the front.\nNeeds the WebView2 runtime, which Windows 10/11 already have.\nThe portable build does not auto-update: download a newer zip from\nhttps://github.com/%s/releases\n\n便携版：双击 "AI Disk Cleaner.exe" 即可，设置、日志和浏览器数据都放在旁边的 data 文件夹里。\n同一时间只能开一个：已装版开着时再开便携版（或反过来），只会把已开的窗口带到前面。\n便携版不会自动更新，新版本请到上面的地址下载。\n' "$ver" "$GITHUB_REPOSITORY" > portable/README.txt
           zip="target/release/bundle/AI.Disk.Cleaner_${ver}_x64-portable.zip"
           (cd portable && 7z a -tzip "../$zip" . > /dev/null)
           ls -l "$zip"
