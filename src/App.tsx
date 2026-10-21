@@ -976,7 +976,7 @@ export function App() {
         </div>
       )}
 
-      {view === "aitools" && <AiTools lang={lang} />}
+      {view === "aitools" && <AiTools lang={lang} versionCheck={settings?.mcp_version_check ?? true} />}
 
       {view === "overview" && (
         <section className="bigfiles overview">
@@ -1304,6 +1304,13 @@ export function App() {
               </p>
             </>
           )}
+
+          <p>
+            <label>
+              <input type="checkbox" checked={settings.mcp_version_check} onChange={(e) => saveSettings({ ...settings, mcp_version_check: e.target.checked })} />{" "}
+              {s.setMcpVersionCheck}
+            </label>
+          </p>
 
           <h2>{s.setUpdate}</h2>
           <p className="muted">{s.setUpdateBody}</p>

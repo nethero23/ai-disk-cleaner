@@ -7,7 +7,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import "../../ui";
 import { Button, Card, Dialog, FilterChip, Icon, ListItem, SegmentedButton } from "../../ui";
 import { humanSize, t, type Lang } from "../../i18n";
-import type { AiFinding, AiFindingKind, AiInventory, AiMcpServer, AiToolInventory } from "../../types";
+import type { AiFinding, AiFindingKind, AiInventory, AiMcpServer, AiToolInventory, AiVersionInfo } from "../../types";
 import "./style.css";
 
 type View = "tools" | "mcp" | "findings";
@@ -37,7 +37,7 @@ type Detail =
   | { kind: "server"; servers: AiMcpServer[] }
   | { kind: "tool"; tool: AiToolInventory };
 
-export default function AiTools({ lang }: { lang: Lang }) {
+export default function AiTools({ lang, versionCheck }: { lang: Lang; versionCheck: boolean }) {
   const s = t(lang);
   const [inv, setInv] = useState<AiInventory | null>(null);
   const [busy, setBusy] = useState(false);
@@ -45,16 +45,35 @@ export default function AiTools({ lang }: { lang: Lang }) {
   const [view, setView] = useState<View>("tools");
   const [kind, setKind] = useState<AiFindingKind | "all">("all");
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [latest, setLatest] = useState<Map<string, string>>(new Map());
+  const [checking, setChecking] = useState(false);
 
   async function load() {
     setBusy(true);
     setError(null);
     try {
-      setInv(await invoke<AiInventory>("ai_inventory"));
+      const next = await invoke<AiInventory>("ai_inventory");
+      setInv(next);
+      setBusy(false);
+      if (versionCheck) await checkVersions(next);
     } catch (e) {
       setError(String(e));
+      setBusy(false);
     }
-    setBusy(false);
+  }
+
+  // Package names only (npm:/pypi: identities); the command refuses when the setting is off.
+  async function checkVersions(next: AiInventory) {
+    const ids = [...new Set(next.tools.flatMap((x) => x.mcp.map((m) => m.identity)))].filter((id) => id.startsWith("npm:") || id.startsWith("pypi:"));
+    if (ids.length === 0) return;
+    setChecking(true);
+    try {
+      const infos = await invoke<AiVersionInfo[]>("ai_version_check", { identities: ids });
+      setLatest(new Map(infos.filter((i) => i.latest).map((i) => [i.identity, i.latest as string])));
+    } catch {
+      // Offline or blocked: the page works without it.
+    }
+    setChecking(false);
   }
   useEffect(() => {
     void load();
@@ -96,6 +115,7 @@ export default function AiTools({ lang }: { lang: Lang }) {
           <Card variant="filled" className="ai-summary">
             <p>{s.aiSummary(present.length, inv.analysis.mcp_total, inv.analysis.mcp_unique, inv.analysis.skills_total, inv.analysis.skills_unique)}</p>
             {inv.analysis.reclaimable_bytes > 0 && <p className="ai-reclaim">{s.aiReclaim(humanSize(inv.analysis.reclaimable_bytes))}</p>}
+            {checking && <p className="ai-muted">{s.aiChecking}</p>}
           </Card>
 
           <div className="ai-toolbar">
@@ -138,12 +158,14 @@ export default function AiTools({ lang }: { lang: Lang }) {
                 const tools = [...new Set(servers.map((x) => x.tool))];
                 const versions = [...new Set(servers.map((x) => x.version).filter(Boolean))];
                 const secret = servers.some((x) => x.secrets.length > 0);
+                const lat = latest.get(identity);
+                const behindPins = lat ? versions.filter((v) => v && isBehind(v, lat)) : [];
                 return (
                   <ListItem
                     key={identity}
                     avatar={<Icon name={servers[0].transport === "remote" ? "language" : "hub"} />}
                     headline={<>{servers[0].name}{secret && <Icon name="lock" className="ai-inline-icon" />}</>}
-                    supporting={<>{identity}{versions.length > 1 ? ` · ${versions.join(" / ")}` : ""}</>}
+                    supporting={<>{identity}{versions.length > 1 ? ` · ${versions.join(" / ")}` : ""}{lat ? <span className={behindPins.length ? "ai-behind" : "ai-muted"}> · {behindPins.length ? s.aiNewer(behindPins.join(" / "), lat) : s.aiLatest(lat)}</span> : null}</>}
                     trailing={<span className="ai-trail">{tools.length > 1 ? s.aiInTools(tools.length) : toolName(tools[0])}</span>}
                     onOpen={() => setDetail({ kind: "server", servers })}
                   />
@@ -196,6 +218,22 @@ export default function AiTools({ lang }: { lang: Lang }) {
 }
 
 type S = ReturnType<typeof t>;
+
+function versionKey(v: string): number[] {
+  return v.replace(/^v/, "").split(/[.\-+]/).map((p) => parseInt(p, 10) || 0);
+}
+
+function isBehind(pinned: string, latest: string): boolean {
+  if (!/^\d/.test(pinned)) return false;
+  const a = versionKey(pinned);
+  const b = versionKey(latest);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (x !== y) return y > x;
+  }
+  return false;
+}
 
 function PathList({ paths, s }: { paths: string[]; s: S }) {
   const [copied, setCopied] = useState<string | null>(null);

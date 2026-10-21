@@ -44,6 +44,9 @@ pub struct Settings {
     pub growth_notify_bytes: u64,
     /// The first-run walkthrough has been shown (or skipped).
     pub onboarded: bool,
+    /// On the AI tools page, ask npm / PyPI for the latest version of each
+    /// MCP server package. Sends package names only, never config contents.
+    pub mcp_version_check: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -70,6 +73,7 @@ impl Default for Settings {
             idle_model_days: 90,
             growth_notify_bytes: 2 * 1024 * 1024 * 1024,
             onboarded: false,
+            mcp_version_check: true,
         }
     }
 }

@@ -14,11 +14,13 @@ pub mod analyze;
 pub mod catalog;
 pub mod mcp;
 pub mod skills;
+pub mod versions;
 
 pub use analyze::{analyze, Analysis, Finding, FindingKind};
 pub use catalog::{Catalog, McpSource, ToolDef};
 pub use mcp::{ConfigFile, McpServer, McpTransport, SecretHit};
 pub use skills::{Extension, Plugin, Skill};
+pub use versions::{latest_from_response, registry_url, VersionInfo};
 
 use crate::paths::PathContext;
 use serde::{Deserialize, Serialize};

@@ -443,6 +443,50 @@ async fn ai_inventory() -> Result<cleaner_core::aiconfig::Inventory, String> {
     .map_err(|e| e.to_string())
 }
 
+/// Asks npm / PyPI for the latest version of each MCP server package. The
+/// request carries the package name only. Off when the setting is off.
+#[tauri::command]
+async fn ai_version_check(
+    app: AppHandle,
+    identities: Vec<String>,
+) -> Result<Vec<cleaner_core::aiconfig::VersionInfo>, String> {
+    use cleaner_core::aiconfig::{latest_from_response, registry_url, VersionInfo};
+    if !Settings::load(&settings_path(&app)).mcp_version_check {
+        return Ok(Vec::new());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let agent = ureq::Agent::config_builder()
+            .timeout_global(Some(std::time::Duration::from_secs(15)))
+            .build()
+            .new_agent();
+        let mut seen = std::collections::HashSet::new();
+        let mut out = Vec::new();
+        for identity in identities.into_iter().take(200) {
+            if !seen.insert(identity.clone()) {
+                continue;
+            }
+            let Some(url) = registry_url(&identity) else {
+                continue;
+            };
+            let mut info = VersionInfo {
+                identity: identity.clone(),
+                ..Default::default()
+            };
+            match agent.get(&url).call() {
+                Ok(mut resp) => match resp.body_mut().read_to_string() {
+                    Ok(body) => info.latest = latest_from_response(&identity, &body),
+                    Err(e) => info.error = Some(e.to_string()),
+                },
+                Err(e) => info.error = Some(e.to_string()),
+            }
+            out.push(info);
+        }
+        out
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Deep clean: the catalogue with cheap estimates.
 #[tauri::command]
 fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
@@ -694,6 +738,7 @@ pub fn run() {
             unrecognized,
             suggest_rule_url,
             ai_inventory,
+            ai_version_check,
             deep_tasks,
             deep_analyze,
             deep_run,
