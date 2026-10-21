@@ -17,6 +17,11 @@ const strings = {
     confirmBody: (n: number, size: string) =>
       `将把 ${n} 项（${size}）移入回收站。可以从回收站或本软件的清理记录还原。`,
     confirmReview: (n: number) => `其中 ${n} 项标记为「需确认」，可能包含你的对话记录或正在使用的环境。`,
+    exportFirst: (n: number) => `清理前先把 ${n} 项对话记录打包成 zip 备份`,
+    exportPick: "选择保存位置…",
+    exportTo: (p: string) => `保存到：${p}`,
+    exporting: "正在打包对话记录…",
+    exported: (files: number, zip: string) => `已导出 ${files} 个文件到 ${zip}`,
     cancel: "取消",
     confirm: "移入回收站",
     done: (size: string) => `已释放 ${size}`,
@@ -107,6 +112,11 @@ const strings = {
     confirmBody: (n: number, size: string) =>
       `${n} items (${size}) will be moved to the Recycle Bin. You can restore them from there or from this app's history.`,
     confirmReview: (n: number) => `${n} of them are marked "Review" and may hold chat history or an environment still in use.`,
+    exportFirst: (n: number) => `Back up ${n} chat-history item(s) to a zip before cleaning`,
+    exportPick: "Choose where to save…",
+    exportTo: (p: string) => `Save to: ${p}`,
+    exporting: "Packing chat history…",
+    exported: (files: number, zip: string) => `Exported ${files} files to ${zip}`,
     cancel: "Cancel",
     confirm: "Move to Recycle Bin",
     done: (size: string) => `Freed ${size}`,

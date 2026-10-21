@@ -3,6 +3,7 @@
 
 use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
+use cleaner_core::export::{self, ExportResult};
 use cleaner_core::paths::PathContext;
 use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
 use cleaner_core::vhdx::{self, CompactResult, Vhdx};
@@ -183,6 +184,29 @@ async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
         .map_err(|e| e.to_string())?
 }
 
+/// Rule ids whose items are chat history that can be exported first.
+#[tauri::command]
+fn exportable() -> Vec<String> {
+    export::EXPORTABLE_RULES
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+}
+
+#[tauri::command]
+async fn export_items(
+    app: AppHandle,
+    items: Vec<ScanItem>,
+    dest_dir: PathBuf,
+) -> Result<ExportResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut progress = progress_emitter(app, "export-progress");
+        export::export(&items, &dest_dir, &mut progress).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
 async fn find_duplicates(items: Vec<ScanItem>) -> Result<Vec<DuplicateGroup>, String> {
     tauri::async_runtime::spawn_blocking(move || dedup::find_duplicates(&items))
@@ -214,6 +238,11 @@ pub fn run() {
             relocate_item,
             relocations,
             move_back,
+            compactable,
+            vhdx_files,
+            compact_vhdx,
+            exportable,
+            export_items,
             find_duplicates,
             merge_duplicates
         ])

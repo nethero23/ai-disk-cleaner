@@ -11,6 +11,7 @@
 
 pub mod clean;
 pub mod dedup;
+pub mod export;
 pub mod inspect;
 pub mod model;
 pub mod paths;

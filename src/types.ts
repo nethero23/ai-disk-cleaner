@@ -100,3 +100,9 @@ export interface CompactResult {
   before: number;
   after: number;
 }
+
+export interface ExportResult {
+  zip_path: string;
+  files: number;
+  bytes: number;
+}
