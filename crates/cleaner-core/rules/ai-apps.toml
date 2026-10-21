@@ -11,6 +11,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "应用会自动重建"
 consequence_en = "The app rebuilds it"
+processes = ["Claude"]
 
 [[rule]]
 id = "chatgpt_desktop.cache"
@@ -24,6 +25,7 @@ safety = "safe"
 consequence_zh = "应用会自动重建"
 consequence_en = "The app rebuilds it"
 windows_only = true
+processes = ["ChatGPT"]
 
 [[rule]]
 id = "jan.cache"
@@ -36,6 +38,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "应用会自动重建"
 consequence_en = "The app rebuilds it"
+processes = ["Jan"]
 
 [[rule]]
 id = "jan.models"
@@ -48,6 +51,7 @@ safety = "redownload"
 inspector = "children"
 consequence_zh = "需要在 Jan 里重新下载 {size}"
 consequence_en = "Re-download {size} inside Jan"
+processes = ["Jan"]
 
 [[rule]]
 id = "anythingllm.cache"
@@ -60,6 +64,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "应用会自动重建"
 consequence_en = "The app rebuilds it"
+processes = ["AnythingLLM"]
 
 [[rule]]
 id = "comfyui.temp"
@@ -72,3 +77,5 @@ all_paths = true
 safety = "safe"
 consequence_zh = "预览图和日志，会自动重建"
 consequence_en = "Preview images and logs; rebuilds itself"
+processes = ["ComfyUI"]
+

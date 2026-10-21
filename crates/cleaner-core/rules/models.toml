@@ -11,6 +11,7 @@ safety = "redownload"
 inspector = "ollama_models"
 consequence_zh = "需要用 ollama pull 重新下载 {size}"
 consequence_en = "Re-download {size} with ollama pull"
+processes = ["ollama", "ollama app"]
 
 [[rule]]
 id = "ollama.logs"
@@ -58,6 +59,7 @@ safety = "redownload"
 inspector = "lm_studio_models"
 consequence_zh = "需要在 LM Studio 里重新下载 {size}"
 consequence_en = "Re-download {size} inside LM Studio"
+processes = ["LM Studio", "lms"]
 
 [[rule]]
 id = "lmstudio.conversations"
@@ -69,6 +71,7 @@ paths = ["${USERPROFILE}/.lmstudio/conversations"]
 safety = "review"
 consequence_zh = "你和模型的聊天记录会丢失"
 consequence_en = "Your chat history with models is lost"
+processes = ["LM Studio"]
 
 [[rule]]
 id = "torch.hub"
@@ -104,6 +107,7 @@ safety = "redownload"
 consequence_zh = "Chrome 内置 AI 功能会重新下载约 4 GB"
 consequence_en = "Chrome's built-in AI re-downloads about 4 GB"
 windows_only = true
+processes = ["chrome"]
 
 [[rule]]
 id = "edge.ondevice_model"
@@ -116,3 +120,5 @@ safety = "redownload"
 consequence_zh = "Edge 内置 AI 功能会重新下载"
 consequence_en = "Edge's built-in AI re-downloads it"
 windows_only = true
+processes = ["msedge"]
+

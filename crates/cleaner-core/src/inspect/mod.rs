@@ -5,6 +5,7 @@
 //! delete anything and tolerate half-written caches (a model mid-download,
 //! a workspace folder with no `workspace.json`).
 
+pub mod artifacts;
 pub mod claude;
 pub mod conda;
 pub mod cursor;

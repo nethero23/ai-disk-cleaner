@@ -55,6 +55,10 @@ const strings = {
       system: "系统",
     } as Record<Category, string>,
     history: "清理记录",
+    backToScan: "返回扫描",
+    historyEmpty: "还没有清理过任何东西。",
+    historyTotal: (n: number, size: string) => `共清理 ${n} 项，释放 ${size}。文件在回收站里，可以从那里还原。`,
+    inUse: (p: string) => `${p} 正在运行，关闭后才能清理`,
     language: "English",
   },
   en: {
@@ -109,6 +113,10 @@ const strings = {
       system: "System",
     } as Record<Category, string>,
     history: "History",
+    backToScan: "Back to scan",
+    historyEmpty: "Nothing has been cleaned yet.",
+    historyTotal: (n: number, size: string) => `${n} items cleaned, ${size} freed. Files are in the Recycle Bin and can be restored from there.`,
+    inUse: (p: string) => `${p} is running; close it to clean this`,
     language: "中文",
   },
 };

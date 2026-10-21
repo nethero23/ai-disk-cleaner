@@ -12,6 +12,7 @@ safety = "review"
 consequence_zh = "所有镜像、容器和卷都会丢失。更好的做法是 docker system prune 后压缩虚拟磁盘"
 consequence_en = "All images, containers and volumes are lost. Better: docker system prune, then compact the disk"
 windows_only = true
+processes = ["Docker Desktop", "com.docker.backend"]
 
 [[rule]]
 id = "wsl.distros"
@@ -26,6 +27,7 @@ min_bytes = 2147483648
 consequence_zh = "这是整个 Linux 子系统。删除即丢失其中全部文件"
 consequence_en = "This is a whole Linux system; deleting loses everything inside it"
 windows_only = true
+processes = ["wsl", "vmmem", "vmmemWSL"]
 
 [[rule]]
 id = "docker.cli_cache"

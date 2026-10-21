@@ -13,6 +13,7 @@ pub mod clean;
 pub mod inspect;
 pub mod model;
 pub mod paths;
+pub mod process;
 pub mod rules;
 pub mod scan;
 

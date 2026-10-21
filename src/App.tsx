@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanSummary, ScanItem, ScanReport } from "./types";
+import type { Category, CleanRecord, CleanSummary, ScanItem, ScanReport } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -20,6 +20,11 @@ const CATEGORY_ORDER: Category[] = [
   "system",
 ];
 
+/** Ticked by default: pure caches whose owning tool is not running. */
+function isDefaultTicked(i: ScanItem): boolean {
+  return i.safety === "safe" && !i.in_use_by;
+}
+
 export function App() {
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("lang") as Lang) || "zh");
   const s = t(lang);
@@ -30,6 +35,17 @@ export function App() {
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
+  const [view, setView] = useState<"scan" | "history">("scan");
+  const [history, setHistory] = useState<CleanRecord[]>([]);
+
+  async function openHistory() {
+    try {
+      setHistory(await invoke<CleanRecord[]>("clean_log"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setView("history");
+  }
 
   useEffect(() => {
     localStorage.setItem("lang", lang);
@@ -44,7 +60,7 @@ export function App() {
       const r = await invoke<ScanReport>("scan", { lang });
       setReport(r);
       // Default selection: only what is safe. The user opts into everything else.
-      setSelected(new Set(r.items.filter((i) => i.safety === "safe").map((i) => i.id)));
+      setSelected(new Set(r.items.filter(isDefaultTicked).map((i) => i.id)));
       setPhase("ready");
     } catch (e) {
       setError(String(e));
@@ -87,7 +103,7 @@ export function App() {
     setSelected((prev) => {
       const next = new Set(prev);
       for (const i of items) {
-        if (all) next.delete(i.id);
+        if (all || i.in_use_by) next.delete(i.id);
         else next.add(i.id);
       }
       return next;
@@ -128,6 +144,9 @@ export function App() {
           <button className="ghost" onClick={() => setLang(lang === "zh" ? "en" : "zh")}>
             {s.language}
           </button>
+          <button className="ghost" onClick={() => (view === "history" ? setView("scan") : openHistory())}>
+            {view === "history" ? s.backToScan : s.history}
+          </button>
           <button
             className="primary"
             disabled={phase === "scanning" || phase === "cleaning"}
@@ -148,20 +167,50 @@ export function App() {
         </div>
       )}
 
-      {!report && phase !== "scanning" && (
+      {view === "history" && (
+        <section className="history">
+          {history.length === 0 ? (
+            <p className="empty">{s.historyEmpty}</p>
+          ) : (
+            <>
+              <p className="muted">
+                {s.historyTotal(
+                  history.filter((r) => r.ok).length,
+                  humanSize(history.filter((r) => r.ok).reduce((a, r) => a + r.size_bytes, 0)),
+                )}
+              </p>
+              <table className="log">
+                <tbody>
+                  {[...history].reverse().map((r, i) => (
+                    <tr key={i} className={r.ok ? "" : "failed"}>
+                      <td className="muted">{new Date(r.at).toLocaleString()}</td>
+                      <td>{r.name}</td>
+                      <td className="muted" title={r.path}>{r.path}</td>
+                      <td className="size">{humanSize(r.size_bytes)}</td>
+                      <td className="muted">{r.ok ? "" : r.error}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </section>
+      )}
+
+      {view === "scan" && !report && phase !== "scanning" && (
         <section className="empty">
           <h2>{s.emptyTitle}</h2>
           <p>{s.emptyBody}</p>
         </section>
       )}
-      {phase === "scanning" && (
+      {view === "scan" && phase === "scanning" && (
         <section className="empty">
           <div className="spinner" />
           <p>{s.scanning}</p>
         </section>
       )}
 
-      {report && phase !== "scanning" && (
+      {view === "scan" && report && phase !== "scanning" && (
         <>
           <section className="summary">
             <div className="stat">
@@ -173,7 +222,7 @@ export function App() {
               <Pill level="review" label={s.safety.review} size={humanSize(report.review_bytes)} hint={s.safetyHint.review} />
             </div>
             <div className="quick">
-              <button className="ghost" onClick={() => setSelected(new Set(report.items.filter((i) => i.safety === "safe").map((i) => i.id)))}>
+              <button className="ghost" onClick={() => setSelected(new Set(report.items.filter(isDefaultTicked).map((i) => i.id)))}>
                 {s.selectAllSafe}
               </button>
               <button className="ghost" onClick={() => setSelected(new Set())}>
@@ -223,8 +272,14 @@ export function App() {
                   {open && (
                     <ul className="items">
                       {g.items.map((it) => (
-                        <li key={it.id} className={`item ${selected.has(it.id) ? "on" : ""}`}>
-                          <input type="checkbox" checked={selected.has(it.id)} onChange={() => toggle(it.id)} />
+                        <li key={it.id} className={`item ${selected.has(it.id) ? "on" : ""} ${it.in_use_by ? "inuse" : ""}`}>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(it.id)}
+                            disabled={!!it.in_use_by}
+                            title={it.in_use_by ? s.inUse(it.in_use_by) : undefined}
+                            onChange={() => toggle(it.id)}
+                          />
                           <div className="item-main">
                             <div className="item-line">
                               <span className="tool">{it.tool}</span>
@@ -232,6 +287,11 @@ export function App() {
                               <span className={`tag ${it.safety}`} title={s.safetyHint[it.safety]}>
                                 {s.safety[it.safety]}
                               </span>
+                              {it.in_use_by && (
+                                <span className="tag inuse" title={s.inUse(it.in_use_by)}>
+                                  ● {it.in_use_by}
+                                </span>
+                              )}
                             </div>
                             <div className="item-sub">
                               <span className="consequence">{it.consequence}</span>

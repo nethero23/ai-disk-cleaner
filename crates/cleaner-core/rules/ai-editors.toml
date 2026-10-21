@@ -11,6 +11,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "Cursor 会自动重建"
 consequence_en = "Cursor rebuilds it"
+processes = ["Cursor"]
 
 [[rule]]
 id = "cursor.logs"
@@ -22,6 +23,7 @@ paths = ["${APPDATA}/Cursor/logs"]
 safety = "safe"
 consequence_zh = "只是日志"
 consequence_en = "Logs only"
+processes = ["Cursor"]
 
 [[rule]]
 id = "cursor.workspaces"
@@ -34,6 +36,7 @@ safety = "review"
 inspector = "cursor_workspaces"
 consequence_zh = "该项目在 Cursor 里的状态和对话记录会丢失"
 consequence_en = "That project's editor state and chat history in Cursor is lost"
+processes = ["Cursor"]
 
 [[rule]]
 id = "cursor.global_state"
@@ -46,6 +49,7 @@ safety = "review"
 min_bytes = 1073741824
 consequence_zh = "所有 Cursor 对话和设置会丢失。建议先在 Cursor 里导出或清理旧对话，而不是整个删除"
 consequence_en = "All Cursor chats and settings are lost. Export or prune old chats inside Cursor instead of deleting this"
+processes = ["Cursor"]
 
 [[rule]]
 id = "windsurf.cache"
@@ -58,6 +62,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "Windsurf 会自动重建"
 consequence_en = "Windsurf rebuilds it"
+processes = ["Windsurf"]
 
 [[rule]]
 id = "windsurf.workspaces"
@@ -70,6 +75,7 @@ safety = "review"
 inspector = "cursor_workspaces"
 consequence_zh = "该项目在 Windsurf 里的状态和对话记录会丢失"
 consequence_en = "That project's editor state and chat history in Windsurf is lost"
+processes = ["Windsurf"]
 
 [[rule]]
 id = "vscode.cache"
@@ -82,6 +88,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "VS Code 会自动重建"
 consequence_en = "VS Code rebuilds it"
+processes = ["Code"]
 
 [[rule]]
 id = "vscode.workspaces"
@@ -94,6 +101,7 @@ safety = "review"
 inspector = "cursor_workspaces"
 consequence_zh = "该项目的编辑器状态（含 Copilot 对话）会丢失"
 consequence_en = "That project's editor state (including Copilot chats) is lost"
+processes = ["Code"]
 
 [[rule]]
 id = "antigravity.cache"
@@ -106,6 +114,7 @@ all_paths = true
 safety = "safe"
 consequence_zh = "Antigravity 会自动重建"
 consequence_en = "Antigravity rebuilds it"
+processes = ["Antigravity"]
 
 [[rule]]
 id = "jetbrains.caches"
@@ -119,3 +128,5 @@ inspector = "children"
 min_bytes = 104857600
 consequence_zh = "IDE 下次打开项目时重新建索引，会慢几分钟"
 consequence_en = "The IDE re-indexes on next open, which takes a few minutes"
+processes = ["idea64", "pycharm64", "webstorm64", "clion64", "goland64", "rider64", "rustrover64"]
+

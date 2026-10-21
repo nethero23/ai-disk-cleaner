@@ -97,3 +97,10 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 .modal h3 { margin-top: 0; }
 .modal .warn { color: var(--review); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+.tag.inuse { background: var(--line); color: var(--muted); }
+.item.inuse { opacity: 0.75; }
+.history { padding: 16px 24px; }
+.log { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.log td { padding: 8px 10px; border-bottom: 1px solid var(--line); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log tr.failed td { color: var(--review); }

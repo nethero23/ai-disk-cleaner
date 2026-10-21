@@ -51,6 +51,9 @@ pub struct ScanItem {
     pub consequence: String,
     /// Extra detail the UI can show on hover (version, revision, env packages).
     pub detail: Option<String>,
+    /// Name of a running process that owns this data; set means "close it first".
+    #[serde(default)]
+    pub in_use_by: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

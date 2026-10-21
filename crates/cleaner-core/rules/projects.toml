@@ -1,0 +1,16 @@
+# Build artifacts inside the user's own projects. The inspector walks the home
+# folder (bounded depth, AppData and known caches skipped) and decides Safe vs
+# Review per project from how recently it was edited.
+
+[[rule]]
+id = "projects.artifacts"
+tool = "项目"
+category = "project_artifacts"
+name_zh = "项目构建产物 (node_modules / .venv / target …)"
+name_en = "Project build artifacts (node_modules / .venv / target …)"
+paths = ["${USERPROFILE}"]
+safety = "review"
+inspector = "project_artifacts"
+min_bytes = 52428800
+consequence_zh = "下次安装或构建时会重建"
+consequence_en = "Rebuilt on next install or build"
