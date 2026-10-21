@@ -139,3 +139,5 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .bar-fill { display: block; height: 100%; background: var(--accent, #4f8cff); border-radius: 5px; }
 .bar-value { text-align: right; color: var(--muted, #888); }
 @media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
+
+.consequence.warn { color: var(--review); }

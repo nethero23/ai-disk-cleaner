@@ -32,7 +32,7 @@ fn labels(lang: &str) -> Labels {
             scan: "Scan now",
             quit: "Quit",
             found_title: "Junk found",
-            found_body: "{size} can be cleaned. Click to review.",
+            found_body: "{size} can be cleaned safely. Open AI Disk Cleaner to review.",
             clean_title: "Scan finished",
             clean_body: "Nothing worth cleaning right now.",
         }
@@ -42,7 +42,7 @@ fn labels(lang: &str) -> Labels {
             scan: "立即扫描",
             quit: "退出",
             found_title: "发现可清理的垃圾",
-            found_body: "可清理 {size}，点击查看。",
+            found_body: "有 {size} 可以安全清理，打开 AI Disk Cleaner 查看。",
             clean_title: "扫描完成",
             clean_body: "目前没有值得清理的东西。",
         }
@@ -179,8 +179,10 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
     let _ = latest.save(&settings_path(app));
 
     let l = labels(&settings.lang);
-    let size = cleaner_core::model::human_size(report.total_bytes);
-    let worth = report.total_bytes >= settings.notify_min_bytes;
+    // Only what is safe to delete counts: the total also holds Review items
+    // such as a 30 GB Docker disk, which would make every scan "worth it".
+    let size = cleaner_core::model::human_size(report.safe_bytes);
+    let worth = report.safe_bytes > 0 && report.safe_bytes >= settings.notify_min_bytes;
     if worth || forced {
         let (title, body) = if worth {
             (l.found_title, l.found_body.replace("{size}", &size))
