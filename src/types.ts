@@ -141,6 +141,7 @@ export interface Settings {
   auto_clean_safe: boolean;
   auto_update_check: boolean;
   scan_drives: string[];
+  growth_notify_bytes: number;
   onboarded: boolean;
 }
 
@@ -230,4 +231,10 @@ export interface DeepResult {
 export interface DeepSummary {
   results: DeepResult[];
   freed_bytes: number;
+export interface Growth {
+  tool: string;
+  now_bytes: number;
+  before_bytes: number;
+  delta_bytes: number;
+  since: string;
 }
