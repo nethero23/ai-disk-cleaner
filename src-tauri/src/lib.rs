@@ -3,6 +3,7 @@
 
 use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
+use cleaner_core::paths::PathContext;
 use cleaner_core::relocate::{self, RelocateResult};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
@@ -101,6 +102,13 @@ fn relocatable() -> Vec<String> {
         .collect()
 }
 
+/// The folder a move would actually take (a whole store for env-var tools),
+/// so the confirmation shows it before anything happens.
+#[tauri::command]
+fn move_source(rule_id: String, path: PathBuf) -> PathBuf {
+    relocate::move_source(&rule_id, &path, &PathContext::from_env())
+}
+
 #[tauri::command]
 async fn relocate_item(
     app: AppHandle,
@@ -116,7 +124,8 @@ async fn relocate_item(
                 last_emit = std::time::Instant::now();
             }
         };
-        relocate::relocate(&rule_id, &path, &dest_root, &mut progress).map_err(|e| e.to_string())
+        let src = relocate::move_source(&rule_id, &path, &PathContext::from_env());
+        relocate::relocate(&rule_id, &src, &dest_root, &mut progress).map_err(|e| e.to_string())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -149,6 +158,7 @@ pub fn run() {
             clean_log,
             rules,
             relocatable,
+            move_source,
             relocate_item,
             find_duplicates,
             merge_duplicates

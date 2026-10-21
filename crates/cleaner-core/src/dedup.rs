@@ -109,8 +109,16 @@ fn scan_root(p: &Path) -> PathBuf {
 pub fn find_duplicates(items: &[ScanItem]) -> Vec<DuplicateGroup> {
     // First by size (cheap), then hash only sizes that collide.
     let mut by_size: HashMap<u64, Vec<DupFile>> = HashMap::new();
+    // Every Ollama model (and every orphan blob) maps to the same `blobs`
+    // folder; walk it once and count each file once, or each blob turns up
+    // as a duplicate of itself.
+    let mut roots = std::collections::HashSet::new();
+    let mut files = std::collections::HashSet::new();
     for item in items.iter().filter(|i| i.category == Category::Models) {
         let root = scan_root(&item.path);
+        if !roots.insert(root.clone()) {
+            continue;
+        }
         for e in WalkDir::new(&root)
             .follow_links(false)
             .into_iter()
@@ -120,7 +128,7 @@ pub fn find_duplicates(items: &[ScanItem]) -> Vec<DuplicateGroup> {
                 continue;
             }
             let Ok(md) = e.metadata() else { continue };
-            if md.len() < MIN_FILE_BYTES {
+            if md.len() < MIN_FILE_BYTES || !files.insert(e.path().to_path_buf()) {
                 continue;
             }
             by_size.entry(md.len()).or_default().push(DupFile {
@@ -273,6 +281,34 @@ mod tests {
         assert_eq!(file_identity(&a), file_identity(&b));
         assert_eq!(fs::read(&b).unwrap().len(), 2048);
         assert!(!b.with_extension("aidc-dup-tmp").exists());
+    }
+
+    #[test]
+    fn shared_blob_store_is_not_its_own_duplicate() {
+        // Two Ollama models point into one blobs folder.
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("models");
+        fs::create_dir_all(root.join("blobs")).unwrap();
+        fs::create_dir_all(root.join("manifests/lib/a")).unwrap();
+        fs::create_dir_all(root.join("manifests/lib/b")).unwrap();
+        let blob = fs::File::create(root.join("blobs/sha256-x")).unwrap();
+        blob.set_len(MIN_FILE_BYTES + 1).unwrap();
+        let item = |m: &str| ScanItem {
+            id: m.into(),
+            rule_id: "ollama.models".into(),
+            tool: "Ollama".into(),
+            category: Category::Models,
+            name: m.into(),
+            path: root.join("manifests/lib").join(m).join("latest"),
+            size_bytes: 0,
+            file_count: 0,
+            last_used: None,
+            safety: crate::SafetyLevel::Redownload,
+            consequence: String::new(),
+            detail: None,
+            in_use_by: None,
+        };
+        assert!(find_duplicates(&[item("a"), item("b")]).is_empty());
     }
 
     #[test]

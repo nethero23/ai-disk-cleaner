@@ -29,6 +29,9 @@ pub fn children(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> {
         if !p.is_dir() || p.is_symlink() {
             continue;
         }
+        if !rule.require.is_empty() && !rule.require.iter().any(|r| p.join(r).exists()) {
+            continue;
+        }
         let name = entry.file_name().to_string_lossy().to_string();
         let stats = tree_stats(&p);
         items.push(make_item(rule, &p, name, stats, opts, None));

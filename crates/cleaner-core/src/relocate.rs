@@ -9,7 +9,9 @@
 //! verified, so a failure half-way leaves everything as it was plus a
 //! partial copy the caller can delete.
 
-use crate::{Error, Result};
+use crate::paths::PathContext;
+use crate::scan::resolve_paths;
+use crate::{Error, Result, RuleSet};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -40,6 +42,28 @@ pub fn redirect_for(rule_id: &str) -> Option<Redirect> {
         "lmstudio.models" | "jan.models" | "whisper.models" | "docker.vhdx" => Redirect::Junction,
         _ => return None,
     })
+}
+
+/// The folder a move of `item_path` actually acts on. A tool told about its
+/// new place through an environment variable reads its whole store from
+/// there, so moving one Playwright browser or one Ollama model (whose item
+/// path is a manifest file) out of the store would point the tool at that
+/// single folder and lose everything else: those rules move the store root.
+/// Junction rules move just the item; the junction keeps the rest intact.
+pub fn move_source(rule_id: &str, item_path: &Path, ctx: &PathContext) -> PathBuf {
+    if !matches!(redirect_for(rule_id), Some(Redirect::EnvVar(_))) {
+        return item_path.into();
+    }
+    RuleSet::builtin()
+        .rules
+        .iter()
+        .find(|r| r.id == rule_id)
+        .and_then(|r| {
+            resolve_paths(r, ctx)
+                .into_iter()
+                .find(|root| item_path.starts_with(root))
+        })
+        .unwrap_or_else(|| item_path.into())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -139,15 +163,29 @@ pub fn relocate(
     let dest = check(src, dest_root)?;
     let (total_bytes, total_files) = count_tree(src);
 
-    copy_tree(src, &dest, total_bytes, progress)?;
+    // On any failure the partial copy is ours alone; remove it so a retry
+    // does not stop at "destination already exists".
+    let discard = |e: Error| {
+        let _ = std::fs::remove_dir_all(&dest);
+        e
+    };
+    copy_tree(src, &dest, total_bytes, progress).map_err(discard)?;
+    // A live cache (npm writing its logs, a download in progress) changes
+    // under the copy; that is not a broken copy, the tool is just running.
+    if count_tree(src) != (total_bytes, total_files) {
+        return Err(discard(Error::Refused(
+            src.into(),
+            "its contents changed during the copy; close the tool that uses it and try again. Original left untouched".into(),
+        )));
+    }
     let (got_bytes, got_files) = count_tree(&dest);
     if got_bytes != total_bytes || got_files != total_files {
-        return Err(Error::Refused(
-            dest,
+        return Err(discard(Error::Refused(
+            dest.clone(),
             format!(
                 "copy verification failed ({got_files}/{total_files} files, {got_bytes}/{total_bytes} bytes); original left untouched"
             ),
-        ));
+        )));
     }
 
     let note = match &redirect {
@@ -286,5 +324,31 @@ mod tests {
             "unmovable rule? no: dest exists"
         );
         assert!(redirect_for("windows.user_temp").is_none());
+    }
+
+    #[test]
+    fn env_var_rules_move_the_whole_store() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store = tmp.path().join("ms-playwright");
+        fs::create_dir_all(store.join("chromium-1234")).unwrap();
+        fs::create_dir_all(tmp.path().join("models/manifests/x")).unwrap();
+        let mut ctx = PathContext::with_vars(Default::default());
+        ctx.set("PLAYWRIGHT_BROWSERS_PATH", store.clone());
+        ctx.set("OLLAMA_MODELS", tmp.path().join("models"));
+        assert_eq!(
+            move_source("playwright.browsers", &store.join("chromium-1234"), &ctx),
+            store
+        );
+        assert_eq!(
+            move_source(
+                "ollama.models",
+                &tmp.path().join("models/manifests/x/latest"),
+                &ctx
+            ),
+            tmp.path().join("models")
+        );
+        // A junction leaves the rest of the store where it is.
+        let one = tmp.path().join("lm/models/pub");
+        assert_eq!(move_source("lmstudio.models", &one, &ctx), one);
     }
 }

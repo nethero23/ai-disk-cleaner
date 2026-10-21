@@ -2,9 +2,13 @@
 //!   aidc scan            # table of what a scan finds
 //!   aidc scan --json     # the same as JSON
 //!   aidc rules           # the rule library
+//!   aidc dupes           # duplicate model files across tools (read only)
+//!   aidc move <rule_id> <path> <dest_folder>   # move a cache to another drive
 
 use cleaner_core::model::human_size;
-use cleaner_core::{scan_all, RuleSet, ScanOptions};
+use cleaner_core::paths::PathContext;
+use cleaner_core::{dedup, relocate, scan_all, RuleSet, ScanOptions};
+use std::path::Path;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -56,8 +60,52 @@ fn main() {
                 println!("unreadable: {}", p.display());
             }
         }
+        Some("dupes") => {
+            let report = scan_all(&RuleSet::builtin(), &ScanOptions::default());
+            let groups = dedup::find_duplicates(&report.items);
+            for g in &groups {
+                println!(
+                    "{} x{}  reclaimable {}{}",
+                    human_size(g.size_bytes),
+                    g.files.len(),
+                    human_size(g.reclaimable_bytes),
+                    if g.same_volume {
+                        ""
+                    } else {
+                        "  (different drives)"
+                    }
+                );
+                for f in &g.files {
+                    println!("    {:<14} {}", f.tool, f.path.display());
+                }
+            }
+            println!("{} duplicate group(s)", groups.len());
+        }
+        Some("move") => {
+            let (Some(rule_id), Some(path), Some(dest)) = (args.get(1), args.get(2), args.get(3))
+            else {
+                eprintln!("usage: aidc move <rule_id> <path> <dest_folder>");
+                std::process::exit(2);
+            };
+            let src = relocate::move_source(rule_id, Path::new(path), &PathContext::from_env());
+            match relocate::relocate(rule_id, &src, Path::new(dest), &mut |_, _| {}) {
+                Ok(r) => println!(
+                    "moved {} ({} files, {}) to {} via {:?} {}",
+                    r.from.display(),
+                    r.files,
+                    human_size(r.bytes),
+                    r.to.display(),
+                    r.redirect,
+                    r.note
+                ),
+                Err(e) => {
+                    eprintln!("{e}");
+                    std::process::exit(1);
+                }
+            }
+        }
         Some(other) => {
-            eprintln!("unknown command {other}; use scan or rules");
+            eprintln!("unknown command {other}; use scan, rules, dupes or move");
             std::process::exit(2);
         }
     }
