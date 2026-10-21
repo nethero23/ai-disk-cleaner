@@ -1,0 +1,94 @@
+# CLI coding agents. Transcripts are user data (Review); caches are safe.
+
+[[rule]]
+id = "claude_code.projects"
+tool = "Claude Code"
+category = "ai_agent"
+name_zh = "Claude Code 会话记录"
+name_en = "Claude Code session transcripts"
+paths = ["${USERPROFILE}/.claude/projects"]
+safety = "review"
+inspector = "claude_projects"
+consequence_zh = "该项目的对话历史会丢失，--resume 将找不到旧会话"
+consequence_en = "That project's conversation history is lost; --resume won't find old sessions"
+
+[[rule]]
+id = "claude_code.cache"
+tool = "Claude Code"
+category = "ai_agent"
+name_zh = "Claude Code 缓存与调试日志"
+name_en = "Claude Code cache and debug logs"
+paths = ["${USERPROFILE}/.claude/cache", "${USERPROFILE}/.claude/debug", "${USERPROFILE}/.claude/shell-snapshots", "${USERPROFILE}/.claude/statsig"]
+all_paths = true
+safety = "safe"
+consequence_zh = "会自动重建"
+consequence_en = "Rebuilds itself"
+
+[[rule]]
+id = "codex.sessions"
+tool = "Codex CLI"
+category = "ai_agent"
+name_zh = "Codex 会话记录"
+name_en = "Codex session logs"
+paths = ["${USERPROFILE}/.codex/sessions"]
+safety = "review"
+consequence_zh = "Codex 的对话历史会丢失"
+consequence_en = "Codex conversation history is lost"
+
+[[rule]]
+id = "codex.log"
+tool = "Codex CLI"
+category = "ai_agent"
+name_zh = "Codex 日志"
+name_en = "Codex logs"
+paths = ["${USERPROFILE}/.codex/log"]
+safety = "safe"
+consequence_zh = "只是日志"
+consequence_en = "Logs only"
+
+[[rule]]
+id = "gemini_cli.sessions"
+tool = "Gemini CLI"
+category = "ai_agent"
+name_zh = "Gemini CLI 会话与检查点"
+name_en = "Gemini CLI sessions and checkpoints"
+paths = ["${USERPROFILE}/.gemini/tmp", "${USERPROFILE}/.gemini/sessions", "${USERPROFILE}/.gemini/checkpoints"]
+all_paths = true
+safety = "review"
+consequence_zh = "Gemini CLI 的对话历史和未应用的修改会丢失"
+consequence_en = "Gemini CLI chat history and staged edits are lost"
+
+[[rule]]
+id = "continue.index"
+tool = "Continue"
+category = "ai_agent"
+name_zh = "Continue 代码索引"
+name_en = "Continue code index"
+paths = ["${USERPROFILE}/.continue/index"]
+safety = "safe"
+consequence_zh = "下次打开项目时重新建索引"
+consequence_en = "Re-indexed next time the project is opened"
+
+[[rule]]
+id = "aider.cache"
+tool = "Aider"
+category = "ai_agent"
+name_zh = "Aider 缓存"
+name_en = "Aider cache"
+paths = ["${USERPROFILE}/.aider/caches", "${USERPROFILE}/.aider.tags.cache.v3", "${USERPROFILE}/.aider.tags.cache.v4"]
+all_paths = true
+safety = "safe"
+consequence_zh = "会自动重建"
+consequence_en = "Rebuilds itself"
+
+[[rule]]
+id = "copilot_cli.cache"
+tool = "GitHub Copilot"
+category = "ai_agent"
+name_zh = "Copilot CLI 缓存"
+name_en = "Copilot CLI cache"
+paths = ["${USERPROFILE}/.copilot/cache", "${LOCALAPPDATA}/github-copilot"]
+all_paths = true
+safety = "safe"
+consequence_zh = "会自动重建"
+consequence_en = "Rebuilds itself"

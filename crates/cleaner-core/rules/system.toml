@@ -1,0 +1,157 @@
+# Plain Windows junk, so the app is never worse than a general cleaner.
+
+[[rule]]
+id = "windows.user_temp"
+tool = "Windows"
+category = "system"
+name_zh = "用户临时文件"
+name_en = "User temp files"
+paths = ["${TEMP}"]
+safety = "safe"
+consequence_zh = "正在使用的文件会被跳过"
+consequence_en = "Files in use are skipped"
+
+[[rule]]
+id = "windows.system_temp"
+tool = "Windows"
+category = "system"
+name_zh = "系统临时文件"
+name_en = "System temp files"
+paths = ["${SYSTEMROOT}/Temp"]
+safety = "safe"
+consequence_zh = "正在使用的文件会被跳过"
+consequence_en = "Files in use are skipped"
+windows_only = true
+
+[[rule]]
+id = "windows.update_download"
+tool = "Windows Update"
+category = "system"
+name_zh = "Windows 更新下载缓存"
+name_en = "Windows Update download cache"
+paths = ["${SYSTEMROOT}/SoftwareDistribution/Download"]
+safety = "safe"
+consequence_zh = "未安装的更新会重新下载"
+consequence_en = "Pending updates re-download"
+windows_only = true
+
+[[rule]]
+id = "windows.delivery_optimization"
+tool = "Windows Update"
+category = "system"
+name_zh = "传递优化缓存"
+name_en = "Delivery Optimization cache"
+paths = ["${SYSTEMROOT}/SoftwareDistribution/DeliveryOptimization"]
+safety = "safe"
+consequence_zh = "用于给局域网其他电脑分发更新的缓存"
+consequence_en = "Cache used to share updates with other PCs on the LAN"
+windows_only = true
+
+[[rule]]
+id = "windows.thumbnails"
+tool = "Windows"
+category = "system"
+name_zh = "缩略图缓存"
+name_en = "Thumbnail cache"
+paths = ["${LOCALAPPDATA}/Microsoft/Windows/Explorer"]
+safety = "safe"
+consequence_zh = "文件夹里的图片缩略图会重新生成"
+consequence_en = "Picture thumbnails in folders regenerate"
+windows_only = true
+
+[[rule]]
+id = "windows.crash_dumps"
+tool = "Windows"
+category = "system"
+name_zh = "程序崩溃转储"
+name_en = "Crash dumps"
+paths = ["${LOCALAPPDATA}/CrashDumps", "${SYSTEMROOT}/Minidump", "${SYSTEMROOT}/LiveKernelReports"]
+all_paths = true
+safety = "safe"
+consequence_zh = "只对排查崩溃有用"
+consequence_en = "Only useful for debugging crashes"
+windows_only = true
+
+[[rule]]
+id = "windows.error_reporting"
+tool = "Windows"
+category = "system"
+name_zh = "Windows 错误报告"
+name_en = "Windows Error Reporting"
+paths = ["${LOCALAPPDATA}/Microsoft/Windows/WER", "${PROGRAMDATA}/Microsoft/Windows/WER"]
+all_paths = true
+safety = "safe"
+consequence_zh = "发送给微软的错误报告队列"
+consequence_en = "Queue of error reports for Microsoft"
+windows_only = true
+
+[[rule]]
+id = "windows.prefetch_logs"
+tool = "Windows"
+category = "system"
+name_zh = "Windows 日志 (Logs)"
+name_en = "Windows logs"
+paths = ["${SYSTEMROOT}/Logs"]
+safety = "safe"
+min_bytes = 209715200
+consequence_zh = "系统日志，不影响运行"
+consequence_en = "System logs; nothing depends on them"
+windows_only = true
+
+[[rule]]
+id = "windows.installer_cache"
+tool = "Windows"
+category = "system"
+name_zh = "Package Cache (安装包缓存)"
+name_en = "Package Cache (installer leftovers)"
+paths = ["${PROGRAMDATA}/Package Cache"]
+safety = "review"
+min_bytes = 524288000
+consequence_zh = "卸载或修复 Visual Studio / .NET 等软件时可能需要重新下载安装包"
+consequence_en = "Uninstalling or repairing Visual Studio / .NET may need to re-download installers"
+windows_only = true
+
+[[rule]]
+id = "nuget.cache"
+tool = "NuGet"
+category = "package_cache"
+name_zh = "NuGet 包缓存"
+name_en = "NuGet package cache"
+paths = ["${USERPROFILE}/.nuget/packages", "${LOCALAPPDATA}/NuGet/v3-cache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "下次 restore 时重新下载"
+consequence_en = "Re-downloaded on next restore"
+
+[[rule]]
+id = "cargo.registry"
+tool = "Cargo"
+category = "package_cache"
+name_zh = "Cargo 注册表缓存"
+name_en = "Cargo registry cache"
+paths = ["${USERPROFILE}/.cargo/registry"]
+safety = "safe"
+consequence_zh = "下次 cargo build 时重新下载"
+consequence_en = "Re-downloaded on next cargo build"
+
+[[rule]]
+id = "gradle.caches"
+tool = "Gradle"
+category = "package_cache"
+name_zh = "Gradle 缓存"
+name_en = "Gradle caches"
+paths = ["${USERPROFILE}/.gradle/caches"]
+safety = "safe"
+consequence_zh = "下次构建时重新下载依赖"
+consequence_en = "Dependencies re-download on next build"
+
+[[rule]]
+id = "go.modcache"
+tool = "Go"
+category = "package_cache"
+name_zh = "Go 模块缓存"
+name_en = "Go module cache"
+paths = ["${USERPROFILE}/go/pkg/mod/cache"]
+safety = "safe"
+consequence_zh = "下次 go build 时重新下载"
+consequence_en = "Re-downloaded on next go build"

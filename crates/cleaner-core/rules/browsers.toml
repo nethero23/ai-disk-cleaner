@@ -1,0 +1,40 @@
+# Browser caches. Only the cache folders, never cookies, history or profiles.
+
+[[rule]]
+id = "chrome.cache"
+tool = "Chrome"
+category = "browser"
+name_zh = "Chrome 缓存"
+name_en = "Chrome cache"
+paths = ["${LOCALAPPDATA}/Google/Chrome/User Data/Default/Cache", "${LOCALAPPDATA}/Google/Chrome/User Data/Default/Code Cache", "${LOCALAPPDATA}/Google/Chrome/User Data/Default/GPUCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "网页会重新缓存；登录状态不受影响"
+consequence_en = "Pages re-cache; logins are unaffected"
+windows_only = true
+
+[[rule]]
+id = "edge.cache"
+tool = "Edge"
+category = "browser"
+name_zh = "Edge 缓存"
+name_en = "Edge cache"
+paths = ["${LOCALAPPDATA}/Microsoft/Edge/User Data/Default/Cache", "${LOCALAPPDATA}/Microsoft/Edge/User Data/Default/Code Cache", "${LOCALAPPDATA}/Microsoft/Edge/User Data/Default/GPUCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "网页会重新缓存；登录状态不受影响"
+consequence_en = "Pages re-cache; logins are unaffected"
+windows_only = true
+
+[[rule]]
+id = "firefox.cache"
+tool = "Firefox"
+category = "browser"
+name_zh = "Firefox 缓存"
+name_en = "Firefox cache"
+paths = ["${LOCALAPPDATA}/Mozilla/Firefox/Profiles"]
+safety = "safe"
+inspector = "children"
+consequence_zh = "网页会重新缓存；登录状态不受影响"
+consequence_en = "Pages re-cache; logins are unaffected"
+windows_only = true

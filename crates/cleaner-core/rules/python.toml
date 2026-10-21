@@ -1,0 +1,102 @@
+# Python package caches and environments. Caches are safe; environments are Review
+# because deleting one in use breaks a project.
+
+[[rule]]
+id = "pip.cache"
+tool = "pip"
+category = "package_cache"
+name_zh = "pip 下载缓存"
+name_en = "pip cache"
+paths = ["${PIP_CACHE_DIR}", "${LOCALAPPDATA}/pip/cache", "${USERPROFILE}/.cache/pip"]
+safety = "safe"
+consequence_zh = "pip 会在下次安装时重新下载需要的包"
+consequence_en = "pip re-downloads packages when next needed"
+
+[[rule]]
+id = "uv.cache"
+tool = "uv"
+category = "package_cache"
+name_zh = "uv 缓存"
+name_en = "uv cache"
+paths = ["${UV_CACHE_DIR}", "${LOCALAPPDATA}/uv/cache", "${USERPROFILE}/.cache/uv"]
+safety = "safe"
+consequence_zh = "uv 会自动重建；用 uvx 启动的 MCP 服务会重新下载依赖"
+consequence_en = "uv rebuilds it; MCP servers started with uvx re-fetch their deps"
+
+[[rule]]
+id = "conda.pkgs"
+tool = "conda"
+category = "package_cache"
+name_zh = "conda 包缓存"
+name_en = "conda package cache"
+paths = [
+  "${CONDA_PKGS_DIRS}",
+  "${CONDA_ROOT}/pkgs",
+  "${USERPROFILE}/miniconda3/pkgs",
+  "${USERPROFILE}/anaconda3/pkgs",
+  "${USERPROFILE}/miniforge3/pkgs",
+  "${USERPROFILE}/.conda/pkgs",
+  "${PROGRAMDATA}/miniconda3/pkgs",
+  "${PROGRAMDATA}/anaconda3/pkgs",
+]
+all_paths = true
+safety = "safe"
+consequence_zh = "相当于 conda clean --all；已安装的环境不受影响"
+consequence_en = "Same as conda clean --all; installed environments are untouched"
+
+[[rule]]
+id = "conda.envs"
+tool = "conda"
+category = "python_env"
+name_zh = "conda 环境"
+name_en = "conda environments"
+paths = [
+  "${CONDA_ROOT}/envs",
+  "${USERPROFILE}/miniconda3/envs",
+  "${USERPROFILE}/anaconda3/envs",
+  "${USERPROFILE}/miniforge3/envs",
+  "${USERPROFILE}/.conda/envs",
+  "${PROGRAMDATA}/miniconda3/envs",
+  "${PROGRAMDATA}/anaconda3/envs",
+]
+all_paths = true
+safety = "review"
+inspector = "conda_envs"
+consequence_zh = "整个环境被删除，依赖它的项目将无法运行，需重新创建"
+consequence_en = "The whole environment is removed; projects using it stop working until recreated"
+
+[[rule]]
+id = "uv.python"
+tool = "uv"
+category = "python_env"
+name_zh = "uv 管理的 Python 解释器"
+name_en = "uv-managed Python interpreters"
+paths = ["${APPDATA}/uv/data/python", "${USERPROFILE}/.local/share/uv/python"]
+safety = "review"
+inspector = "children"
+consequence_zh = "依赖这个版本的项目会在下次运行时重新下载解释器"
+consequence_en = "Projects pinned to this version re-download the interpreter on next run"
+
+[[rule]]
+id = "python.pycache_user"
+tool = "Python"
+category = "package_cache"
+name_zh = "Python 字节码缓存 (__pycache__)"
+name_en = "Python bytecode cache (__pycache__)"
+paths = ["${LOCALAPPDATA}/Programs/Python"]
+safety = "safe"
+min_bytes = 52428800
+consequence_zh = "Python 会在下次 import 时重新生成"
+consequence_en = "Python regenerates it on next import"
+windows_only = true
+
+[[rule]]
+id = "jupyter.runtime"
+tool = "Jupyter"
+category = "package_cache"
+name_zh = "Jupyter 运行时残留"
+name_en = "Jupyter runtime leftovers"
+paths = ["${APPDATA}/jupyter/runtime", "${USERPROFILE}/.local/share/jupyter/runtime"]
+safety = "safe"
+consequence_zh = "内核连接文件，Jupyter 会重新创建"
+consequence_en = "Kernel connection files; Jupyter recreates them"

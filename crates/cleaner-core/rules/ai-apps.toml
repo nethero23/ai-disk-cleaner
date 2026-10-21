@@ -1,0 +1,74 @@
+# Electron desktop apps for AI chat. Only Chromium cache folders, never their data.
+
+[[rule]]
+id = "claude_desktop.cache"
+tool = "Claude"
+category = "ai_desktop_app"
+name_zh = "Claude 桌面版缓存"
+name_en = "Claude desktop cache"
+paths = ["${APPDATA}/Claude/Cache", "${APPDATA}/Claude/Code Cache", "${APPDATA}/Claude/GPUCache", "${APPDATA}/Claude/DawnCache", "${APPDATA}/Claude/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+
+[[rule]]
+id = "chatgpt_desktop.cache"
+tool = "ChatGPT"
+category = "ai_desktop_app"
+name_zh = "ChatGPT 桌面版缓存"
+name_en = "ChatGPT desktop cache"
+paths = ["${LOCALAPPDATA}/Packages/OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0/LocalCache", "${APPDATA}/ChatGPT/Cache", "${APPDATA}/ChatGPT/Code Cache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+windows_only = true
+
+[[rule]]
+id = "jan.cache"
+tool = "Jan"
+category = "ai_desktop_app"
+name_zh = "Jan 缓存与日志"
+name_en = "Jan cache and logs"
+paths = ["${APPDATA}/Jan/Cache", "${APPDATA}/Jan/Code Cache", "${APPDATA}/Jan/GPUCache", "${USERPROFILE}/jan/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+
+[[rule]]
+id = "jan.models"
+tool = "Jan"
+category = "models"
+name_zh = "Jan 模型"
+name_en = "Jan models"
+paths = ["${USERPROFILE}/jan/models", "${APPDATA}/Jan/data/models"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "需要在 Jan 里重新下载 {size}"
+consequence_en = "Re-download {size} inside Jan"
+
+[[rule]]
+id = "anythingllm.cache"
+tool = "AnythingLLM"
+category = "ai_desktop_app"
+name_zh = "AnythingLLM 缓存"
+name_en = "AnythingLLM cache"
+paths = ["${APPDATA}/anythingllm-desktop/Cache", "${APPDATA}/anythingllm-desktop/Code Cache", "${APPDATA}/anythingllm-desktop/GPUCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+
+[[rule]]
+id = "comfyui.temp"
+tool = "ComfyUI"
+category = "ai_desktop_app"
+name_zh = "ComfyUI 桌面版临时输出与日志"
+name_en = "ComfyUI desktop temp output and logs"
+paths = ["${USERPROFILE}/Documents/ComfyUI/temp", "${APPDATA}/ComfyUI/logs", "${APPDATA}/ComfyUI/Cache", "${APPDATA}/ComfyUI/Code Cache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "预览图和日志，会自动重建"
+consequence_en = "Preview images and logs; rebuilds itself"

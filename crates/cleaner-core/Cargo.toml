@@ -1,0 +1,22 @@
+[package]
+name = "cleaner-core"
+description = "Scan engine and rule library for ai-disk-cleaner: finds junk left by AI tools and the OS, rates it, deletes it reversibly."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+walkdir.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+trash.workspace = true
+dirs.workspace = true
+regex.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

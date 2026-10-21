@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["crates/cleaner-core", "src-tauri"]
+# The Tauri app needs WebView2 (Windows) or webkit2gtk (Linux) to build.
+# `cargo test` on a plain Linux box only builds the core engine.
+default-members = ["crates/cleaner-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/nethero23/ai-disk-cleaner"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+walkdir = "2.5"
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+trash = "5"
+dirs = "6"
+regex = "1"
+log = "0.4"
