@@ -177,6 +177,12 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .unrec { margin: 10px 0; padding: 10px 14px; border-radius: 8px; background: var(--panel); }
 .unrec-head { display: flex; gap: 12px; align-items: center; }
 .unrec table { margin-top: 6px; }
+.deep-list { list-style: none; padding: 0; margin: 8px 0; }
+.deep-item { padding: 12px 14px; border-radius: 8px; background: var(--panel); margin-bottom: 8px; }
+.deep-item label { display: flex; gap: 10px; align-items: center; }
+.deep-item label .size { margin-left: auto; }
+.deep-item p { margin: 6px 0 0 26px; }
+.deep-item .warn { color: var(--review); }
 .idle { margin: 10px 0; padding: 10px 14px; border-radius: 8px; background: var(--panel); }
 .idle-head { display: flex; gap: 12px; align-items: center; }
 .idle table { margin-top: 6px; }

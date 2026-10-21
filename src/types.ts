@@ -213,6 +213,35 @@ export interface Unrecognized {
   newest: string | null;
 }
 
+export interface DeepTask {
+  id: string;
+  title: string;
+  body: string;
+  consequence: string;
+  estimate_bytes: number | null;
+  needs_analysis: boolean;
+  applicable: boolean;
+}
+
+export interface DeepAnalysis {
+  winsxs_actual_bytes: number | null;
+  winsxs_reclaimable_bytes: number | null;
+  winsxs_cleanup_recommended: boolean | null;
+  shadow_used_bytes: number | null;
+  shadow_count: number | null;
+}
+
+export interface DeepResult {
+  id: string;
+  ok: boolean;
+  message: string;
+}
+
+export interface DeepSummary {
+  results: DeepResult[];
+  freed_bytes: number;
+}
+
 export interface Growth {
   tool: string;
   now_bytes: number;
