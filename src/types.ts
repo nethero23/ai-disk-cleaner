@@ -160,6 +160,24 @@ export interface Preview {
   largest: PreviewEntry[];
 }
 
+export interface OverviewEntry {
+  name: string;
+  path: string;
+  bytes: number;
+  files: number;
+  children: OverviewEntry[];
+}
+
+export interface Overview {
+  root: string;
+  total_bytes: number;
+  free_bytes: number;
+  scanned_bytes: number;
+  entries: OverviewEntry[];
+  computed_at: string;
+  cancelled: boolean;
+}
+
 export interface Drive {
   path: string;
   name: string;
