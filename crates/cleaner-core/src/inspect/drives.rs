@@ -279,6 +279,7 @@ pub fn rule_for(s: &Sig) -> Rule {
         windows_only: false,
         require: vec![],
         processes: s.processes.iter().map(|p| p.to_string()).collect(),
+        auto_clean: true,
     }
 }
 
