@@ -89,3 +89,14 @@ export interface DuplicateGroup {
   reclaimable_bytes: number;
   same_volume: boolean;
 }
+
+export interface Vhdx {
+  path: string;
+  size_bytes: number;
+}
+
+export interface CompactResult {
+  path: string;
+  before: number;
+  after: number;
+}

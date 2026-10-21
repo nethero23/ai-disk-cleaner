@@ -1,5 +1,5 @@
-# Docker Desktop and WSL. Reported, not deleted: the right fix is compacting the
-# virtual disk, which arrives in v0.2.
+# Docker Desktop and WSL. Reported, rarely deleted: the right fix is compacting
+# the virtual disk (see `vhdx.rs`), which the UI offers on these items.
 
 [[rule]]
 id = "docker.vhdx"

@@ -161,6 +161,27 @@ async fn move_back(app: AppHandle, record: RelocateRecord) -> Result<(), String>
     .map_err(|e| e.to_string())?
 }
 
+/// Rule ids whose items can be compacted.
+#[tauri::command]
+fn compactable() -> Vec<String> {
+    vhdx::COMPACTABLE_RULES
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+}
+
+#[tauri::command]
+fn vhdx_files(path: PathBuf) -> Vec<Vhdx> {
+    vhdx::find(&path)
+}
+
+#[tauri::command]
+async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
+    tauri::async_runtime::spawn_blocking(move || vhdx::compact(&path).map_err(|e| e.to_string()))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
 async fn find_duplicates(items: Vec<ScanItem>) -> Result<Vec<DuplicateGroup>, String> {
     tauri::async_runtime::spawn_blocking(move || dedup::find_duplicates(&items))

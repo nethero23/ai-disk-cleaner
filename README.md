@@ -21,7 +21,7 @@ CCleaner、360、电脑管家不扫模型和 Python 环境；WizTree 只告诉�
 crates/cleaner-core/   扫描引擎（纯 Rust，可在任何平台测试）
   rules/*.toml         规则库：每条规则 = 路径模板 + 安全等级 + 删除后果
   src/inspect/         按工具解析内容：Ollama manifest、HF hub、conda env、Cursor workspace…
-  src/bin/aidc.rs      命令行：aidc scan [--json] [--en]
+  src/bin/aidc.rs      命令行：aidc scan [--json] [--en] / dupes / move / compact
 src-tauri/             Tauri 2 应用壳（Windows 需要 WebView2）
 src/                   React 界面
 ```

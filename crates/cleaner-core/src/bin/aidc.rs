@@ -7,7 +7,7 @@
 
 use cleaner_core::model::human_size;
 use cleaner_core::paths::PathContext;
-use cleaner_core::{dedup, relocate, scan_all, RuleSet, ScanOptions};
+use cleaner_core::{dedup, relocate, scan_all, vhdx, RuleSet, ScanOptions};
 use std::path::Path;
 
 fn main() {
@@ -80,6 +80,24 @@ fn main() {
                 }
             }
             println!("{} duplicate group(s)", groups.len());
+        }
+        Some("compact") => {
+            let Some(path) = args.get(1) else {
+                eprintln!("usage: aidc compact <file.vhdx>");
+                std::process::exit(2);
+            };
+            match vhdx::compact(Path::new(path)) {
+                Ok(r) => println!(
+                    "{}: {} -> {}",
+                    r.path.display(),
+                    human_size(r.before),
+                    human_size(r.after)
+                ),
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    std::process::exit(1);
+                }
+            }
         }
         Some("move") => {
             let (Some(rule_id), Some(path), Some(dest)) = (args.get(1), args.get(2), args.get(3))
