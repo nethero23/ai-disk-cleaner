@@ -134,3 +134,136 @@ consequence_en = "Edge's built-in AI re-downloads it"
 windows_only = true
 processes = ["msedge"]
 
+
+[[rule]]
+id = "comfyui.models"
+tool = "ComfyUI"
+category = "models"
+name_zh = "ComfyUI 模型 (checkpoints / loras / vae)"
+name_en = "ComfyUI models"
+paths = ["${USERPROFILE}/Documents/ComfyUI/models", "${USERPROFILE}/ComfyUI/models"]
+safety = "review"
+inspector = "children"
+consequence_zh = "多为手动下载的模型，删除后需要自己重新下载 {size}"
+consequence_en = "Mostly hand-downloaded; you re-download {size} yourself"
+processes = ["ComfyUI", "python"]
+
+[[rule]]
+id = "sd_webui.models"
+tool = "Stable Diffusion WebUI"
+category = "models"
+name_zh = "Stable Diffusion WebUI 模型"
+name_en = "Stable Diffusion WebUI models"
+paths = ["${USERPROFILE}/stable-diffusion-webui/models", "${USERPROFILE}/sd.webui/webui/models", "${USERPROFILE}/Forge/webui/models"]
+safety = "review"
+inspector = "children"
+consequence_zh = "多为手动下载的模型，删除后需要自己重新下载 {size}"
+consequence_en = "Mostly hand-downloaded; you re-download {size} yourself"
+processes = ["python"]
+
+[[rule]]
+id = "stability_matrix.models"
+tool = "Stability Matrix"
+category = "models"
+name_zh = "Stability Matrix 共享模型"
+name_en = "Stability Matrix shared models"
+paths = ["${APPDATA}/StabilityMatrix/Models", "${USERPROFILE}/StabilityMatrix/Data/Models"]
+safety = "review"
+inspector = "children"
+consequence_zh = "删除后需要在 Stability Matrix 里重新下载 {size}"
+consequence_en = "Re-download {size} inside Stability Matrix"
+processes = ["StabilityMatrix"]
+
+[[rule]]
+id = "msty.models"
+tool = "Msty"
+category = "models"
+name_zh = "Msty 本地模型"
+name_en = "Msty local models"
+paths = ["${APPDATA}/Msty/models", "${USERPROFILE}/.msty/models"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "需要在 Msty 里重新下载 {size}"
+consequence_en = "Re-download {size} inside Msty"
+processes = ["Msty"]
+
+[[rule]]
+id = "xinference.cache"
+tool = "Xinference"
+category = "models"
+name_zh = "Xinference 模型缓存"
+name_en = "Xinference model cache"
+paths = ["${XINFERENCE_HOME}/cache", "${USERPROFILE}/.xinference/cache"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "下次启动模型时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) next time the model launches"
+
+[[rule]]
+id = "vllm.cache"
+tool = "vLLM"
+category = "models"
+name_zh = "vLLM 编译缓存"
+name_en = "vLLM compile cache"
+paths = ["${VLLM_CACHE_ROOT}", "${USERPROFILE}/.cache/vllm"]
+safety = "safe"
+consequence_zh = "torch.compile 和 CUDA graph 缓存，下次启动会重建（首次加载变慢）"
+consequence_en = "torch.compile / CUDA graph caches; rebuilt on next start (slower first load)"
+
+[[rule]]
+id = "keras.models"
+tool = "Keras"
+category = "models"
+name_zh = "Keras 预训练模型缓存"
+name_en = "Keras pretrained model cache"
+paths = ["${KERAS_HOME}/models", "${USERPROFILE}/.keras/models"]
+safety = "redownload"
+consequence_zh = "下次调用时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) on next use"
+
+[[rule]]
+id = "kagglehub.cache"
+tool = "Kaggle"
+category = "models"
+name_zh = "Kaggle 数据集与模型缓存"
+name_en = "kagglehub cache"
+paths = ["${KAGGLEHUB_CACHE}", "${USERPROFILE}/.cache/kagglehub"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "下次 kagglehub 调用时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) on next kagglehub call"
+
+[[rule]]
+id = "clip.cache"
+tool = "OpenAI CLIP"
+category = "models"
+name_zh = "CLIP 模型缓存"
+name_en = "CLIP model cache"
+paths = ["${USERPROFILE}/.cache/clip"]
+safety = "redownload"
+consequence_zh = "SD WebUI 等工具下次使用时重新下载 {size}"
+consequence_en = "SD WebUI and friends re-download {size} on next use"
+
+[[rule]]
+id = "paddle.models"
+tool = "PaddlePaddle"
+category = "models"
+name_zh = "PaddleOCR / PaddleX 模型"
+name_en = "PaddleOCR / PaddleX models"
+paths = ["${USERPROFILE}/.paddleocr", "${USERPROFILE}/.paddlex", "${USERPROFILE}/.paddlehub"]
+all_paths = true
+safety = "redownload"
+consequence_zh = "下次运行时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) on next run"
+
+[[rule]]
+id = "pinokio.cache"
+tool = "Pinokio"
+category = "models"
+name_zh = "Pinokio 下载缓存"
+name_en = "Pinokio download cache"
+paths = ["${USERPROFILE}/pinokio/cache"]
+safety = "safe"
+consequence_zh = "安装脚本的下载缓存，需要时重新下载"
+consequence_en = "Installer downloads; re-fetched when needed"
+processes = ["Pinokio"]

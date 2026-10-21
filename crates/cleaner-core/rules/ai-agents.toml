@@ -94,3 +94,53 @@ all_paths = true
 safety = "safe"
 consequence_zh = "会自动重建"
 consequence_en = "Rebuilds itself"
+
+[[rule]]
+id = "qwen_code.sessions"
+tool = "Qwen Code"
+category = "ai_agent"
+name_zh = "Qwen Code 临时文件与会话"
+name_en = "Qwen Code temp and sessions"
+paths = ["${USERPROFILE}/.qwen/tmp", "${USERPROFILE}/.qwen/sessions", "${USERPROFILE}/.qwen/checkpoints"]
+all_paths = true
+safety = "review"
+consequence_zh = "历史会话和检查点会丢失"
+consequence_en = "Past sessions and checkpoints are lost"
+
+[[rule]]
+id = "opencode.data"
+tool = "OpenCode"
+category = "ai_agent"
+name_zh = "OpenCode 日志与缓存"
+name_en = "OpenCode logs and cache"
+paths = ["${USERPROFILE}/.local/share/opencode/log", "${USERPROFILE}/.cache/opencode"]
+all_paths = true
+safety = "safe"
+consequence_zh = "日志和缓存，会自动重建"
+consequence_en = "Logs and cache; rebuilt automatically"
+
+[[rule]]
+id = "cline.tasks"
+tool = "Cline"
+category = "ai_agent"
+name_zh = "Cline 任务历史"
+name_en = "Cline task history"
+paths = ["${APPDATA}/Code/User/globalStorage/saoudrizwan.claude-dev/tasks", "${APPDATA}/Cursor/User/globalStorage/saoudrizwan.claude-dev/tasks"]
+all_paths = true
+safety = "review"
+inspector = "children"
+consequence_zh = "每个任务的对话记录和文件快照会丢失"
+consequence_en = "Each task's conversation and file snapshots are lost"
+
+[[rule]]
+id = "roo_code.tasks"
+tool = "Roo Code"
+category = "ai_agent"
+name_zh = "Roo Code 任务历史"
+name_en = "Roo Code task history"
+paths = ["${APPDATA}/Code/User/globalStorage/rooveterinaryinc.roo-cline/tasks", "${APPDATA}/Cursor/User/globalStorage/rooveterinaryinc.roo-cline/tasks"]
+all_paths = true
+safety = "review"
+inspector = "children"
+consequence_zh = "每个任务的对话记录和文件快照会丢失"
+consequence_en = "Each task's conversation and file snapshots are lost"

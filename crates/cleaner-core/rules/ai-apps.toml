@@ -79,3 +79,91 @@ consequence_zh = "预览图和日志，会自动重建"
 consequence_en = "Preview images and logs; rebuilds itself"
 processes = ["ComfyUI"]
 
+
+[[rule]]
+id = "msty.cache"
+tool = "Msty"
+category = "ai_desktop_app"
+name_zh = "Msty 缓存"
+name_en = "Msty cache"
+paths = ["${APPDATA}/Msty/Cache", "${APPDATA}/Msty/Code Cache", "${APPDATA}/Msty/GPUCache", "${APPDATA}/Msty/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+processes = ["Msty"]
+
+[[rule]]
+id = "lmstudio.cache"
+tool = "LM Studio"
+category = "ai_desktop_app"
+name_zh = "LM Studio 缓存与日志"
+name_en = "LM Studio cache and logs"
+paths = ["${APPDATA}/LM Studio/Cache", "${APPDATA}/LM Studio/Code Cache", "${APPDATA}/LM Studio/GPUCache", "${APPDATA}/LM Studio/logs", "${USERPROFILE}/.lmstudio/.internal/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+processes = ["LM Studio"]
+
+[[rule]]
+id = "cherry_studio.cache"
+tool = "Cherry Studio"
+category = "ai_desktop_app"
+name_zh = "Cherry Studio 缓存"
+name_en = "Cherry Studio cache"
+paths = ["${APPDATA}/CherryStudio/Cache", "${APPDATA}/CherryStudio/Code Cache", "${APPDATA}/CherryStudio/GPUCache", "${APPDATA}/CherryStudio/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+processes = ["Cherry Studio"]
+
+[[rule]]
+id = "chatbox.cache"
+tool = "Chatbox"
+category = "ai_desktop_app"
+name_zh = "Chatbox 缓存"
+name_en = "Chatbox cache"
+paths = ["${APPDATA}/xyz.chatboxapp.app/Cache", "${APPDATA}/xyz.chatboxapp.app/Code Cache", "${APPDATA}/xyz.chatboxapp.app/GPUCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "应用会自动重建"
+consequence_en = "The app rebuilds it"
+processes = ["Chatbox"]
+
+[[rule]]
+id = "open_webui.cache"
+tool = "Open WebUI"
+category = "ai_desktop_app"
+name_zh = "Open WebUI 缓存"
+name_en = "Open WebUI cache"
+paths = ["${USERPROFILE}/.cache/open-webui", "${USERPROFILE}/open-webui/backend/data/cache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "嵌入模型与音频缓存，会按需重建"
+consequence_en = "Embedding and audio caches; rebuilt on demand"
+
+[[rule]]
+id = "gradio.cache"
+tool = "Gradio"
+category = "ai_desktop_app"
+name_zh = "Gradio 上传/输出缓存"
+name_en = "Gradio upload and output cache"
+paths = ["${GRADIO_TEMP_DIR}", "${USERPROFILE}/.cache/gradio", "${TEMP}/gradio"]
+all_paths = true
+safety = "safe"
+consequence_zh = "SD WebUI 等 Gradio 界面的上传图片和生成结果副本"
+consequence_en = "Copies of uploads and outputs from Gradio UIs such as SD WebUI"
+
+[[rule]]
+id = "sd_webui.temp"
+tool = "Stable Diffusion WebUI"
+category = "ai_desktop_app"
+name_zh = "Stable Diffusion WebUI 临时文件"
+name_en = "Stable Diffusion WebUI temp"
+paths = ["${USERPROFILE}/stable-diffusion-webui/tmp", "${USERPROFILE}/stable-diffusion-webui/log", "${USERPROFILE}/sd.webui/webui/tmp"]
+all_paths = true
+safety = "safe"
+consequence_zh = "临时图片和日志，不影响生成"
+consequence_en = "Temp images and logs; generation is unaffected"
