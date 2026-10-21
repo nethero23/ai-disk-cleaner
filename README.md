@@ -58,6 +58,10 @@ consequence_en = "…"
 
 `cargo test` 会校验所有规则文件。
 
+## 发布
+
+推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建 NSIS/MSI 安装包并发布到 GitHub Releases。
+
 ## 设置
 
 应用内「设置」页可以：
