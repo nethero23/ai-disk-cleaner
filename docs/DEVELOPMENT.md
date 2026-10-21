@@ -73,11 +73,15 @@ consequence_en = "…"
 在 GitHub 仓库首页右侧 About → ⚙ 里填（最多 20 个）：
 
 ```
-disk-cleaner windows c-drive-cleaner junk-cleaner storage-cleanup
+disk-cleaner windows c-drive-cleaner disk-space junk-cleaner storage-cleanup
 ai-tools ollama huggingface lm-studio llm cursor claude-code
 pip-cache conda docker wsl tauri rust cleaner ccleaner-alternative
 ```
 
-About 描述建议：`最懂 AI 的 Windows C 盘瘦身工具 · Free disk cleaner for AI developers: clean Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / pip / conda caches, WSL & Docker vhdx. Scan first, undo anytime.`
+About 描述建议：`最懂 AI 的硬盘清理工具 · Free Windows disk cleaner for AI developers, all drives: clean Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / pip / conda caches, WSL & Docker vhdx. Scan first, undo anytime.`
 
 Website 栏可填 Releases 页链接。
+
+## README 多语言
+
+`README.md`（简体中文）和 `README.en.md`（英文）是主版本。`README.ja/ko/de/fr/es/pt-BR/ru/ar/hi.md` 是从英文版翻译的，不含路线图和开发说明。改功能描述时先改中英文两份，再同步其他语言；每份顶部都写了「可能落后于英文版」。

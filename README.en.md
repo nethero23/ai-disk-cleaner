@@ -2,9 +2,9 @@
 
 <img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner icon">
 
-# AI Disk Cleaner: the Windows disk cleaner that understands AI tools
+# AI Disk Cleaner: the disk cleaner that understands AI tools
 
-**Free, open-source C: drive cleaner for AI developers. Finds and frees the space taken by Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / VS Code caches, pip / conda / npm caches and WSL / Docker virtual disks. Scan first, you choose, every delete can be undone.**
+**Free, open-source Windows disk cleaner for AI developers, for C:, D: and every other drive. Finds and frees the space taken by Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / VS Code caches, pip / conda / npm caches and WSL / Docker virtual disks. Scan first, you choose, every delete can be undone.**
 
 [![Latest release](https://img.shields.io/github/v/release/nethero23/ai-disk-cleaner?label=download&color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/nethero23/ai-disk-cleaner/total?color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases)
@@ -13,19 +13,21 @@
 ![Rust](https://img.shields.io/badge/Rust-Tauri%202-orange?logo=rust)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[中文](README.md) · **English**
+[简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md) · [Português](README.pt-BR.md) · [Русский](README.ru.md) · [العربية](README.ar.md) · [हिन्दी](README.hi.md)
 
 [⬇️ Download](https://github.com/nethero23/ai-disk-cleaner/releases/latest) · [Features](#features) · [vs CCleaner / BleachBit / Dism++](#comparison) · [FAQ](#faq)
 
 </div>
 
 <!-- Screenshot placeholder: uncomment once docs/images/hero.gif exists
-<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner scanning the C: drive for AI model caches and cleaning them"></p>
+<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner scanning drives for AI model caches and cleaning them"></p>
 -->
 
 ## Why
 
 On a PC used for AI work, the C: drive rarely fills up with classic system junk. It fills up with **local LLM weights, Python environments, AI code editor caches and WSL/Docker virtual disks**, often hundreds of GB. CCleaner and similar tools don't look there; WizTree shows which folder is big but not what it is or whether it is safe to delete.
+
+And it is not only C:. Model libraries, conda environments, Docker disks and project `node_modules` end up on D: and E: too. AI Disk Cleaner scans every drive you select.
 
 AI Disk Cleaner explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
@@ -62,12 +64,13 @@ It reads Ollama manifests, the Hugging Face cache layout, conda environments, LM
 
 ### ⚡ Convenient
 
-- "Where did my space go?" drive overview
+- **All drives**: scan C:, D:, external disks, whichever you tick; finds models and caches that were moved to other drives by their folder signature
+- "Where did my space go?" overview for each drive
 - Growth monitor: see which folders are growing, with a notification when weekly growth passes a threshold
 - Idle-model hints: find models you have not used in a long time
 - Deep system clean: WinSxS component store, restore points, hibernation file, Delivery Optimization cache, Windows Update cache
 - Unrecognized big folders: large folders no rule knows yet are listed too, with a one-click rule suggestion
-- Multi-drive scan, big-file scan, project build output (`node_modules`, `target`, `.venv`…)
+- Big-file scan, project build output (`node_modules`, `target`, `.venv`…)
 - Group by tool, search, sort; parallel scan with progress and cancel
 - Tray icon, scheduled background scans, notification when junk passes a threshold, optional auto-clean of Safe items (off by default)
 - First-run guide and a one-line summary after each scan
@@ -114,8 +117,8 @@ In short: for classic system junk, any of them will do. For AI and developer-too
 
 ## FAQ
 
-### My C: drive is full. How do I see what is using the space?
-Open "Where did my space go?" for a per-folder breakdown of the drive (with `Users\<you>\AppData\Local`, `Downloads` etc. listed separately), then run a scan to see usage per tool and per model.
+### My C: (or D:) drive is full. How do I see what is using the space?
+Open "Where did my space go?", pick a drive, and get a per-folder breakdown (with `Users\<you>\AppData\Local`, `Downloads` etc. listed separately), then run a scan to see usage per tool and per model.
 
 ### Where does Ollama store models, and how do I move them to another drive?
 By default in `C:\Users\<you>\.ollama\models`. Find the Ollama item in the scan results, choose "Move to another drive" and pick a folder on D:. The app copies, verifies and sets `OLLAMA_MODELS`. Restart Ollama and it reads from the new place.
@@ -134,6 +137,9 @@ They appear under the Python / dev cache group as "Safe": they are rebuilt on th
 
 ### How do I shrink a WSL or Docker `ext4.vhdx`?
 Virtual disks never shrink on their own. Select the vhdx and click "Compact": the app runs `wsl --shutdown` and then diskpart's `compact vdisk` (admin rights needed; works on Windows Home). Data inside is not touched.
+
+### Does it only clean C:? Can it scan D: and E:?
+It scans any drive. Tick the drives in "Scan range" (in Settings and at the top of the results). Model libraries, caches, virtual disks, build output and big files on other drives are all found. When C: is tight, you can also move big models to another drive.
 
 ### I deleted something by mistake. Can I get it back?
 Yes. Everything goes to the Recycle Bin. Use "Undo last clean", or restore single items from the history page.
@@ -163,7 +169,7 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 
 Missing an AI tool you use? [Open an issue](https://github.com/nethero23/ai-disk-cleaner/issues) or add a rule (a few lines of TOML). Build and rule format: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-If it saved you some gigabytes, a ⭐ helps others with a full C: drive find it.
+If it saved you some gigabytes, a ⭐ helps others with a full disk find it.
 
 ## License
 

@@ -2,9 +2,9 @@
 
 <img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner 图标">
 
-# AI Disk Cleaner · 最懂 AI 的 C 盘瘦身工具
+# AI Disk Cleaner · 最懂 AI 的硬盘清理工具
 
-**免费开源的 Windows C 盘清理工具，专清 AI 工具留下的垃圾：Ollama / Hugging Face / LM Studio 模型，Cursor / Claude Code / VS Code 缓存，pip / conda / npm 缓存，WSL / Docker 虚拟磁盘。先扫描、你来选、删了能撤销。**
+**免费开源的 Windows 硬盘清理工具，C 盘、D 盘、所有盘一起扫，专清 AI 工具留下的垃圾：Ollama / Hugging Face / LM Studio 模型，Cursor / Claude Code / VS Code 缓存，pip / conda / npm 缓存，WSL / Docker 虚拟磁盘。先扫描、你来选、删了能撤销。**
 
 [![最新版本](https://img.shields.io/github/v/release/nethero23/ai-disk-cleaner?label=%E4%B8%8B%E8%BD%BD&color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
 [![下载量](https://img.shields.io/github/downloads/nethero23/ai-disk-cleaner/total?color=0b7a75)](https://github.com/nethero23/ai-disk-cleaner/releases)
@@ -13,19 +13,21 @@
 ![Rust](https://img.shields.io/badge/Rust-Tauri%202-orange?logo=rust)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**中文** · [English](README.en.md)
+[简体中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md) · [Português](README.pt-BR.md) · [Русский](README.ru.md) · [العربية](README.ar.md) · [हिन्दी](README.hi.md)
 
 [⬇️ 下载最新版](https://github.com/nethero23/ai-disk-cleaner/releases/latest) · [功能](#功能) · [和 CCleaner / BleachBit / Dism++ 比](#和其他清理软件比) · [常见问题](#常见问题)
 
 </div>
 
 <!-- 截图占位：把 docs/images/hero.gif 放好后取消下面这行的注释
-<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner 扫描 C 盘 AI 模型缓存并一键清理的演示"></p>
+<p align="center"><img src="docs/images/hero.gif" width="900" alt="AI Disk Cleaner 扫描硬盘上 AI 模型缓存并一键清理的演示"></p>
 -->
 
 ## 一句话
 
-C 盘又红了？在一台跑 AI 的电脑上，真正占地方的往往不是系统垃圾，而是 **几十上百 GB 的大模型、Python 环境、AI 编辑器缓存和 WSL/Docker 虚拟磁盘**。CCleaner、360、电脑管家不扫这些；WizTree 只告诉你哪个文件夹大，不告诉你那是什么、能不能删。
+C 盘又红了，D 盘也快满了？在一台跑 AI 的电脑上，真正占地方的往往不是系统垃圾，而是 **几十上百 GB 的大模型、Python 环境、AI 编辑器缓存和 WSL/Docker 虚拟磁盘**。CCleaner、360、电脑管家不扫这些；WizTree 只告诉你哪个文件夹大，不告诉你那是什么、能不能删。
+
+而且这些东西不只在 C 盘：模型库、conda 环境、Docker 虚拟磁盘、项目里的 `node_modules` 经常散在 D 盘、E 盘。AI Disk Cleaner 会扫你勾选的所有盘。
 
 AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
 
@@ -62,12 +64,13 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 
 ### ⚡ 好用
 
-- 「空间去哪儿了」概览：一眼看清 C 盘被谁占了
+- **全盘扫描**：C 盘、D 盘、移动硬盘，勾哪个扫哪个；按目录特征找到挪到其他盘的模型和缓存
+- 「空间去哪儿了」概览：每个盘被谁占了，一眼看清
 - 增长监控：看哪个目录最近在长，一周涨幅超过阈值就通知
 - 闲置模型建议：按最后使用时间找出很久没用的模型
 - 系统深度清理：WinSxS 组件存储、系统还原点、休眠文件、传递优化缓存、Windows 更新缓存
 - 未识别的大目录：规则库还不认识的大文件夹也会列出来，可一键提交规则建议
-- 多盘扫描、全盘大文件扫描、项目构建产物（`node_modules`、`target`、`.venv`…）扫描
+- 全盘大文件扫描、项目构建产物（`node_modules`、`target`、`.venv`…）扫描
 - 结果按工具分组、搜索、排序；并行扫描，带进度可取消
 - 托盘常驻、定时后台扫描、垃圾超阈值通知、可选自动清理安全项（默认关）
 - 首次运行引导、扫描后一句话总结
@@ -115,8 +118,8 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 
 ## 常见问题
 
-### C 盘满了，怎么看是被什么占满的？
-打开 AI Disk Cleaner 的「空间去哪儿了」，会列出 C 盘每个顶层文件夹的占用，`Users\<你>` 下的 `AppData\Local`、`Downloads` 等也单独列出。再点「扫描」，结果会具体到每个工具、每个模型。
+### C 盘（或 D 盘）满了，怎么看是被什么占满的？
+打开 AI Disk Cleaner 的「空间去哪儿了」，选一个盘，会列出每个顶层文件夹的占用，`Users\<你>` 下的 `AppData\Local`、`Downloads` 等也单独列出。再点「扫描」，结果会具体到每个工具、每个模型。
 
 ### Ollama 的模型存在哪里？怎么移到 D 盘？
 默认在 `C:\Users\<你>\.ollama\models`。在扫描结果里找到 Ollama 模型，点「搬到其他盘」，选 D 盘目录即可。程序会复制、校验、设置 `OLLAMA_MODELS` 环境变量，之后 Ollama 自动从新位置读取。重启 Ollama 生效。
@@ -135,6 +138,9 @@ Cursor 的缓存、日志、扩展下载缓存可以放心删（标「安全」�
 
 ### WSL 或 Docker 的 `ext4.vhdx` 越来越大怎么缩小？
 虚拟磁盘只会变大不会自动缩小。在 AI Disk Cleaner 里找到对应的 vhdx，点「压缩」，程序会先 `wsl --shutdown` 再用 diskpart 压缩（需要管理员权限，Windows 家庭版也能用），不会删除里面的数据。
+
+### 只能清 C 盘吗？D 盘、E 盘能扫吗？
+能。在「扫描范围」里勾选要扫的盘（设置页和扫描结果页顶部都能改）。其他盘上的模型库、缓存、虚拟磁盘、项目构建产物和大文件都会被找出来。C 盘空间紧张时，也可以把大模型「搬到其他盘」。
 
 ### 删错了怎么办？
 所有删除都进回收站。清理完成后可以「一键撤销」，也可以去「清理记录」里逐项还原。
@@ -164,10 +170,10 @@ CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境
 
 缺了你常用的 AI 工具？欢迎 [提 Issue](https://github.com/nethero23/ai-disk-cleaner/issues) 或直接加一条规则（一段 TOML 就行）。开发、构建、规则格式见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。
 
-觉得有用的话，点个 ⭐ Star，让更多 C 盘告急的人找到它。
+觉得有用的话，点个 ⭐ Star，让更多硬盘告急的人找到它。
 
 ## License
 
 [MIT](LICENSE)
 
-<sub>关键词：C盘清理 · C盘瘦身 · C盘满了怎么清理 · 磁盘清理工具 · 垃圾清理软件 · 大模型缓存清理 · Ollama 模型迁移 · Hugging Face 缓存清理 · Cursor 缓存清理 · conda 环境清理 · pip 缓存清理 · WSL vhdx 压缩 · Docker 磁盘占用 · CCleaner 替代 · Windows disk cleaner for AI developers</sub>
+<sub>关键词：硬盘清理 · 磁盘空间清理 · C盘清理 · C盘瘦身 · D盘清理 · C盘满了怎么清理 · 磁盘清理工具 · 垃圾清理软件 · 大模型缓存清理 · Ollama 模型迁移 · Hugging Face 缓存清理 · Cursor 缓存清理 · conda 环境清理 · pip 缓存清理 · WSL vhdx 压缩 · Docker 磁盘占用 · CCleaner 替代 · Windows disk cleaner for AI developers</sub>
