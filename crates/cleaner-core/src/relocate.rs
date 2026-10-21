@@ -76,6 +76,10 @@ pub struct RelocateResult {
     pub redirect: Redirect,
     /// What the user must still do by hand, if anything (e.g. restart the tool).
     pub note: String,
+    /// For env-var redirects: what the variable held before the move, so
+    /// move-back can restore it instead of deleting it.
+    #[serde(default)]
+    pub previous_env: Option<String>,
 }
 
 /// One line of the relocation log: enough to move the data back.
@@ -90,6 +94,8 @@ pub struct RelocateRecord {
     /// False once moved back (or the record is otherwise stale).
     #[serde(default = "default_true")]
     pub active: bool,
+    #[serde(default)]
+    pub previous_env: Option<String>,
 }
 
 fn default_true() -> bool {
@@ -105,6 +111,7 @@ pub fn log_relocation(log_path: &Path, rule_id: &str, r: &RelocateResult) {
         bytes: r.bytes,
         redirect: r.redirect.clone(),
         active: true,
+        previous_env: r.previous_env.clone(),
     };
     append_record(log_path, &rec);
 }
@@ -149,34 +156,52 @@ pub fn move_back(log_path: &Path, rec: &RelocateRecord, progress: Progress) -> R
             "the moved folder no longer exists".into(),
         ));
     }
-    // A junction at the old path is what we left behind; remove the link
-    // itself (not what it points to) before copying back into a real folder.
-    if rec.from.is_symlink() || is_junction(&rec.from) {
-        remove_link(&rec.from).map_err(|source| Error::Io {
-            path: rec.from.clone(),
-            source,
-        })?;
-    }
-    if rec.from.exists() {
+    let linked = rec.from.is_symlink() || is_junction(&rec.from);
+    if rec.from.exists() && !linked {
         return Err(Error::Refused(
             rec.from.clone(),
             "something already exists at the original location".into(),
         ));
     }
+    // Copy next to the original first (same volume, so the final step is a
+    // rename). The junction stays in place until the copy is known good, so a
+    // locked file or a full disk leaves the tool still working.
+    let staging = staging_path(&rec.from);
+    let _ = std::fs::remove_dir_all(&staging);
     let (total_bytes, total_files) = count_tree(&rec.to);
     let discard = |e: Error| {
-        let _ = std::fs::remove_dir_all(&rec.from);
+        let _ = std::fs::remove_dir_all(&staging);
         e
     };
-    copy_tree(&rec.to, &rec.from, total_bytes, progress).map_err(discard)?;
-    if count_tree(&rec.from) != (total_bytes, total_files) {
+    copy_tree(&rec.to, &staging, total_bytes, progress).map_err(discard)?;
+    if count_tree(&staging) != (total_bytes, total_files) {
         return Err(discard(Error::Refused(
             rec.from.clone(),
             "copy verification failed; nothing removed".into(),
         )));
     }
+    if linked {
+        remove_link(&rec.from).map_err(|source| Error::Io {
+            path: rec.from.clone(),
+            source,
+        })?;
+    }
+    if let Err(source) = std::fs::rename(&staging, &rec.from) {
+        // Put things back the way they were: the data is still at `to`.
+        if linked {
+            let _ = make_junction(&rec.from, &rec.to);
+        }
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(Error::Io {
+            path: rec.from.clone(),
+            source,
+        });
+    }
     if let Redirect::EnvVar(var) = &rec.redirect {
-        unset_user_env(var)?;
+        match &rec.previous_env {
+            Some(prev) if !prev.is_empty() => set_user_env(var, Path::new(prev))?,
+            _ => unset_user_env(var)?,
+        }
     }
     std::fs::remove_dir_all(&rec.to).map_err(|source| Error::Io {
         path: rec.to.clone(),
@@ -191,6 +216,16 @@ pub fn move_back(log_path: &Path, rec: &RelocateRecord, progress: Progress) -> R
         },
     );
     Ok(())
+}
+
+/// Where move-back copies to before swapping it into place: a sibling of the
+/// original, so the rename never crosses volumes.
+fn staging_path(from: &Path) -> PathBuf {
+    let name = from
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "data".into());
+    from.with_file_name(format!("{name}.moving-back"))
 }
 
 /// A junction or directory symlink is removed as a directory on Windows and
@@ -361,8 +396,10 @@ pub fn relocate(
         )));
     }
 
+    let mut previous_env = None;
     let note = match &redirect {
         Redirect::EnvVar(var) => {
+            previous_env = get_user_env(var);
             set_user_env(var, &dest)?;
             std::fs::remove_dir_all(src).map_err(|source| Error::Io {
                 path: src.into(),
@@ -387,6 +424,7 @@ pub fn relocate(
         files: total_files,
         redirect,
         note,
+        previous_env,
     })
 }
 
@@ -395,6 +433,27 @@ fn restart_note(rule_id: &str) -> String {
         "ollama.models" => "restart Ollama".into(),
         _ => "open a new terminal for the variable to take effect".into(),
     }
+}
+
+/// Reads the persistent user-level value of a variable (not the process's
+/// own, which may come from the system scope or a shell profile).
+#[cfg(windows)]
+fn get_user_env(var: &str) -> Option<String> {
+    let script = format!(
+        "[Environment]::GetEnvironmentVariable('{}', 'User')",
+        var.replace('\'', "''")
+    );
+    let out = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .output()
+        .ok()?;
+    let v = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    (!v.is_empty()).then_some(v)
+}
+
+#[cfg(not(windows))]
+fn get_user_env(var: &str) -> Option<String> {
+    std::env::var(var).ok().filter(|v| !v.is_empty())
 }
 
 /// Sets a persistent user-level environment variable.
@@ -498,6 +557,45 @@ mod tests {
         assert_eq!(fs::read(src.join("a")).unwrap().len(), 100);
         assert!(!d.join("cache").exists());
         assert!(read_relocations(&log).is_empty());
+    }
+
+    #[test]
+    fn failed_move_back_leaves_the_link_in_place() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("c").join("cache");
+        fs::create_dir_all(&src).unwrap();
+        fs::write(src.join("a"), vec![1u8; 10]).unwrap();
+        let d = tmp.path().join("d");
+        fs::create_dir_all(&d).unwrap();
+        let log = tmp.path().join("relocate.log");
+        let r = relocate("cargo.registry", &src, &d, &mut |_, _| {}).unwrap();
+        log_relocation(&log, "cargo.registry", &r);
+        let rec = read_relocations(&log).remove(0);
+
+        // Make the staging folder un-creatable: a file sits where it would go.
+        fs::write(staging_path(&src), b"x").unwrap();
+        assert!(move_back(&log, &rec, &mut |_, _| {}).is_err());
+        fs::remove_file(staging_path(&src)).unwrap();
+
+        // The link is still there, the data still at its moved place, the
+        // record still active.
+        assert!(src.is_symlink());
+        assert!(d.join("cache").join("a").exists());
+        assert_eq!(read_relocations(&log).len(), 1);
+
+        // And a retry now succeeds.
+        move_back(&log, &rec, &mut |_, _| {}).unwrap();
+        assert!(!src.is_symlink());
+        assert!(src.join("a").exists());
+        assert!(!staging_path(&src).exists());
+    }
+
+    #[test]
+    fn records_survive_the_previous_env_field_missing() {
+        let line = r#"{"at":"2026-01-01T00:00:00Z","rule_id":"npm.cache","from":"/a","to":"/b","bytes":1,"redirect":{"kind":"env_var","value":"NPM_CONFIG_CACHE"}}"#;
+        let rec: RelocateRecord = serde_json::from_str(line).unwrap();
+        assert!(rec.active);
+        assert_eq!(rec.previous_env, None);
     }
 
     #[test]

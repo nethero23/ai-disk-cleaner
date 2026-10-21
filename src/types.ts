@@ -66,6 +66,7 @@ export interface RelocateRecord {
   bytes: number;
   redirect: { kind: "env_var"; value: string } | { kind: "junction" };
   active: boolean;
+  previous_env?: string | null;
 }
 
 export interface RelocateResult {
