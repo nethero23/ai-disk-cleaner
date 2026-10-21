@@ -2,7 +2,7 @@
 //! Everything here reads `settings.json` fresh so a change in the settings
 //! page takes effect without a restart.
 
-use crate::{effective_rules, log_path, settings_path};
+use crate::{effective_rules, growth_path, log_path, settings_path};
 use cleaner_core::clean;
 use cleaner_core::settings::Settings;
 use cleaner_core::SafetyLevel;
@@ -28,6 +28,8 @@ struct Labels {
     clean_body: &'static str,
     auto_title: &'static str,
     auto_body: &'static str,
+    growth_title: &'static str,
+    growth_body: &'static str,
 }
 
 fn labels(lang: &str) -> Labels {
@@ -42,6 +44,8 @@ fn labels(lang: &str) -> Labels {
             clean_body: "Nothing worth cleaning right now.",
             auto_title: "Cleaned automatically",
             auto_body: "{n} items ({size}) moved to the Recycle Bin.",
+            growth_title: "Something is growing",
+            growth_body: "{tool} grew by {size} this week. Open AI Disk Cleaner to see what.",
         }
     } else {
         Labels {
@@ -54,6 +58,8 @@ fn labels(lang: &str) -> Labels {
             clean_body: "目前没有值得清理的东西。",
             auto_title: "已自动清理",
             auto_body: "{n} 项（{size}）已移入回收站。",
+            growth_title: "有东西在长",
+            growth_body: "{tool} 这周涨了 {size}，打开 AI Disk Cleaner 看看是什么。",
         }
     }
 }
@@ -179,6 +185,31 @@ struct BackgroundClean {
     freed_bytes: u64,
 }
 
+/// One notification for the fastest-growing tool, when it crossed the threshold.
+fn notify_growth(app: &AppHandle, settings: &Settings) {
+    if settings.growth_notify_bytes == 0 {
+        return;
+    }
+    let snaps = cleaner_core::growth::read(&growth_path(app));
+    let Some(top) = cleaner_core::growth::growth(&snaps, 7).into_iter().next() else {
+        return;
+    };
+    if top.delta_bytes < settings.growth_notify_bytes as i64 {
+        return;
+    }
+    let l = labels(&settings.lang);
+    let body = l.growth_body.replace("{tool}", &top.tool).replace(
+        "{size}",
+        &cleaner_core::model::human_size(top.delta_bytes as u64),
+    );
+    let _ = app
+        .notification()
+        .builder()
+        .title(l.growth_title)
+        .body(body)
+        .show();
+}
+
 pub fn run_background_scan(app: &AppHandle, forced: bool) {
     let (rules, _, settings) = effective_rules(app);
     let opts = ScanOptions {
@@ -189,6 +220,8 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         ..ScanOptions::default()
     };
     let mut report = scan_all(&rules, &opts);
+    cleaner_core::growth::record(&growth_path(app), &report);
+    notify_growth(app, &settings);
 
     // Unattended clean: only Safe items whose owning tool is not running,
     // only for scheduled scans (a tray "scan now" is a request to look).
