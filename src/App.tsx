@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, ScanItem, ScanReport } from "./types";
+import type { Category, CleanRecord, CleanSummary, DuplicateGroup, RelocateResult, ScanItem, ScanReport } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -37,6 +39,65 @@ export function App() {
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
   const [view, setView] = useState<"scan" | "history">("scan");
   const [history, setHistory] = useState<CleanRecord[]>([]);
+  const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
+  const [moving, setMoving] = useState<{ item: ScanItem; dest: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
+  const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
+  const [dupsBusy, setDupsBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    invoke<string[]>("relocatable").then((ids) => setRelocatable(new Set(ids))).catch(() => {});
+  }, []);
+
+  async function pickMoveTarget(item: ScanItem) {
+    const dest = await openDialog({ directory: true, multiple: false, title: s.moveTitle });
+    if (typeof dest === "string") setMoving({ item, dest });
+  }
+
+  async function runMove() {
+    if (!moving) return;
+    const { item, dest } = moving;
+    setMoving({ item, dest, progress: [0, item.size_bytes] });
+    const unlisten = await listen<{ copied: number; total: number }>("relocate-progress", (e) => {
+      setMoving((m) => (m ? { ...m, progress: [e.payload.copied, e.payload.total] } : m));
+    });
+    try {
+      const result = await invoke<RelocateResult>("relocate_item", { ruleId: item.rule_id, path: item.path, destRoot: dest });
+      setMoving({ item, dest, result });
+      setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => i.id !== item.id) } : prev));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    } catch (e) {
+      setError(String(e));
+      setMoving(null);
+    } finally {
+      unlisten();
+    }
+  }
+
+  async function runFindDups() {
+    if (!report) return;
+    setDupsBusy(true);
+    try {
+      setDups(await invoke<DuplicateGroup[]>("find_duplicates", { items: report.items }));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDupsBusy(false);
+  }
+
+  async function runMerge(group: DuplicateGroup) {
+    try {
+      const freed = await invoke<number>("merge_duplicates", { group, keep: group.files[0].path });
+      setNotice(s.merged(humanSize(freed)));
+      setDups((prev) => (prev ? prev.filter((g) => g !== group) : prev));
+    } catch (e) {
+      setError(String(e));
+    }
+  }
 
   async function openHistory() {
     try {
@@ -158,6 +219,7 @@ export function App() {
       </header>
 
       {error && <div className="banner error">{error}</div>}
+      {notice && <div className="banner ok">{notice}</div>}
       {result && (
         <div className="banner ok">
           {s.done(humanSize(result.freed_bytes))}
@@ -228,7 +290,45 @@ export function App() {
               <button className="ghost" onClick={() => setSelected(new Set())}>
                 {s.selectNone}
               </button>
+              <button className="ghost" disabled={dupsBusy} onClick={runFindDups}>
+                {dupsBusy ? s.findingDups : s.findDups}
+              </button>
             </div>
+            {dups && (
+              <div className="dups">
+                {dups.length === 0 ? (
+                  <p className="muted">{s.dupsNone}</p>
+                ) : (
+                  <>
+                    <p className="stat-label">
+                      {s.dupsTitle(dups.length, humanSize(dups.reduce((a, g) => a + g.reclaimable_bytes, 0)))}
+                    </p>
+                    <p className="muted">{s.dupsHow}</p>
+                    {dups.map((g, i) => (
+                      <div key={i} className="dup-group">
+                        <div className="dup-head">
+                          <span className="size">{humanSize(g.size_bytes)}</span>
+                          <span className="muted"> × {g.files.length}</span>
+                          <span style={{ flex: 1 }} />
+                          {g.same_volume ? (
+                            <button className="ghost" onClick={() => runMerge(g)}>{s.merge}</button>
+                          ) : (
+                            <span className="muted">{s.mergeDiffVolume}</span>
+                          )}
+                        </div>
+                        <ul className="dup-files">
+                          {g.files.map((f) => (
+                            <li key={f.path} title={f.path}>
+                              <span className="tool">{f.tool}</span> {f.path}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
             {report.unreadable.length > 0 && (
               <p className="muted" title={report.unreadable.join("\n")}>
                 {s.unreadable(report.unreadable.length)}
@@ -302,6 +402,11 @@ export function App() {
                               <button className="link" onClick={() => revealItemInDir(it.path)}>
                                 {s.openFolder}
                               </button>
+                              {relocatable.has(it.rule_id) && !it.in_use_by && (
+                                <button className="link" onClick={() => pickMoveTarget(it)}>
+                                  {s.move}
+                                </button>
+                              )}
                             </div>
                           </div>
                           <div className="item-meta">
@@ -331,6 +436,40 @@ export function App() {
             </button>
           </footer>
         </>
+      )}
+
+      {moving && (
+        <div className="modal-backdrop" onClick={() => !moving.progress && setMoving(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{s.moveTitle}</h3>
+            {moving.result ? (
+              <>
+                <p>{s.moveDone(moving.result.to)}</p>
+                {moving.result.note && <p className="warn">{s.moveNote[moving.result.note] ?? moving.result.note}</p>}
+                <div className="modal-actions">
+                  <button className="primary" onClick={() => setMoving(null)}>OK</button>
+                </div>
+              </>
+            ) : moving.progress ? (
+              <>
+                <p>{s.moving}</p>
+                <progress max={moving.progress[1] || 1} value={moving.progress[0]} style={{ width: "100%" }} />
+                <p className="muted">
+                  {humanSize(moving.progress[0])} / {humanSize(moving.progress[1])}
+                </p>
+              </>
+            ) : (
+              <>
+                <p>{s.moveBody(moving.item.name, humanSize(moving.item.size_bytes), moving.dest)}</p>
+                <p className="muted">{moving.item.path}</p>
+                <div className="modal-actions">
+                  <button className="ghost" onClick={() => setMoving(null)}>{s.cancel}</button>
+                  <button className="primary" onClick={runMove}>{s.moveTitle}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       {confirming && (

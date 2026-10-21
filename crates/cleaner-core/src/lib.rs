@@ -10,10 +10,12 @@
 //! moves to the Recycle Bin and appends to a log.
 
 pub mod clean;
+pub mod dedup;
 pub mod inspect;
 pub mod model;
 pub mod paths;
 pub mod process;
+pub mod relocate;
 pub mod rules;
 pub mod scan;
 
