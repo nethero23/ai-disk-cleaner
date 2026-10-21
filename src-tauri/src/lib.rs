@@ -18,12 +18,29 @@ use tauri::{AppHandle, Emitter, Manager};
 
 mod background;
 
+/// Portable build: a file named `portable` next to the exe makes the app
+/// keep settings and logs in `data` beside it instead of AppData.
+pub(crate) fn portable_dir() -> Option<PathBuf> {
+    let exe_dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
+    exe_dir
+        .join("portable")
+        .is_file()
+        .then(|| exe_dir.join("data"))
+}
+
+#[tauri::command]
+fn is_portable() -> bool {
+    portable_dir().is_some()
+}
+
 /// Where the clean log lives: the app's own data folder, never the user's documents.
 pub(crate) fn log_path(app: &AppHandle) -> PathBuf {
-    let dir = app.path().app_data_dir().unwrap_or_else(|_| {
-        dirs::data_local_dir()
-            .unwrap_or_else(std::env::temp_dir)
-            .join("ai-disk-cleaner")
+    let dir = portable_dir().unwrap_or_else(|| {
+        app.path().app_data_dir().unwrap_or_else(|_| {
+            dirs::data_local_dir()
+                .unwrap_or_else(std::env::temp_dir)
+                .join("ai-disk-cleaner")
+        })
     });
     let _ = std::fs::create_dir_all(&dir);
     dir.join("clean-log.jsonl")
@@ -606,6 +623,7 @@ pub fn run() {
             cancel_scan,
             clean_items,
             clean_log,
+            is_portable,
             growth_report,
             restore_status,
             restore_items,
