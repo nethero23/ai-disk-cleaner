@@ -36,7 +36,10 @@ export function App() {
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
+  const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
   const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles">("scan");
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
   const [bigPick, setBigPick] = useState<Set<string>>(new Set());
@@ -397,19 +400,44 @@ export function App() {
     }
   }
 
-  const groups = useMemo(() => {
+  const visibleItems = useMemo(() => {
     if (!report) return [];
-    const by = new Map<Category, ScanItem[]>();
-    for (const it of report.items) {
-      if (!by.has(it.category)) by.set(it.category, []);
-      by.get(it.category)!.push(it);
+    const q = query.trim().toLowerCase();
+    if (!q) return report.items;
+    return report.items.filter((i) => `${i.tool} ${i.name} ${i.path} ${i.detail ?? ""}`.toLowerCase().includes(q));
+  }, [report, query]);
+
+  const groups = useMemo(() => {
+    const SAFETY_RANK = { safe: 0, redownload: 1, review: 2 };
+    const cmp = (a: ScanItem, b: ScanItem) => {
+      switch (sortBy) {
+        case "recent":
+          return (b.last_used ?? "").localeCompare(a.last_used ?? "") || b.size_bytes - a.size_bytes;
+        case "safety":
+          return SAFETY_RANK[a.safety] - SAFETY_RANK[b.safety] || b.size_bytes - a.size_bytes;
+        case "name":
+          return a.tool.localeCompare(b.tool) || a.name.localeCompare(b.name);
+        default:
+          return b.size_bytes - a.size_bytes;
+      }
+    };
+    const by = new Map<string, ScanItem[]>();
+    for (const it of visibleItems) {
+      const key = groupBy === "tool" ? it.tool : it.category;
+      if (!by.has(key)) by.set(key, []);
+      by.get(key)!.push(it);
     }
-    return CATEGORY_ORDER.filter((c) => by.has(c)).map((c) => ({
-      category: c,
-      items: by.get(c)!,
-      bytes: by.get(c)!.reduce((a, i) => a + i.size_bytes, 0),
+    const keys =
+      groupBy === "tool"
+        ? [...by.keys()].sort((a, b) => by.get(b)!.reduce((x, i) => x + i.size_bytes, 0) - by.get(a)!.reduce((x, i) => x + i.size_bytes, 0))
+        : CATEGORY_ORDER.filter((c) => by.has(c));
+    return keys.map((k) => ({
+      key: k,
+      title: groupBy === "tool" ? k : s.category[k as Category],
+      items: [...by.get(k)!].sort(cmp),
+      bytes: by.get(k)!.reduce((a, i) => a + i.size_bytes, 0),
     }));
-  }, [report]);
+  }, [visibleItems, groupBy, sortBy, s]);
 
   const selectedItems = useMemo(
     () => (report ? report.items.filter((i) => selected.has(i.id)) : []),
@@ -1011,15 +1039,47 @@ export function App() {
             )}
           </section>
 
+          {report.items.length > 0 && (
+            <div className="toolbar">
+              <input
+                type="search"
+                className="search"
+                placeholder={s.searchPlaceholder}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <label>
+                {s.groupBy}
+                <select value={groupBy} onChange={(e) => { const v = e.target.value as "category" | "tool"; setGroupBy(v); localStorage.setItem("groupBy", v); setCollapsed(new Set()); }}>
+                  <option value="category">{s.groupByCategory}</option>
+                  <option value="tool">{s.groupByTool}</option>
+                </select>
+              </label>
+              <label>
+                {s.sortBy}
+                <select value={sortBy} onChange={(e) => { const v = e.target.value as "size" | "recent" | "safety" | "name"; setSortBy(v); localStorage.setItem("sortBy", v); }}>
+                  <option value="size">{s.sortSize}</option>
+                  <option value="recent">{s.sortRecent}</option>
+                  <option value="safety">{s.sortSafety}</option>
+                  <option value="name">{s.sortName}</option>
+                </select>
+              </label>
+              {query && (
+                <span className="muted">{s.matched(visibleItems.length, humanSize(visibleItems.reduce((a, i) => a + i.size_bytes, 0)))}</span>
+              )}
+            </div>
+          )}
+
           {report.items.length === 0 && <p className="empty">{s.nothing}</p>}
+          {report.items.length > 0 && visibleItems.length === 0 && <p className="empty">{s.noMatch}</p>}
 
           <main className="groups">
             {groups.map((g) => {
-              const open = !collapsed.has(g.category);
+              const open = !collapsed.has(g.key);
               const allOn = g.items.every((i) => selected.has(i.id));
               const someOn = g.items.some((i) => selected.has(i.id));
               return (
-                <section key={g.category} className="group">
+                <section key={g.key} className="group">
                   <header className="group-head">
                     <input
                       type="checkbox"
@@ -1032,14 +1092,14 @@ export function App() {
                       onClick={() =>
                         setCollapsed((prev) => {
                           const next = new Set(prev);
-                          if (next.has(g.category)) next.delete(g.category);
-                          else next.add(g.category);
+                          if (next.has(g.key)) next.delete(g.key);
+                          else next.add(g.key);
                           return next;
                         })
                       }
                     >
                       <span className={`chev ${open ? "open" : ""}`}>▸</span>
-                      {s.category[g.category]}
+                      {g.title}
                       <span className="count">{g.items.length}</span>
                     </button>
                     <span className="group-size">{humanSize(g.bytes)}</span>
