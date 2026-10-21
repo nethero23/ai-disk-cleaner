@@ -80,6 +80,7 @@ export function App() {
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [obStep, setObStep] = useState<number | null>(null);
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateState, setUpdateState] = useState<"idle" | "checking" | "downloading" | "installed">("idle");
   const [updatePct, setUpdatePct] = useState(0);
@@ -204,11 +205,34 @@ export function App() {
     invoke<Settings>("get_settings")
       .then((st) => {
         setSettings(st);
+        if (!st.onboarded) setObStep(0);
         if (st.auto_update_check) runCheckUpdate(false);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function finishOnboarding() {
+    setObStep(null);
+    if (settings && !settings.onboarded) saveSettings({ ...settings, onboarded: true });
+  }
+
+  // One sentence after a scan: what can go safely and who is the biggest offender.
+  const summaryLine = useMemo(() => {
+    if (!report) return "";
+    if (report.items.length === 0) return s.sumNothing;
+    const parts: string[] = [];
+    if (report.safe_bytes > 0) {
+      parts.push(s.sumSafe(humanSize(report.safe_bytes)));
+      const byTool = new Map<string, number>();
+      for (const i of report.items) if (i.safety === "safe") byTool.set(i.tool, (byTool.get(i.tool) ?? 0) + i.size_bytes);
+      const top = [...byTool].sort((a, b) => b[1] - a[1])[0];
+      if (top && top[1] >= report.safe_bytes * 0.2) parts.push(s.sumTop(top[0], humanSize(top[1])));
+    }
+    if (report.redownload_bytes > 0) parts.push(s.sumRedownload(humanSize(report.redownload_bytes)));
+    if (report.review_bytes > 0) parts.push(s.sumReview(humanSize(report.review_bytes)));
+    return parts.join(lang === "zh" ? "，" : ", ") + (lang === "zh" ? "。" : ".");
+  }, [report, s, lang]);
 
   async function saveSettings(next: Settings) {
     setSettings(next);
@@ -1268,6 +1292,7 @@ export function App() {
                 </span>
               )}
             </div>
+            {summaryLine && <p className="summary-line">{summaryLine}</p>}
             {report.cancelled && <div className="banner">{s.scanPartial}</div>}
             <div className="stat-row">
               <Pill level="safe" label={s.safety.safe} size={humanSize(report.safe_bytes)} hint={s.safetyHint.safe} />
@@ -1600,6 +1625,30 @@ export function App() {
         </div>
       )}
 
+      {obStep !== null && (
+        <div className="modal-backdrop">
+          <div className="modal onboarding">
+            <p className="muted">{s.obStep(obStep + 1, s.obTitles.length)}</p>
+            <h3>{s.obTitles[obStep]}</h3>
+            <p>{s.obBodies[obStep]}</p>
+            {obStep === 1 && (
+              <div className="stat-row">
+                <Pill level="safe" label={s.safety.safe} size="" hint={s.safetyHint.safe} />
+                <Pill level="redownload" label={s.safety.redownload} size="" hint={s.safetyHint.redownload} />
+                <Pill level="review" label={s.safety.review} size="" hint={s.safetyHint.review} />
+              </div>
+            )}
+            <div className="modal-actions">
+              <button className="ghost" onClick={finishOnboarding}>{s.obSkip}</button>
+              {obStep + 1 < s.obTitles.length ? (
+                <button className="primary" onClick={() => setObStep(obStep + 1)}>{s.obNext}</button>
+              ) : (
+                <button className="primary" onClick={finishOnboarding}>{s.obDone}</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {confirming && (
         <div className="modal-backdrop" onClick={() => setConfirming(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
