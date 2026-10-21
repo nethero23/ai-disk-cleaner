@@ -58,6 +58,12 @@ consequence_en = "…"
 
 `cargo test` 会校验所有规则文件。
 
+## 安装方式
+
+- **安装包**：Releases 里的 `*-setup.exe`（NSIS，推荐，支持应用内自动更新）或 `*.msi`。
+- **便携版**：`*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹；不自动更新。
+- **winget / Scoop**：每次发布会附带 `*_manifests.zip`，里面是 `nethero23.AIDiskCleaner` 的 winget 清单（三份 YAML）和 Scoop 的 `aidc.json`，哈希已填好。提交到 [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) 和自己的 Scoop bucket 后，就能 `winget install nethero23.AIDiskCleaner` / `scoop install aidc`。
+
 ## 发布
 
 推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建 NSIS/MSI 安装包并发布到 GitHub Releases。
