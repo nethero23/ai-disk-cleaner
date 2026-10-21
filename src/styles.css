@@ -141,3 +141,9 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
 
 .consequence.warn { color: var(--review); }
+
+.peek { margin: 6px 0 2px; padding: 8px 10px; background: var(--bg, #f6f7f9); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+.peek-list { margin: 4px 0 0; padding: 0; }
+.peek-list li { display: grid; grid-template-columns: 1fr 80px 90px auto; gap: 8px; align-items: center; padding: 2px 0; }
+.peek-rel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peek-size { text-align: right; font-variant-numeric: tabular-nums; }

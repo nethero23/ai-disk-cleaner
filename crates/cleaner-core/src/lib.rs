@@ -16,6 +16,7 @@ pub mod export;
 pub mod inspect;
 pub mod model;
 pub mod paths;
+pub mod preview;
 pub mod process;
 pub mod relocate;
 pub mod rules;

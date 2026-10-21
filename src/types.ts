@@ -143,6 +143,19 @@ export interface RulesUpdate {
   updated_at: string;
 }
 
+export interface PreviewEntry {
+  rel: string;
+  path: string;
+  size_bytes: number;
+  modified: string | null;
+}
+
+export interface Preview {
+  files: number;
+  dirs: number;
+  largest: PreviewEntry[];
+}
+
 export interface Drive {
   path: string;
   name: string;
