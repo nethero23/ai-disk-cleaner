@@ -220,7 +220,7 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         ..ScanOptions::default()
     };
     let mut report = scan_all(&rules, &opts);
-    cleaner_core::growth::record(&growth_path(app), &report);
+    cleaner_core::growth::record(&growth_path(app), &report, &settings.scan_drives);
     notify_growth(app, &settings);
 
     // Unattended clean: only Safe items whose owning tool is not running,

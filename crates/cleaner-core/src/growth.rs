@@ -7,7 +7,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Keep at most this many snapshots so the file never grows without bound.
 const KEEP: usize = 2000;
@@ -17,10 +17,32 @@ pub struct Snapshot {
     pub at: DateTime<Utc>,
     pub total_bytes: u64,
     pub by_tool: BTreeMap<String, u64>,
+    /// What else was scanned besides the system drive (extra roots, sorted,
+    /// lower-case). Two scans with different scopes are not comparable:
+    /// ticking `D:\` adds that drive's project folders to "项目" and would
+    /// look like 12 GB of growth overnight.
+    #[serde(default)]
+    pub scope: Vec<String>,
+}
+
+/// The scope key for a set of extra roots.
+pub fn scope_key(extra_roots: &[PathBuf]) -> Vec<String> {
+    let mut v: Vec<String> = extra_roots
+        .iter()
+        .map(|p| {
+            p.to_string_lossy()
+                .to_ascii_lowercase()
+                .trim_end_matches(['\\', '/'])
+                .to_string()
+        })
+        .collect();
+    v.sort();
+    v.dedup();
+    v
 }
 
 impl Snapshot {
-    pub fn from_report(report: &ScanReport) -> Self {
+    pub fn from_report(report: &ScanReport, extra_roots: &[PathBuf]) -> Self {
         let mut by_tool = BTreeMap::new();
         for i in &report.items {
             *by_tool.entry(i.tool.clone()).or_insert(0) += i.size_bytes;
@@ -29,6 +51,7 @@ impl Snapshot {
             at: report.finished_at.unwrap_or_else(Utc::now),
             total_bytes: report.total_bytes,
             by_tool,
+            scope: scope_key(extra_roots),
         }
     }
 }
@@ -46,12 +69,12 @@ pub struct Growth {
 }
 
 /// Appends a snapshot of this scan, trimming the file to the newest `KEEP`.
-pub fn record(path: &Path, report: &ScanReport) {
+pub fn record(path: &Path, report: &ScanReport, extra_roots: &[PathBuf]) {
     // A cancelled scan under-reports every tool; recording it would look like a drop.
     if report.cancelled {
         return;
     }
-    let snap = Snapshot::from_report(report);
+    let snap = Snapshot::from_report(report, extra_roots);
     let mut all = read(path);
     all.push(snap);
     if all.len() > KEEP {
@@ -82,8 +105,9 @@ pub fn read(path: &Path) -> Vec<Snapshot> {
 }
 
 /// Compares the newest snapshot with the oldest one taken within `window`
-/// days of it, per tool, biggest growth first. Tools absent from the
-/// earlier snapshot count as 0 before (they are new). Needs two snapshots.
+/// days of it and with the same scope, per tool, biggest growth first.
+/// Tools absent from the earlier snapshot count as 0 before (they are new).
+/// Needs two comparable snapshots.
 pub fn growth(snapshots: &[Snapshot], window_days: i64) -> Vec<Growth> {
     let Some(latest) = snapshots.last() else {
         return Vec::new();
@@ -91,7 +115,7 @@ pub fn growth(snapshots: &[Snapshot], window_days: i64) -> Vec<Growth> {
     let cutoff = latest.at - Duration::days(window_days);
     let Some(before) = snapshots
         .iter()
-        .filter(|s| s.at >= cutoff && s.at < latest.at)
+        .filter(|s| s.at >= cutoff && s.at < latest.at && s.scope == latest.scope)
         .min_by_key(|s| s.at)
     else {
         return Vec::new();
@@ -124,7 +148,28 @@ mod tests {
             at: Utc::now() - Duration::days(days_ago),
             total_bytes: pairs.iter().map(|p| p.1).sum(),
             by_tool: pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect(),
+            scope: Vec::new(),
         }
+    }
+
+    #[test]
+    fn scans_of_different_scope_are_not_compared() {
+        let mut wide = snap(1, &[("项目", 12_000)]);
+        wide.scope = scope_key(&[PathBuf::from("D:\\")]);
+        let snaps = vec![snap(2, &[("项目", 100)]), wide.clone()];
+        // Only one snapshot in the D: scope: nothing to compare with.
+        assert!(growth(&snaps, 7).is_empty());
+        let mut wide2 = snap(0, &[("项目", 12_500)]);
+        wide2.scope = scope_key(&[PathBuf::from("d:")]);
+        let snaps = vec![snap(2, &[("项目", 100)]), wide, wide2];
+        let g = growth(&snaps, 7);
+        assert_eq!(g.len(), 1);
+        assert_eq!(g[0].delta_bytes, 500);
+        // Older files without a scope load as "system drive only".
+        let old: Snapshot =
+            serde_json::from_str(r#"{"at":"2026-01-01T00:00:00Z","total_bytes":1,"by_tool":{}}"#)
+                .unwrap();
+        assert!(old.scope.is_empty());
     }
 
     #[test]
@@ -167,9 +212,9 @@ mod tests {
             in_use_by: None,
             auto_clean: true,
         });
-        record(&p, &r);
+        record(&p, &r, &[]);
         r.cancelled = true;
-        record(&p, &r);
+        record(&p, &r, &[]);
         let back = read(&p);
         assert_eq!(back.len(), 1);
         assert_eq!(back[0].by_tool["Cursor"], 7);

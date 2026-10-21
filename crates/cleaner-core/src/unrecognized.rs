@@ -54,12 +54,25 @@ const SKIP_NAMES: &[&str] = &[
 const CONTAINERS: &[&str] = &["programs", "jetbrains", "google", "npm", "pip", "pypoetry"];
 
 /// Every path template of every rule, expanded, whether or not it exists.
-/// Templates with unset variables (optional overrides) are skipped.
+/// Templates with unset variables (optional overrides) are skipped, and so
+/// are walk-style rules (the project-artifacts walker is rooted at the whole
+/// profile) and any path that is one of our scan roots or above them:
+/// those "cover" everything and would hide every unrecognized folder.
 fn covered_paths(rules: &RuleSet, ctx: &PathContext) -> Vec<PathBuf> {
+    let roots: Vec<PathBuf> = ["${USERPROFILE}", "${LOCALAPPDATA}", "${APPDATA}"]
+        .iter()
+        .filter_map(|v| ctx.expand(v))
+        .collect();
     let mut out = Vec::new();
     for r in &rules.rules {
+        if r.inspector == crate::rules::Inspector::ProjectArtifacts {
+            continue;
+        }
         for t in &r.paths {
             if let Some(p) = ctx.expand(t) {
+                if roots.iter().any(|root| root.starts_with(&p)) {
+                    continue;
+                }
                 out.push(p);
             }
         }
@@ -315,6 +328,27 @@ mod tests {
             &[home.join("AppData/Local/Mystery")],
         );
         assert!(found.iter().all(|u| u.name != r"AppData\Local\Mystery"));
+    }
+
+    #[test]
+    fn profile_wide_rules_do_not_hide_everything() {
+        let tmp = tempfile::tempdir().unwrap();
+        let home = tmp.path();
+        let p = home.join("AppData/Local/Huawei");
+        std::fs::create_dir_all(&p).unwrap();
+        std::fs::write(p.join("f.bin"), vec![0u8; 300]).unwrap();
+        let mut walker = rule("projects.artifacts", "${USERPROFILE}");
+        walker.inspector = crate::rules::Inspector::ProjectArtifacts;
+        let rules = RuleSet {
+            rules: vec![
+                walker,
+                rule("root", "${LOCALAPPDATA}"),
+                rule("known", "${LOCALAPPDATA}/Known"),
+            ],
+        };
+        let found = find(&rules, &ctx(home), 100, &[]);
+        let names: Vec<&str> = found.iter().map(|u| u.name.as_str()).collect();
+        assert_eq!(names, vec![r"AppData\Local\Huawei"]);
     }
 
     #[test]
