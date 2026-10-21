@@ -155,3 +155,77 @@ paths = ["${USERPROFILE}/go/pkg/mod/cache"]
 safety = "safe"
 consequence_zh = "下次 go build 时重新下载"
 consequence_en = "Re-downloaded on next go build"
+
+[[rule]]
+id = "windows.inetcache"
+tool = "Windows"
+category = "system"
+name_zh = "系统网络缓存 (INetCache)"
+name_en = "System web cache (INetCache)"
+paths = ["${LOCALAPPDATA}/Microsoft/Windows/INetCache"]
+safety = "safe"
+consequence_zh = "系统组件和旧版 IE 的网络缓存"
+consequence_en = "Web cache used by system components and legacy IE"
+windows_only = true
+
+[[rule]]
+id = "windows.defender_scans"
+tool = "Windows"
+category = "system"
+name_zh = "Windows Defender 扫描历史"
+name_en = "Windows Defender scan history"
+paths = ["${PROGRAMDATA}/Microsoft/Windows Defender/Scans/History/Store"]
+safety = "safe"
+min_bytes = 104857600
+consequence_zh = "只是扫描记录，不影响防护"
+consequence_en = "Scan records only; protection is unaffected"
+windows_only = true
+
+[[rule]]
+id = "windows.store_cache"
+tool = "Windows"
+category = "system"
+name_zh = "Microsoft Store 下载缓存"
+name_en = "Microsoft Store download cache"
+paths = ["${LOCALAPPDATA}/Packages/Microsoft.WindowsStore_8wekyb3d8bbwe/LocalCache", "${LOCALAPPDATA}/Packages/Microsoft.WindowsStore_8wekyb3d8bbwe/TempState"]
+all_paths = true
+safety = "safe"
+consequence_zh = "商店会自动重建"
+consequence_en = "The Store rebuilds it"
+windows_only = true
+processes = ["WinStore.App"]
+
+[[rule]]
+id = "poetry.cache"
+tool = "Poetry"
+category = "package_cache"
+name_zh = "Poetry 包缓存"
+name_en = "Poetry package cache"
+paths = ["${POETRY_CACHE_DIR}", "${LOCALAPPDATA}/pypoetry/Cache", "${USERPROFILE}/.cache/pypoetry"]
+all_paths = true
+safety = "safe"
+consequence_zh = "下次 poetry install 时重新下载"
+consequence_en = "Re-downloaded on next poetry install"
+
+[[rule]]
+id = "maven.repository"
+tool = "Maven"
+category = "package_cache"
+name_zh = "Maven 本地仓库"
+name_en = "Maven local repository"
+paths = ["${USERPROFILE}/.m2/repository"]
+safety = "safe"
+min_bytes = 524288000
+consequence_zh = "下次构建时重新下载依赖"
+consequence_en = "Dependencies re-download on next build"
+
+[[rule]]
+id = "composer.cache"
+tool = "Composer"
+category = "package_cache"
+name_zh = "Composer 缓存"
+name_en = "Composer cache"
+paths = ["${LOCALAPPDATA}/Composer", "${USERPROFILE}/.cache/composer"]
+safety = "safe"
+consequence_zh = "下次 composer install 时重新下载"
+consequence_en = "Re-downloaded on next composer install"

@@ -130,3 +130,56 @@ consequence_zh = "IDE 下次打开项目时重新建索引，会慢几分钟"
 consequence_en = "The IDE re-indexes on next open, which takes a few minutes"
 processes = ["idea64", "pycharm64", "webstorm64", "clion64", "goland64", "rider64", "rustrover64"]
 
+
+[[rule]]
+id = "trae.cache"
+tool = "Trae"
+category = "ai_editor"
+name_zh = "Trae 缓存与日志"
+name_en = "Trae cache and logs"
+paths = ["${APPDATA}/Trae/Cache", "${APPDATA}/Trae/CachedData", "${APPDATA}/Trae/Code Cache", "${APPDATA}/Trae/GPUCache", "${APPDATA}/Trae/logs", "${APPDATA}/Trae CN/Cache", "${APPDATA}/Trae CN/CachedData", "${APPDATA}/Trae CN/Code Cache", "${APPDATA}/Trae CN/GPUCache", "${APPDATA}/Trae CN/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "编辑器会自动重建"
+consequence_en = "The editor rebuilds it"
+processes = ["Trae", "Trae CN"]
+
+[[rule]]
+id = "trae.workspaces"
+tool = "Trae"
+category = "ai_editor"
+name_zh = "Trae 工作区状态"
+name_en = "Trae workspace storage"
+paths = ["${APPDATA}/Trae/User/workspaceStorage", "${APPDATA}/Trae CN/User/workspaceStorage"]
+all_paths = true
+safety = "review"
+inspector = "children"
+consequence_zh = "对应项目的历史记录和 AI 索引会丢失"
+consequence_en = "That project's history and AI index are lost"
+processes = ["Trae", "Trae CN"]
+
+[[rule]]
+id = "kiro.cache"
+tool = "Kiro"
+category = "ai_editor"
+name_zh = "Kiro 缓存与日志"
+name_en = "Kiro cache and logs"
+paths = ["${APPDATA}/Kiro/Cache", "${APPDATA}/Kiro/CachedData", "${APPDATA}/Kiro/Code Cache", "${APPDATA}/Kiro/GPUCache", "${APPDATA}/Kiro/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "编辑器会自动重建"
+consequence_en = "The editor rebuilds it"
+processes = ["Kiro"]
+
+[[rule]]
+id = "zed.cache"
+tool = "Zed"
+category = "ai_editor"
+name_zh = "Zed 缓存与日志"
+name_en = "Zed cache and logs"
+paths = ["${LOCALAPPDATA}/Zed/logs", "${LOCALAPPDATA}/Zed/copilot", "${LOCALAPPDATA}/Zed/node"]
+all_paths = true
+safety = "safe"
+consequence_zh = "编辑器会自动重建"
+consequence_en = "The editor rebuilds it"
+processes = ["Zed"]

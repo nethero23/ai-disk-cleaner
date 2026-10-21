@@ -61,3 +61,54 @@ all_paths = true
 safety = "safe"
 consequence_zh = "下次 torch.compile 时重新编译"
 consequence_en = "Recompiled on next torch.compile"
+
+[[rule]]
+id = "nvidia.driver_downloads"
+tool = "NVIDIA"
+category = "gpu"
+name_zh = "NVIDIA 驱动安装包下载"
+name_en = "NVIDIA driver downloads"
+paths = ["${PROGRAMDATA}/NVIDIA Corporation/Downloader", "${PROGRAMDATA}/NVIDIA/Downloader", "${LOCALAPPDATA}/NVIDIA Corporation/NVIDIA app/Downloads"]
+all_paths = true
+safety = "safe"
+consequence_zh = "已安装驱动的安装包，GeForce Experience / NVIDIA App 会在需要时重新下载"
+consequence_en = "Installers for drivers already installed; NVIDIA App re-downloads when needed"
+windows_only = true
+
+[[rule]]
+id = "nvidia.installer_leftovers"
+tool = "NVIDIA"
+category = "gpu"
+name_zh = "NVIDIA 驱动解压残留"
+name_en = "NVIDIA driver extraction leftovers"
+paths = ["${PROGRAMDATA}/NVIDIA Corporation/Installer2", "${PROGRAMDATA}/NVIDIA Corporation/NetService"]
+all_paths = true
+safety = "review"
+min_bytes = 209715200
+consequence_zh = "控制面板的修复/卸载功能可能需要重新下载驱动"
+consequence_en = "Repair / uninstall from the control panel may need to re-download the driver"
+windows_only = true
+
+[[rule]]
+id = "windows.d3d_shader_cache"
+tool = "Windows"
+category = "gpu"
+name_zh = "DirectX 着色器缓存"
+name_en = "DirectX shader cache"
+paths = ["${LOCALAPPDATA}/D3DSCache"]
+safety = "safe"
+consequence_zh = "游戏和 GPU 程序首次启动会稍慢"
+consequence_en = "Games and GPU apps start slightly slower once"
+windows_only = true
+
+[[rule]]
+id = "torch.extensions"
+tool = "PyTorch"
+category = "gpu"
+name_zh = "PyTorch 扩展编译缓存"
+name_en = "PyTorch extension build cache"
+paths = ["${TORCH_EXTENSIONS_DIR}", "${USERPROFILE}/.cache/torch_extensions", "${LOCALAPPDATA}/torch_extensions"]
+all_paths = true
+safety = "safe"
+consequence_zh = "自定义 CUDA 算子下次导入时重新编译"
+consequence_en = "Custom CUDA ops recompile on next import"
