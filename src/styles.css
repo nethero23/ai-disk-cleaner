@@ -168,3 +168,5 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .summary-line { margin: 4px 0 8px; font-size: 15px; }
 .modal.onboarding p { line-height: 1.6; }
 .modal.onboarding .stat-row { margin: 8px 0; }
+.banner .linkish { margin-left: 12px; text-decoration: underline; }
+.history .muted > button.ghost { margin-left: 12px; }
