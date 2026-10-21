@@ -10,8 +10,10 @@ import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
 import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
 import { DrivePicker } from "./DrivePicker";
+import { Fab, NavigationRail, Tabs } from "./ui";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
+type Page = "clean" | "space" | "history" | "settings";
 
 const CATEGORY_ORDER: Category[] = [
   "models",
@@ -46,6 +48,7 @@ export function App() {
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
   const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview" | "deep">("scan");
+  const page: Page = view === "scan" || view === "deep" ? "clean" : view === "overview" || view === "bigfiles" ? "space" : view;
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [ovRoot, setOvRoot] = useState<string | null>(null);
@@ -782,35 +785,67 @@ export function App() {
 
   return (
     <div className="app">
+      <NavigationRail<Page>
+        fab={
+          <Fab
+            icon="radar"
+            label={phase === "scanning" ? s.scanning : report ? s.rescan : s.scan}
+            disabled={phase === "scanning" || phase === "cleaning"}
+            onClick={() => {
+              setView("scan");
+              runScan();
+            }}
+          />
+        }
+        items={[
+          { value: "clean", label: s.navClean, icon: "cleaning_services" },
+          { value: "space", label: s.navSpace, icon: "donut_large" },
+          { value: "history", label: s.navHistory, icon: "history" },
+        ]}
+        bottom={[{ value: "settings", label: s.settings, icon: "settings", badge: update !== null }]}
+        value={page}
+        onChange={(p) => {
+          if (p === "clean") setView("scan");
+          else if (p === "space") openOverview();
+          else if (p === "history") openHistory();
+          else openSettings();
+        }}
+      />
+      <div className="app-main">
       <header className="topbar">
-        <div>
-          <h1>{s.appName}</h1>
-          <p className="tagline">{s.tagline}</p>
-        </div>
+        <h1>{{ clean: s.navClean, space: s.navSpace, history: s.navHistory, settings: s.settings }[page]}</h1>
         <div className="topbar-actions">
           <button className="ghost" onClick={() => setLang(lang === "zh" ? "en" : "zh")}>
             {s.language}
           </button>
-          {view !== "scan" ? (
-            <button className="ghost" onClick={() => setView("scan")}>{s.backToScan}</button>
-          ) : (
-            <>
-              <button className="ghost" onClick={openHistory}>{s.history}</button>
-              <button className="ghost" onClick={openBigFiles}>{s.bigFiles}</button>
-              <button className="ghost" onClick={openOverview}>{s.overview}</button>
-              <button className="ghost" onClick={openDeep}>{s.deep}</button>
-              <button className="ghost" onClick={openSettings}>{s.settings}</button>
-            </>
-          )}
-          <button
-            className="primary"
-            disabled={phase === "scanning" || phase === "cleaning"}
-            onClick={runScan}
-          >
-            {phase === "scanning" ? s.scanning : report ? s.rescan : s.scan}
-          </button>
         </div>
       </header>
+      {page === "clean" && (
+        <div className="page-tabs">
+          <Tabs
+            label={s.navClean}
+            value={view === "deep" ? "deep" : "scan"}
+            onChange={(v) => (v === "deep" ? openDeep() : setView("scan"))}
+            tabs={[
+              { value: "scan", label: s.tabScan, icon: "radar" },
+              { value: "deep", label: s.deep, icon: "admin_panel_settings" },
+            ]}
+          />
+        </div>
+      )}
+      {page === "space" && (
+        <div className="page-tabs">
+          <Tabs
+            label={s.navSpace}
+            value={view === "bigfiles" ? "bigfiles" : "overview"}
+            onChange={(v) => (v === "bigfiles" ? openBigFiles() : openOverview())}
+            tabs={[
+              { value: "overview", label: s.tabOverview, icon: "donut_large" },
+              { value: "bigfiles", label: s.bigFiles, icon: "description" },
+            ]}
+          />
+        </div>
+      )}
 
       {error && <div className="banner error">{error}</div>}
       {notice && <div className="banner ok">{notice}</div>}
@@ -1911,6 +1946,7 @@ export function App() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
