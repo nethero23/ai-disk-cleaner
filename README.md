@@ -1,0 +1,67 @@
+# AI Disk Cleaner
+
+最懂 AI 的 Windows C 盘瘦身工具。先扫描，把每一 GB 翻译成人能看懂的东西（哪个模型、哪个环境、多久没用），标出安全等级，你勾选后再移入回收站，可还原。
+
+A Windows disk cleaner that understands AI tools: Ollama / Hugging Face / LM Studio models, pip / uv / conda caches, Cursor / Windsurf / Claude Code / Codex leftovers, plus ordinary Windows junk. Scan first, decide second, delete reversibly.
+
+## 为什么
+
+CCleaner、360、电脑管家不扫模型和 Python 环境；WizTree 只告诉你哪个文件夹大，不告诉你是什么、能不能删。一台做 AI 的电脑里这些动辄几百 GB。
+
+## 原则
+
+- **只读扫描**：扫描过程不写任何文件。
+- **三级安全标签**：安全（纯缓存，自动重建）／可重下（删了要重新下载）／需确认（含用户数据或可能在用）。默认只勾「安全」。
+- **可撤销**：删除一律进回收站，并写清理日志。
+- **不做**：注册表清理、后台常驻、弹窗、捆绑、上传文件列表。
+
+## 结构
+
+```
+crates/cleaner-core/   扫描引擎（纯 Rust，可在任何平台测试）
+  rules/*.toml         规则库：每条规则 = 路径模板 + 安全等级 + 删除后果
+  src/inspect/         按工具解析内容：Ollama manifest、HF hub、conda env、Cursor workspace…
+  src/bin/aidc.rs      命令行：aidc scan [--json] [--en]
+src-tauri/             Tauri 2 应用壳（Windows 需要 WebView2）
+src/                   React 界面
+```
+
+## 开发
+
+```bash
+# 引擎测试（任何平台）
+cargo test -p cleaner-core
+cargo run -p cleaner-core --bin aidc -- scan
+
+# 桌面应用（Windows；需要 Rust、Node 22、WebView2）
+npm install
+npm run tauri dev
+npm run tauri build   # 生成 NSIS / MSI 安装包
+```
+
+## 添加规则
+
+在 `crates/cleaner-core/rules/` 里加一段：
+
+```toml
+[[rule]]
+id = "tool.what"
+tool = "Tool"
+category = "package_cache"
+name_zh = "……"
+name_en = "…"
+paths = ["${LOCALAPPDATA}/Tool/Cache"]   # 第一个存在的路径生效；all_paths = true 则全部
+safety = "safe"                           # safe | redownload | review
+consequence_zh = "……"
+consequence_en = "…"
+```
+
+`cargo test` 会校验所有规则文件。
+
+## 路线
+
+- v0.1 扫描 + 勾选 + 回收站删除（当前）
+- v0.2 模型搬家到其他盘、跨工具重复模型去重、WSL/Docker 虚拟磁盘压缩、全盘大文件扫描
+- v0.3 在线规则更新、对话记录归档
+
+License: MIT
