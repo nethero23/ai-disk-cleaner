@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, DuplicateGroup, RelocateResult, ScanItem, ScanReport } from "./types";
+import type { Category, CleanRecord, CleanSummary, DuplicateGroup, RelocateRecord, RelocateResult, ScanItem, ScanReport } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -39,6 +39,8 @@ export function App() {
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
   const [view, setView] = useState<"scan" | "history">("scan");
   const [history, setHistory] = useState<CleanRecord[]>([]);
+  const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
+  const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
   const [relocatable, setRelocatable] = useState<Set<string>>(new Set());
   const [moving, setMoving] = useState<{ item: ScanItem; dest: string; source: string; progress?: [number, number]; result?: RelocateResult } | null>(null);
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
@@ -107,10 +109,29 @@ export function App() {
   async function openHistory() {
     try {
       setHistory(await invoke<CleanRecord[]>("clean_log"));
+      setRelocations(await invoke<RelocateRecord[]>("relocations"));
     } catch (e) {
       setError(String(e));
     }
     setView("history");
+  }
+
+  async function moveBack(rec: RelocateRecord) {
+    setMovingBack({ rec });
+    setError(null);
+    const unlisten = await listen<{ copied: number; total: number }>("relocate-progress", (e) => {
+      setMovingBack((m) => (m ? { ...m, progress: [e.payload.copied, e.payload.total] } : m));
+    });
+    try {
+      await invoke("move_back", { record: rec });
+      setNotice(s.movedBack(rec.from));
+      setRelocations((prev) => prev.filter((r) => r !== rec));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      unlisten();
+      setMovingBack(null);
+    }
   }
 
   useEffect(() => {
@@ -236,6 +257,36 @@ export function App() {
 
       {view === "history" && (
         <section className="history">
+          {relocations.length > 0 && (
+            <div className="moved">
+              <h3>{s.movedTitle}</h3>
+              <p className="muted">{s.movedBody}</p>
+              <table className="log">
+                <tbody>
+                  {relocations.map((r) => (
+                    <tr key={r.from + r.to}>
+                      <td className="muted">{new Date(r.at).toLocaleString()}</td>
+                      <td title={r.from}>{r.from}</td>
+                      <td className="muted" title={r.to}>→ {r.to}</td>
+                      <td className="size">{humanSize(r.bytes)}</td>
+                      <td>
+                        {movingBack?.rec === r ? (
+                          <span className="muted">
+                            {s.movingBack}
+                            {movingBack.progress && movingBack.progress[1] > 0 && ` ${Math.round((movingBack.progress[0] / movingBack.progress[1]) * 100)}%`}
+                          </span>
+                        ) : (
+                          <button className="ghost" disabled={movingBack !== null} onClick={() => moveBack(r)}>
+                            {s.moveBack}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           {history.length === 0 ? (
             <p className="empty">{s.historyEmpty}</p>
           ) : (

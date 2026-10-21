@@ -58,6 +58,16 @@ export interface CleanSummary {
   records: CleanRecord[];
 }
 
+export interface RelocateRecord {
+  at: string;
+  rule_id: string;
+  from: string;
+  to: string;
+  bytes: number;
+  redirect: { kind: "env_var"; value: string } | { kind: "junction" };
+  active: boolean;
+}
+
 export interface RelocateResult {
   from: string;
   to: string;

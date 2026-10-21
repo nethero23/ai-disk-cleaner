@@ -37,6 +37,7 @@ pub fn redirect_for(rule_id: &str) -> Option<Redirect> {
         "conda.pkgs" => Redirect::EnvVar("CONDA_PKGS_DIRS".into()),
         "playwright.browsers" => Redirect::EnvVar("PLAYWRIGHT_BROWSERS_PATH".into()),
         "torch.hub" => Redirect::EnvVar("TORCH_HOME".into()),
+        "modelscope.hub" => Redirect::EnvVar("MODELSCOPE_CACHE".into()),
         "npm.cache" => Redirect::EnvVar("NPM_CONFIG_CACHE".into()),
         "cargo.registry" | "gradle.caches" | "go.modcache" | "nuget.cache" => Redirect::Junction,
         "lmstudio.models" | "jan.models" | "whisper.models" | "docker.vhdx" => Redirect::Junction,
@@ -75,6 +76,178 @@ pub struct RelocateResult {
     pub redirect: Redirect,
     /// What the user must still do by hand, if anything (e.g. restart the tool).
     pub note: String,
+}
+
+/// One line of the relocation log: enough to move the data back.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelocateRecord {
+    pub at: chrono::DateTime<chrono::Utc>,
+    pub rule_id: String,
+    pub from: PathBuf,
+    pub to: PathBuf,
+    pub bytes: u64,
+    pub redirect: Redirect,
+    /// False once moved back (or the record is otherwise stale).
+    #[serde(default = "default_true")]
+    pub active: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+pub fn log_relocation(log_path: &Path, rule_id: &str, r: &RelocateResult) {
+    let rec = RelocateRecord {
+        at: chrono::Utc::now(),
+        rule_id: rule_id.into(),
+        from: r.from.clone(),
+        to: r.to.clone(),
+        bytes: r.bytes,
+        redirect: r.redirect.clone(),
+        active: true,
+    };
+    append_record(log_path, &rec);
+}
+
+fn append_record(log_path: &Path, rec: &RelocateRecord) {
+    use std::io::Write;
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path)
+    {
+        if let Ok(line) = serde_json::to_string(rec) {
+            let _ = writeln!(f, "{line}");
+        }
+    }
+}
+
+/// Relocations still in effect: the log is append-only, and a move back
+/// appends the same record with `active: false`, so the last word wins.
+pub fn read_relocations(log_path: &Path) -> Vec<RelocateRecord> {
+    let mut latest: std::collections::HashMap<(PathBuf, PathBuf), RelocateRecord> =
+        Default::default();
+    for line in std::fs::read_to_string(log_path)
+        .unwrap_or_default()
+        .lines()
+    {
+        if let Ok(rec) = serde_json::from_str::<RelocateRecord>(line) {
+            latest.insert((rec.from.clone(), rec.to.clone()), rec);
+        }
+    }
+    let mut out: Vec<_> = latest.into_values().filter(|r| r.active).collect();
+    out.sort_by_key(|r| std::cmp::Reverse(r.at));
+    out
+}
+
+/// Reverses a relocation: copies the data back to `from`, verifies, points
+/// the tool at the original place again, removes the copy at `to`.
+pub fn move_back(log_path: &Path, rec: &RelocateRecord, progress: Progress) -> Result<()> {
+    if !rec.to.is_dir() {
+        return Err(Error::Refused(
+            rec.to.clone(),
+            "the moved folder no longer exists".into(),
+        ));
+    }
+    // A junction at the old path is what we left behind; remove the link
+    // itself (not what it points to) before copying back into a real folder.
+    if rec.from.is_symlink() || is_junction(&rec.from) {
+        remove_link(&rec.from).map_err(|source| Error::Io {
+            path: rec.from.clone(),
+            source,
+        })?;
+    }
+    if rec.from.exists() {
+        return Err(Error::Refused(
+            rec.from.clone(),
+            "something already exists at the original location".into(),
+        ));
+    }
+    let (total_bytes, total_files) = count_tree(&rec.to);
+    let discard = |e: Error| {
+        let _ = std::fs::remove_dir_all(&rec.from);
+        e
+    };
+    copy_tree(&rec.to, &rec.from, total_bytes, progress).map_err(discard)?;
+    if count_tree(&rec.from) != (total_bytes, total_files) {
+        return Err(discard(Error::Refused(
+            rec.from.clone(),
+            "copy verification failed; nothing removed".into(),
+        )));
+    }
+    if let Redirect::EnvVar(var) = &rec.redirect {
+        unset_user_env(var)?;
+    }
+    std::fs::remove_dir_all(&rec.to).map_err(|source| Error::Io {
+        path: rec.to.clone(),
+        source,
+    })?;
+    append_record(
+        log_path,
+        &RelocateRecord {
+            at: chrono::Utc::now(),
+            active: false,
+            ..rec.clone()
+        },
+    );
+    Ok(())
+}
+
+/// A junction or directory symlink is removed as a directory on Windows and
+/// as a file on Unix; neither touches what it points to.
+#[cfg(windows)]
+fn remove_link(p: &Path) -> std::io::Result<()> {
+    std::fs::remove_dir(p)
+}
+
+#[cfg(not(windows))]
+fn remove_link(p: &Path) -> std::io::Result<()> {
+    std::fs::remove_file(p)
+}
+
+#[cfg(windows)]
+fn is_junction(p: &Path) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+    std::fs::symlink_metadata(p)
+        .map(|m| m.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0)
+        .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+fn is_junction(p: &Path) -> bool {
+    p.is_symlink()
+}
+
+/// Removes a persistent user-level environment variable.
+#[cfg(windows)]
+fn unset_user_env(var: &str) -> Result<()> {
+    // `setx` cannot delete; PowerShell's SetEnvironmentVariable with $null
+    // removes the value and broadcasts the change like setx does.
+    let script = format!(
+        "[Environment]::SetEnvironmentVariable('{}', $null, 'User')",
+        var.replace('\'', "''")
+    );
+    let status = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .status()
+        .map_err(|source| Error::Io {
+            path: PathBuf::from(var),
+            source,
+        })?;
+    if !status.success() {
+        return Err(Error::Refused(
+            PathBuf::from(var),
+            "could not remove the environment variable".into(),
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn unset_user_env(var: &str) -> Result<()> {
+    log::info!("would unset {var}");
+    Ok(())
 }
 
 /// Called with (copied_bytes, total_bytes) as the copy proceeds.
@@ -302,6 +475,29 @@ mod tests {
         // The old path still resolves, through the link.
         assert!(src.is_symlink());
         assert_eq!(fs::read(src.join("a.bin")).unwrap().len(), 3000);
+    }
+
+    #[test]
+    fn move_back_restores_the_original_and_retires_the_record() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src = tmp.path().join("c").join("cache");
+        fs::create_dir_all(&src).unwrap();
+        fs::write(src.join("a"), vec![1u8; 100]).unwrap();
+        let d = tmp.path().join("d");
+        fs::create_dir_all(&d).unwrap();
+        let log = tmp.path().join("relocate.log");
+
+        let r = relocate("cargo.registry", &src, &d, &mut |_, _| {}).unwrap();
+        log_relocation(&log, "cargo.registry", &r);
+        let recs = read_relocations(&log);
+        assert_eq!(recs.len(), 1);
+        assert!(src.is_symlink());
+
+        move_back(&log, &recs[0], &mut |_, _| {}).unwrap();
+        assert!(!src.is_symlink());
+        assert_eq!(fs::read(src.join("a")).unwrap().len(), 100);
+        assert!(!d.join("cache").exists());
+        assert!(read_relocations(&log).is_empty());
     }
 
     #[test]

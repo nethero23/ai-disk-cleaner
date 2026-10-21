@@ -496,6 +496,7 @@ dependencies = [
  "dirs 6.0.0",
  "log",
  "regex",
+ "same-file",
  "serde",
  "serde_json",
  "sha2",

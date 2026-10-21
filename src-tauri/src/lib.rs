@@ -4,7 +4,7 @@
 use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
 use cleaner_core::paths::PathContext;
-use cleaner_core::relocate::{self, RelocateResult};
+use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
 use std::path::PathBuf;
@@ -19,6 +19,21 @@ fn log_path(app: &AppHandle) -> PathBuf {
     });
     let _ = std::fs::create_dir_all(&dir);
     dir.join("clean-log.jsonl")
+}
+
+fn relocate_log_path(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("relocate-log.jsonl")
+}
+
+/// Throttled progress emitter shared by move and move-back.
+fn progress_emitter(app: AppHandle, event: &'static str) -> impl FnMut(u64, u64) {
+    let mut last_emit = std::time::Instant::now();
+    move |copied: u64, total: u64| {
+        if last_emit.elapsed().as_millis() > 200 || copied == total {
+            let _ = app.emit(event, RelocateProgress { copied, total });
+            last_emit = std::time::Instant::now();
+        }
+    }
 }
 
 #[tauri::command]
@@ -116,16 +131,31 @@ async fn relocate_item(
     path: PathBuf,
     dest_root: PathBuf,
 ) -> Result<RelocateResult, String> {
+    let log = relocate_log_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let mut last_emit = std::time::Instant::now();
-        let mut progress = |copied: u64, total: u64| {
-            if last_emit.elapsed().as_millis() > 200 || copied == total {
-                let _ = app.emit("relocate-progress", RelocateProgress { copied, total });
-                last_emit = std::time::Instant::now();
-            }
-        };
+        let mut progress = progress_emitter(app, "relocate-progress");
         let src = relocate::move_source(&rule_id, &path, &PathContext::from_env());
-        relocate::relocate(&rule_id, &src, &dest_root, &mut progress).map_err(|e| e.to_string())
+        let r = relocate::relocate(&rule_id, &src, &dest_root, &mut progress)
+            .map_err(|e| e.to_string())?;
+        relocate::log_relocation(&log, &rule_id, &r);
+        Ok(r)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Relocations still in effect, newest first.
+#[tauri::command]
+fn relocations(app: AppHandle) -> Vec<RelocateRecord> {
+    relocate::read_relocations(&relocate_log_path(&app))
+}
+
+#[tauri::command]
+async fn move_back(app: AppHandle, record: RelocateRecord) -> Result<(), String> {
+    let log = relocate_log_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut progress = progress_emitter(app, "relocate-progress");
+        relocate::move_back(&log, &record, &mut progress).map_err(|e| e.to_string())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -160,6 +190,8 @@ pub fn run() {
             relocatable,
             move_source,
             relocate_item,
+            relocations,
+            move_back,
             find_duplicates,
             merge_duplicates
         ])

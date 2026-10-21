@@ -2,7 +2,7 @@
 
 最懂 AI 的 Windows C 盘瘦身工具。先扫描，把每一 GB 翻译成人能看懂的东西（哪个模型、哪个环境、多久没用），标出安全等级，你勾选后再移入回收站，可还原。
 
-A Windows disk cleaner that understands AI tools: Ollama / Hugging Face / LM Studio models, pip / uv / conda caches, Cursor / Windsurf / Claude Code / Codex leftovers, plus ordinary Windows junk. Scan first, decide second, delete reversibly.
+A Windows disk cleaner that understands AI tools: Ollama / Hugging Face / ModelScope / LM Studio models, pip / uv / conda caches, Cursor / Windsurf / Claude Code / Codex leftovers, plus ordinary Windows junk. Scan first, decide second, delete reversibly.
 
 ## 为什么
 

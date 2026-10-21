@@ -57,6 +57,7 @@ impl PathContext {
             "CONDA_ROOT",
             "PLAYWRIGHT_BROWSERS_PATH",
             "TORCH_HOME",
+            "MODELSCOPE_CACHE",
             "LMSTUDIO_HOME",
         ] {
             if let Some(v) = std::env::var_os(key) {
