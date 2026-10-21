@@ -1,0 +1,118 @@
+# Local model stores. Big, re-downloadable, and the thing no general cleaner looks at.
+
+[[rule]]
+id = "ollama.models"
+tool = "Ollama"
+category = "models"
+name_zh = "Ollama 模型"
+name_en = "Ollama models"
+paths = ["${OLLAMA_MODELS}", "${USERPROFILE}/.ollama/models"]
+safety = "redownload"
+inspector = "ollama_models"
+consequence_zh = "需要用 ollama pull 重新下载 {size}"
+consequence_en = "Re-download {size} with ollama pull"
+
+[[rule]]
+id = "ollama.logs"
+tool = "Ollama"
+category = "models"
+name_zh = "Ollama 日志"
+name_en = "Ollama logs"
+paths = ["${LOCALAPPDATA}/Ollama"]
+safety = "safe"
+consequence_zh = "只是日志，Ollama 会重新生成"
+consequence_en = "Logs only; Ollama recreates them"
+windows_only = true
+
+[[rule]]
+id = "huggingface.hub"
+tool = "Hugging Face"
+category = "models"
+name_zh = "Hugging Face 模型缓存"
+name_en = "Hugging Face hub cache"
+paths = ["${HF_HUB_CACHE}", "${HF_HOME}/hub", "${USERPROFILE}/.cache/huggingface/hub"]
+safety = "redownload"
+inspector = "hugging_face_hub"
+consequence_zh = "下次使用时会重新下载 {size}"
+consequence_en = "Will be re-downloaded ({size}) on next use"
+
+[[rule]]
+id = "huggingface.xet"
+tool = "Hugging Face"
+category = "models"
+name_zh = "Hugging Face Xet 分块缓存"
+name_en = "Hugging Face Xet chunk cache"
+paths = ["${HF_HOME}/xet", "${USERPROFILE}/.cache/huggingface/xet"]
+safety = "safe"
+consequence_zh = "下载加速缓存，会自动重建"
+consequence_en = "Download accelerator cache; rebuilds itself"
+
+[[rule]]
+id = "lmstudio.models"
+tool = "LM Studio"
+category = "models"
+name_zh = "LM Studio 模型"
+name_en = "LM Studio models"
+paths = ["${LMSTUDIO_HOME}/models", "${USERPROFILE}/.lmstudio/models", "${USERPROFILE}/.cache/lm-studio/models"]
+safety = "redownload"
+inspector = "lm_studio_models"
+consequence_zh = "需要在 LM Studio 里重新下载 {size}"
+consequence_en = "Re-download {size} inside LM Studio"
+
+[[rule]]
+id = "lmstudio.conversations"
+tool = "LM Studio"
+category = "models"
+name_zh = "LM Studio 对话记录"
+name_en = "LM Studio conversations"
+paths = ["${USERPROFILE}/.lmstudio/conversations"]
+safety = "review"
+consequence_zh = "你和模型的聊天记录会丢失"
+consequence_en = "Your chat history with models is lost"
+
+[[rule]]
+id = "torch.hub"
+tool = "PyTorch"
+category = "models"
+name_zh = "PyTorch Hub 缓存"
+name_en = "PyTorch Hub cache"
+paths = ["${TORCH_HOME}", "${USERPROFILE}/.cache/torch"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "下次调用 torch.hub 时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) next time torch.hub needs it"
+
+[[rule]]
+id = "whisper.models"
+tool = "Whisper"
+category = "models"
+name_zh = "Whisper 模型"
+name_en = "Whisper models"
+paths = ["${USERPROFILE}/.cache/whisper"]
+safety = "redownload"
+consequence_zh = "下次转写时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) on next transcription"
+
+[[rule]]
+id = "chrome.ondevice_model"
+tool = "Chrome"
+category = "browser"
+name_zh = "Chrome 端侧 AI 模型"
+name_en = "Chrome on-device AI model"
+paths = ["${LOCALAPPDATA}/Google/Chrome/User Data/OptGuideOnDeviceModel"]
+safety = "redownload"
+consequence_zh = "Chrome 内置 AI 功能会重新下载约 4 GB"
+consequence_en = "Chrome's built-in AI re-downloads about 4 GB"
+windows_only = true
+
+[[rule]]
+id = "edge.ondevice_model"
+tool = "Edge"
+category = "browser"
+name_zh = "Edge 端侧 AI 模型"
+name_en = "Edge on-device AI model"
+paths = ["${LOCALAPPDATA}/Microsoft/Edge/User Data/OptGuideOnDeviceModel"]
+safety = "redownload"
+consequence_zh = "Edge 内置 AI 功能会重新下载"
+consequence_en = "Edge's built-in AI re-downloads it"
+windows_only = true

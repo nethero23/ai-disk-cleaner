@@ -1,0 +1,121 @@
+# VS Code-family AI editors. Cache folders are safe; globalStorage holds the chat DB.
+
+[[rule]]
+id = "cursor.cache"
+tool = "Cursor"
+category = "ai_editor"
+name_zh = "Cursor 缓存"
+name_en = "Cursor cache"
+paths = ["${APPDATA}/Cursor/Cache", "${APPDATA}/Cursor/CachedData", "${APPDATA}/Cursor/Code Cache", "${APPDATA}/Cursor/GPUCache", "${APPDATA}/Cursor/CachedExtensionVSIXs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "Cursor 会自动重建"
+consequence_en = "Cursor rebuilds it"
+
+[[rule]]
+id = "cursor.logs"
+tool = "Cursor"
+category = "ai_editor"
+name_zh = "Cursor 日志"
+name_en = "Cursor logs"
+paths = ["${APPDATA}/Cursor/logs"]
+safety = "safe"
+consequence_zh = "只是日志"
+consequence_en = "Logs only"
+
+[[rule]]
+id = "cursor.workspaces"
+tool = "Cursor"
+category = "ai_editor"
+name_zh = "Cursor 工作区存储"
+name_en = "Cursor workspace storage"
+paths = ["${APPDATA}/Cursor/User/workspaceStorage"]
+safety = "review"
+inspector = "cursor_workspaces"
+consequence_zh = "该项目在 Cursor 里的状态和对话记录会丢失"
+consequence_en = "That project's editor state and chat history in Cursor is lost"
+
+[[rule]]
+id = "cursor.global_state"
+tool = "Cursor"
+category = "ai_editor"
+name_zh = "Cursor 全局状态库 (state.vscdb，含全部对话)"
+name_en = "Cursor global state DB (state.vscdb, all chats)"
+paths = ["${APPDATA}/Cursor/User/globalStorage"]
+safety = "review"
+min_bytes = 1073741824
+consequence_zh = "所有 Cursor 对话和设置会丢失。建议先在 Cursor 里导出或清理旧对话，而不是整个删除"
+consequence_en = "All Cursor chats and settings are lost. Export or prune old chats inside Cursor instead of deleting this"
+
+[[rule]]
+id = "windsurf.cache"
+tool = "Windsurf"
+category = "ai_editor"
+name_zh = "Windsurf 缓存"
+name_en = "Windsurf cache"
+paths = ["${APPDATA}/Windsurf/Cache", "${APPDATA}/Windsurf/CachedData", "${APPDATA}/Windsurf/Code Cache", "${APPDATA}/Windsurf/GPUCache", "${APPDATA}/Windsurf/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "Windsurf 会自动重建"
+consequence_en = "Windsurf rebuilds it"
+
+[[rule]]
+id = "windsurf.workspaces"
+tool = "Windsurf"
+category = "ai_editor"
+name_zh = "Windsurf 工作区存储"
+name_en = "Windsurf workspace storage"
+paths = ["${APPDATA}/Windsurf/User/workspaceStorage"]
+safety = "review"
+inspector = "cursor_workspaces"
+consequence_zh = "该项目在 Windsurf 里的状态和对话记录会丢失"
+consequence_en = "That project's editor state and chat history in Windsurf is lost"
+
+[[rule]]
+id = "vscode.cache"
+tool = "VS Code"
+category = "ai_editor"
+name_zh = "VS Code 缓存"
+name_en = "VS Code cache"
+paths = ["${APPDATA}/Code/Cache", "${APPDATA}/Code/CachedData", "${APPDATA}/Code/Code Cache", "${APPDATA}/Code/GPUCache", "${APPDATA}/Code/CachedExtensionVSIXs", "${APPDATA}/Code/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "VS Code 会自动重建"
+consequence_en = "VS Code rebuilds it"
+
+[[rule]]
+id = "vscode.workspaces"
+tool = "VS Code"
+category = "ai_editor"
+name_zh = "VS Code 工作区存储"
+name_en = "VS Code workspace storage"
+paths = ["${APPDATA}/Code/User/workspaceStorage"]
+safety = "review"
+inspector = "cursor_workspaces"
+consequence_zh = "该项目的编辑器状态（含 Copilot 对话）会丢失"
+consequence_en = "That project's editor state (including Copilot chats) is lost"
+
+[[rule]]
+id = "antigravity.cache"
+tool = "Antigravity"
+category = "ai_editor"
+name_zh = "Antigravity 缓存"
+name_en = "Antigravity cache"
+paths = ["${APPDATA}/Antigravity/Cache", "${APPDATA}/Antigravity/CachedData", "${APPDATA}/Antigravity/Code Cache", "${APPDATA}/Antigravity/GPUCache", "${APPDATA}/Antigravity/logs"]
+all_paths = true
+safety = "safe"
+consequence_zh = "Antigravity 会自动重建"
+consequence_en = "Antigravity rebuilds it"
+
+[[rule]]
+id = "jetbrains.caches"
+tool = "JetBrains"
+category = "ai_editor"
+name_zh = "JetBrains IDE 索引缓存"
+name_en = "JetBrains IDE index caches"
+paths = ["${LOCALAPPDATA}/JetBrains"]
+safety = "safe"
+inspector = "children"
+min_bytes = 104857600
+consequence_zh = "IDE 下次打开项目时重新建索引，会慢几分钟"
+consequence_en = "The IDE re-indexes on next open, which takes a few minutes"

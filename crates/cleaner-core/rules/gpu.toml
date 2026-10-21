@@ -1,0 +1,63 @@
+# GPU shader and kernel caches. Pure caches, rebuilt on demand.
+
+[[rule]]
+id = "nvidia.dxcache"
+tool = "NVIDIA"
+category = "gpu"
+name_zh = "NVIDIA 着色器缓存"
+name_en = "NVIDIA shader cache"
+paths = ["${LOCALAPPDATA}/NVIDIA/DXCache", "${LOCALAPPDATA}/NVIDIA/GLCache", "${LOCALAPPDATA}/NVIDIA Corporation/NV_Cache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "游戏和应用首次启动会慢一点，之后自动重建"
+consequence_en = "First launch of games and apps is a little slower; rebuilt automatically"
+windows_only = true
+
+[[rule]]
+id = "nvidia.compute_cache"
+tool = "NVIDIA"
+category = "gpu"
+name_zh = "CUDA 内核编译缓存"
+name_en = "CUDA kernel compile cache"
+paths = ["${APPDATA}/NVIDIA/ComputeCache", "${USERPROFILE}/.nv/ComputeCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "首次运行 CUDA 程序会重新编译内核"
+consequence_en = "CUDA programs recompile kernels on first run"
+
+[[rule]]
+id = "amd.shader_cache"
+tool = "AMD"
+category = "gpu"
+name_zh = "AMD 着色器缓存"
+name_en = "AMD shader cache"
+paths = ["${LOCALAPPDATA}/AMD/DxCache", "${LOCALAPPDATA}/AMD/GLCache", "${LOCALAPPDATA}/AMD/VkCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "会自动重建"
+consequence_en = "Rebuilt automatically"
+windows_only = true
+
+[[rule]]
+id = "intel.shader_cache"
+tool = "Intel"
+category = "gpu"
+name_zh = "Intel 着色器缓存"
+name_en = "Intel shader cache"
+paths = ["${LOCALAPPDATA}/Intel/ShaderCache"]
+safety = "safe"
+consequence_zh = "会自动重建"
+consequence_en = "Rebuilt automatically"
+windows_only = true
+
+[[rule]]
+id = "triton.cache"
+tool = "Triton"
+category = "gpu"
+name_zh = "Triton / torch.compile 内核缓存"
+name_en = "Triton / torch.compile kernel cache"
+paths = ["${USERPROFILE}/.triton/cache", "${TEMP}/torchinductor_${USERNAME}"]
+all_paths = true
+safety = "safe"
+consequence_zh = "下次 torch.compile 时重新编译"
+consequence_en = "Recompiled on next torch.compile"
