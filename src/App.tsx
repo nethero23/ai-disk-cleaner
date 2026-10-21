@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
+import type { Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -43,6 +43,7 @@ export function App() {
   const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
   const [bigScanning, setBigScanning] = useState(false);
   const [bigProgress, setBigProgress] = useState<{ seen: number; bytes: number; dir: string } | null>(null);
+  const [peeks, setPeeks] = useState<Map<string, Preview | "loading">>(new Map());
   const [scanStep, setScanStep] = useState<{ done: number; total: number; rule_name: string } | null>(null);
   const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
   const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
@@ -272,6 +273,29 @@ export function App() {
       setError(String(e));
     }
     setPhase("ready");
+  }
+
+  async function togglePeek(it: ScanItem) {
+    if (peeks.has(it.id)) {
+      setPeeks((m) => {
+        const n = new Map(m);
+        n.delete(it.id);
+        return n;
+      });
+      return;
+    }
+    setPeeks((m) => new Map(m).set(it.id, "loading"));
+    try {
+      const p = await invoke<Preview>("preview_item", { path: it.path, limit: 8 });
+      setPeeks((m) => (m.has(it.id) ? new Map(m).set(it.id, p) : m));
+    } catch (e) {
+      setError(String(e));
+      setPeeks((m) => {
+        const n = new Map(m);
+        n.delete(it.id);
+        return n;
+      });
+    }
   }
 
   async function openHistory() {
@@ -1013,6 +1037,9 @@ export function App() {
                               <button className="link" onClick={() => revealItemInDir(it.path)}>
                                 {s.openFolder}
                               </button>
+                              <button className="link" onClick={() => togglePeek(it)}>
+                                {peeks.has(it.id) ? s.peekHide : s.peek}
+                              </button>
                               <button className="link" onClick={() => excludeItem(it)}>
                                 {s.exclude}
                               </button>
@@ -1027,6 +1054,34 @@ export function App() {
                                 </button>
                               )}
                             </div>
+                            {peeks.has(it.id) && (
+                              <div className="peek">
+                                {peeks.get(it.id) === "loading" ? (
+                                  <span className="muted">{s.peekLoading}</span>
+                                ) : (
+                                  (() => {
+                                    const p = peeks.get(it.id) as Preview;
+                                    return p.files === 0 ? (
+                                      <span className="muted">{s.peekEmpty}</span>
+                                    ) : (
+                                      <>
+                                        <div className="muted">{s.peekSummary(p.files, p.dirs, p.largest.length)}</div>
+                                        <ul className="plain peek-list">
+                                          {p.largest.map((f) => (
+                                            <li key={f.path} title={f.path}>
+                                              <span className="peek-rel">{f.rel}</span>
+                                              <span className="peek-size">{humanSize(f.size_bytes)}</span>
+                                              <span className="muted">{relativeDate(f.modified, lang)}</span>
+                                              <button className="link" onClick={() => revealItemInDir(f.path)}>{s.openFolder}</button>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </>
+                                    );
+                                  })()
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="item-meta">
                             <div className="size">{humanSize(it.size_bytes)}</div>

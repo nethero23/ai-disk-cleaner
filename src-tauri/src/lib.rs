@@ -6,6 +6,7 @@ use cleaner_core::clean::{self, CleanRecord, CleanSummary};
 use cleaner_core::dedup::{self, DuplicateGroup};
 use cleaner_core::export::{self, ExportResult};
 use cleaner_core::paths::PathContext;
+use cleaner_core::preview::{self, Preview};
 use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
 use cleaner_core::scan::{scan_all_with, ScanProgress};
 use cleaner_core::settings::Settings;
@@ -125,6 +126,14 @@ async fn clean_items(app: AppHandle, items: Vec<ScanItem>) -> Result<CleanSummar
     })
     .await
     .map_err(|e| e.to_string())
+}
+
+/// The largest files inside an item, for the "what's inside" expander.
+#[tauri::command]
+async fn preview_item(path: PathBuf, limit: usize) -> Result<Preview, String> {
+    tauri::async_runtime::spawn_blocking(move || preview::preview(&path, limit.clamp(1, 50)))
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -464,6 +473,7 @@ pub fn run() {
         .on_window_event(background::on_window_event)
         .invoke_handler(tauri::generate_handler![
             scan,
+            preview_item,
             cancel_scan,
             clean_items,
             clean_log,
