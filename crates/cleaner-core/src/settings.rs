@@ -38,6 +38,8 @@ pub struct Settings {
     pub auto_update_check: bool,
     /// Extra drives (roots) to walk for caches by shape, e.g. `D:\\`.
     pub scan_drives: Vec<PathBuf>,
+    /// Notify when one tool grows by at least this much within a week; 0 = never.
+    pub growth_notify_bytes: u64,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -61,6 +63,7 @@ impl Default for Settings {
             auto_clean_safe: false,
             auto_update_check: true,
             scan_drives: Vec::new(),
+            growth_notify_bytes: 2 * 1024 * 1024 * 1024,
         }
     }
 }

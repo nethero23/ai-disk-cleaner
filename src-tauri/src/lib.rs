@@ -29,6 +29,10 @@ pub(crate) fn log_path(app: &AppHandle) -> PathBuf {
     dir.join("clean-log.jsonl")
 }
 
+pub(crate) fn growth_path(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("growth.jsonl")
+}
+
 fn relocate_log_path(app: &AppHandle) -> PathBuf {
     log_path(app).with_file_name("relocate-log.jsonl")
 }
@@ -78,6 +82,7 @@ struct ScanStep {
 async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
     let (rules, _, settings) = effective_rules(&app);
     SCAN_CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
+    let growth = growth_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let opts = ScanOptions {
             lang,
@@ -86,7 +91,7 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
             extra_roots: settings.scan_drives,
             ..ScanOptions::default()
         };
-        scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
+        let report = scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
             let _ = app.emit(
                 "scan-progress",
                 ScanStep {
@@ -97,7 +102,9 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
                     millis: p.millis,
                 },
             );
-        })
+        });
+        cleaner_core::growth::record(&growth, &report);
+        report
     })
     .await
     .map_err(|e| e.to_string())
@@ -135,6 +142,12 @@ async fn preview_item(path: PathBuf, limit: usize) -> Result<Preview, String> {
     tauri::async_runtime::spawn_blocking(move || preview::preview(&path, limit.clamp(1, 50)))
         .await
         .map_err(|e| e.to_string())
+}
+
+/// Who grew over the last week, biggest first (needs at least two scans).
+#[tauri::command]
+fn growth_report(app: AppHandle) -> Vec<cleaner_core::growth::Growth> {
+    cleaner_core::growth::growth(&cleaner_core::growth::read(&growth_path(&app)), 7)
 }
 
 #[tauri::command]
@@ -538,6 +551,7 @@ pub fn run() {
             cancel_scan,
             clean_items,
             clean_log,
+            growth_report,
             rules,
             get_settings,
             save_settings,

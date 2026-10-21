@@ -127,6 +127,7 @@ export interface Settings {
   auto_clean_safe: boolean;
   auto_update_check: boolean;
   scan_drives: string[];
+  growth_notify_bytes: number;
 }
 
 export interface RuleInfo {
@@ -186,4 +187,12 @@ export interface Drive {
   total_bytes: number;
   free_bytes: number;
   system: boolean;
+}
+
+export interface Growth {
+  tool: string;
+  now_bytes: number;
+  before_bytes: number;
+  delta_bytes: number;
+  since: string;
 }

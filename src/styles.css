@@ -164,3 +164,7 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .peek-size { text-align: right; font-variant-numeric: tabular-nums; }
 .scan-bar { width: 320px; max-width: 80%; height: 8px; }
 .scan-took { font-size: 12px; cursor: help; }
+
+.growth { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 10px; }
+.growth-chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; background: var(--redownload-bg, #fff7e6); }
+.growth-chip.down { background: var(--safe-bg); color: var(--safe); }
