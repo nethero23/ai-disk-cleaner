@@ -65,7 +65,7 @@ name_zh = "Playwright 浏览器"
 name_en = "Playwright browsers"
 paths = ["${PLAYWRIGHT_BROWSERS_PATH}", "${LOCALAPPDATA}/ms-playwright", "${USERPROFILE}/.cache/ms-playwright"]
 safety = "redownload"
-inspector = "children"
+inspector = "versioned_children"
 consequence_zh = "用到它的项目或 MCP 服务需要重新 playwright install（{size}）"
 consequence_en = "Projects or MCP servers using it need playwright install again ({size})"
 

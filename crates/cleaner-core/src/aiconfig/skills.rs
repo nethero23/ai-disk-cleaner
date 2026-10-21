@@ -113,7 +113,7 @@ fn description_of(skill_md: &Path) -> Option<String> {
     None
 }
 
-fn sorted_subdirs(dir: &Path) -> Vec<PathBuf> {
+pub(crate) fn sorted_subdirs(dir: &Path) -> Vec<PathBuf> {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
@@ -171,16 +171,41 @@ fn is_junction(_p: &Path) -> bool {
     false
 }
 
+/// VS Code-style platform suffixes: `ms-vscode.cpptools-1.20.5-win32-x64`.
+const PLATFORM_SUFFIXES: &[&str] = &[
+    "-win32-x64",
+    "-win32-arm64",
+    "-win32-ia32",
+    "-darwin-x64",
+    "-darwin-arm64",
+    "-linux-x64",
+    "-linux-arm64",
+    "-linux-armhf",
+    "-alpine-x64",
+    "-alpine-arm64",
+    "-universal",
+    "-web",
+];
+
 /// Splits `name@1.2.3` / `name-1.2.3` / `name_1.2.3` into name and version.
+/// A platform suffix is dropped first, and a pure build number of three or
+/// more digits (`chromium-1140`, `ffmpeg-1010`) also counts as a version.
 pub fn split_name_version(dir_name: &str) -> (String, Option<String>) {
-    if let Some((n, v)) = dir_name.rsplit_once('@') {
+    let mut base = dir_name;
+    for suf in PLATFORM_SUFFIXES {
+        if let Some(b) = base.strip_suffix(suf) {
+            base = b;
+            break;
+        }
+    }
+    if let Some((n, v)) = base.rsplit_once('@') {
         if !v.is_empty() && v.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             return (n.to_string(), Some(v.to_string()));
         }
     }
     for sep in ['-', '_'] {
-        if let Some((n, v)) = dir_name.rsplit_once(sep) {
-            if looks_like_version(v) {
+        if let Some((n, v)) = base.rsplit_once(sep) {
+            if looks_like_version(v) || (v.len() >= 3 && v.chars().all(|c| c.is_ascii_digit())) {
                 return (n.to_string(), Some(v.to_string()));
             }
         }
@@ -210,10 +235,10 @@ pub fn version_key(v: &str) -> Vec<u64> {
 }
 
 /// (name, (newest folder, its version), older folders).
-type VersionGroup = (String, (PathBuf, Option<String>), Vec<PathBuf>);
+pub(crate) type VersionGroup = (String, (PathBuf, Option<String>), Vec<PathBuf>);
 
 /// Groups versioned folders by name; returns (name, newest, older...).
-fn group_versions(dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
+pub(crate) fn group_versions(dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
     let mut groups: std::collections::BTreeMap<String, Vec<(PathBuf, Option<String>)>> =
         Default::default();
     for d in dirs {
@@ -472,6 +497,15 @@ mod tests {
             ("a.b".into(), Some("1.0.0".into()))
         );
         assert_eq!(split_name_version("plain"), ("plain".into(), None));
+        assert_eq!(
+            split_name_version("ms-vscode.cpptools-1.20.5-win32-x64"),
+            ("ms-vscode.cpptools".into(), Some("1.20.5".into()))
+        );
+        assert_eq!(
+            split_name_version("chromium_headless_shell-1140"),
+            ("chromium_headless_shell".into(), Some("1140".into()))
+        );
+        assert_eq!(split_name_version("ext-2"), ("ext-2".into(), None));
         assert!(version_key("1.10.0") > version_key("1.9.2"));
     }
 }

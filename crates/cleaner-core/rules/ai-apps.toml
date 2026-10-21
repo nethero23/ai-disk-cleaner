@@ -167,3 +167,16 @@ all_paths = true
 safety = "safe"
 consequence_zh = "临时图片和日志，不影响生成"
 consequence_en = "Temp images and logs; generation is unaffected"
+
+[[rule]]
+id = "claude_desktop.extensions_stale"
+tool = "Claude"
+category = "ai_desktop_app"
+name_zh = "Claude 桌面版扩展旧版本"
+name_en = "Claude Desktop extension old versions"
+paths = ["${APPDATA}/Claude/Claude Extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "只删旧版本文件夹，当前版本保留"
+consequence_en = "Only old version folders go; the current version stays"
+processes = ["Claude"]
