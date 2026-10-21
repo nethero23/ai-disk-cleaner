@@ -40,6 +40,8 @@ export interface ScanReport {
   started_at: string | null;
   finished_at: string | null;
   unreadable: string[];
+  timings: [string, number][];
+  cancelled: boolean;
 }
 
 export interface CleanRecord {
