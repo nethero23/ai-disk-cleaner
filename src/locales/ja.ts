@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const ja: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "削除する前に、その 1 GB が何なのかを確かめる",
   scan: "スキャン",
   rescan: "再スキャン",
@@ -277,6 +277,12 @@ const ja: Partial<Strings> = {
   clear: "クリア",
   language: "表示言語",
   languageAuto: "システムに合わせる",
+  setAppearance: "外観と言語",
+  theme: "テーマ",
+  themeSystem: "システム",
+  themeLight: "ライト",
+  themeDark: "ダーク",
+  setScanSection: "スキャン",
   listSep: "、",
   sentenceEnd: "。",
 };

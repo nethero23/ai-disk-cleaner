@@ -10,7 +10,8 @@ import { getVersion } from "@tauri-apps/api/app";
 import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
 import { coreLang, htmlLang, humanSize, isRtl, loadLangPref, relativeDate, resolveLang, saveLangPref, t, type LangPref, sinceDuration } from "./i18n";
-import { LanguageSelect } from "./LanguageSelect";
+import { SettingsPage } from "./pages/Settings/Settings";
+import { applyTheme, loadTheme, type Theme } from "./theme";
 import { DrivePicker } from "./DrivePicker";
 import { Button, Card, Checkbox, Fab, FloatingToolbar, Icon, NavigationRail, SearchBar, SegmentedButton, Tabs } from "./ui";
 import { Hero } from "./pages/Clean/Hero";
@@ -42,6 +43,8 @@ function isDefaultTicked(i: ScanItem): boolean {
 export function App() {
   const [langPref, setLangPref] = useState<LangPref>(loadLangPref);
   const lang = resolveLang(langPref);
+  const [theme, setTheme] = useState<Theme>(loadTheme);
+  useEffect(() => applyTheme(theme), [theme]);
   const s = t(lang);
   const sRef = useRef(s);
   sRef.current = s;
@@ -827,9 +830,6 @@ export function App() {
       <div className="app-main">
       <header className="topbar">
         <h1>{{ clean: s.navClean, space: s.navSpace, history: s.navHistory, aitools: s.aiTools, settings: s.settings }[page]}</h1>
-        <div className="topbar-actions">
-          <LanguageSelect value={langPref} onChange={setLangPref} label={s.language} autoLabel={s.languageAuto} />
-        </div>
       </header>
       {page === "clean" && (
         <div className="page-tabs">
@@ -1176,201 +1176,32 @@ export function App() {
       )}
 
       {view === "settings" && settings && (
-        <section className="settings">
-          <h2>{s.language}</h2>
-          <p>
-            <LanguageSelect value={langPref} onChange={setLangPref} label={s.language} autoLabel={s.languageAuto} />
-          </p>
-          <h2>{s.setExcluded}</h2>
-          <p className="muted">{s.setExcludedBody}</p>
-          {settings.excluded_paths.length === 0 ? (
-            <p className="empty">{s.setExcludedEmpty}</p>
-          ) : (
-            <ul className="plain">
-              {settings.excluded_paths.map((p) => (
-                <li key={p}>
-                  <span title={p}>{p}</span>
-                  <button className="link" onClick={() => saveSettings({ ...settings, excluded_paths: settings.excluded_paths.filter((x) => x !== p) })}>
-                    {s.remove}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p>
-            <button className="ghost" onClick={addExcludedFolder}>{s.addFolder}</button>
-          </p>
-          <h2>{s.scanDrives}</h2>
-          <p className="muted">{s.scanDrivesHint}</p>
-          <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} align="start" />
-          {allDrives.length < 2 && <p className="empty">{s.scanDrivesOnlyOne}</p>}
-          <p>
-            {s.setMinSize}{" "}
-            <select
-              value={settings.min_item_bytes}
-              onChange={(e) => saveSettings({ ...settings, min_item_bytes: Number(e.target.value) })}
-            >
-              <option value={0}>0</option>
-              <option value={10 * 1024 * 1024}>10 MB</option>
-              <option value={100 * 1024 * 1024}>100 MB</option>
-              <option value={1024 * 1024 * 1024}>1 GB</option>
-            </select>
-          </p>
-
-          <h2>{s.setBackground}</h2>
-          <p>
-            <label>
-              <input type="checkbox" checked={settings.close_to_tray} onChange={(e) => saveSettings({ ...settings, close_to_tray: e.target.checked })} />{" "}
-              {s.setCloseToTray}
-            </label>
-          </p>
-          <p>
-            <label>
-              <input type="checkbox" checked={settings.autostart} onChange={(e) => saveSettings({ ...settings, autostart: e.target.checked })} />{" "}
-              {s.setAutostart}
-            </label>
-          </p>
-          <p>
-            {s.setSchedule}{" "}
-            <select
-              value={settings.scheduled_scan_hours}
-              onChange={(e) => saveSettings({ ...settings, scheduled_scan_hours: Number(e.target.value) })}
-            >
-              <option value={0}>{s.schedOff}</option>
-              {[6, 12, 24, 72, 168].map((h) => (
-                <option key={h} value={h}>{s.schedHours(h)}</option>
-              ))}
-            </select>{" "}
-            {s.setNotify}{" "}
-            <select
-              value={settings.notify_min_bytes}
-              onChange={(e) => saveSettings({ ...settings, notify_min_bytes: Number(e.target.value) })}
-            >
-              <option value={0}>0</option>
-              <option value={500 * 1024 * 1024}>500 MB</option>
-              <option value={1024 * 1024 * 1024}>1 GB</option>
-              <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
-            </select>
-          </p>
-          <p>
-            <label>
-              <input type="checkbox" checked={settings.auto_clean_safe} onChange={(e) => saveSettings({ ...settings, auto_clean_safe: e.target.checked })} />{" "}
-              {s.setAutoClean}
-            </label>
-          </p>
-          <p>
-            {s.setIdleDays}{" "}
-            <select value={settings.idle_model_days} onChange={(e) => saveSettings({ ...settings, idle_model_days: Number(e.target.value) })}>
-              {[30, 60, 90, 180, 365].map((d) => (
-                <option key={d} value={d}>{s.days(d)}</option>
-              ))}
-            </select>
-          </p>
-          <p>
-            {s.setGrowthNotify}{" "}
-            <select
-              value={settings.growth_notify_bytes}
-              onChange={(e) => saveSettings({ ...settings, growth_notify_bytes: Number(e.target.value) })}
-            >
-              <option value={0}>{s.growthOff}</option>
-              <option value={1024 * 1024 * 1024}>1 GB</option>
-              <option value={2 * 1024 * 1024 * 1024}>2 GB</option>
-              <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
-              <option value={10 * 1024 * 1024 * 1024}>10 GB</option>
-            </select>
-          </p>
-          {settings.last_background_scan && (
-            <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
-          )}
-
-          <h2>{s.setAppUpdate}</h2>
-          {portable ? (
-            <p className="muted">
-              {s.portableNoUpdate}{" "}
-              <button className="linkish" onClick={() => openUrl("https://github.com/nethero23/ai-disk-cleaner/releases")}>{s.portableReleases}</button>
-            </p>
-          ) : (
-            <>
-              <p>
-                <label>
-                  <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
-                  {s.setAutoUpdateCheck}
-                </label>
-              </p>
-              <p>
-                <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
-                  {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
-                </button>
-              </p>
-            </>
-          )}
-
-          <h2>{s.setUpdate}</h2>
-          <p className="muted">{s.setUpdateBody}</p>
-          <p>
-            <input
-              className="wide"
-              value={settings.rules_update_url}
-              onChange={(e) => setSettings({ ...settings, rules_update_url: e.target.value })}
-              onBlur={() => saveSettings(settings)}
-            />
-          </p>
-          <p>
-            <button className="ghost" disabled={updatingRules} onClick={runRulesUpdate}>
-              {updatingRules ? s.updating : s.updateNow}
-            </button>{" "}
-            <span className="muted">
-              {settings.rules_updated_at ? s.updatedAt(new Date(settings.rules_updated_at).toLocaleString()) : s.neverUpdated}
-            </span>
-          </p>
-
-          <h2>{s.setCustomDir}</h2>
-          <p className="muted">{s.setCustomDirBody}</p>
-          <p>
-            <span className="muted">{settings.custom_rules_dir ?? "—"}</span>{" "}
-            <button className="link" onClick={pickCustomRulesDir}>{s.chooseFolder}</button>
-            {settings.custom_rules_dir && (
-              <button
-                className="link"
-                onClick={async () => {
-                  await saveSettings({ ...settings, custom_rules_dir: null });
-                  setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
-                }}
-              >
-                {s.clearFolder}
-              </button>
-            )}
-          </p>
-          {library && library.errors.length > 0 && (
-            <div className="banner error">
-              {s.setRuleErrors}
-              <ul className="plain">
-                {library.errors.map(([p, e]) => (
-                  <li key={p}>
-                    {p}: {e}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <h2>{s.setRules}</h2>
-          <p className="muted">{s.setRulesBody}</p>
-          {library && (
-            <ul className="plain rules">
-              {library.rules.map((r) => (
-                <li key={r.id}>
-                  <label>
-                    <input type="checkbox" checked={r.enabled} onChange={(e) => toggleRule(r.id, e.target.checked)} />{" "}
-                    <span className="tool">{r.tool}</span> {coreLang(lang) === "zh" ? r.name_zh : r.name_en}{" "}
-                    <span className={`tag ${r.safety}`}>{s.safety[r.safety]}</span>
-                    <span className="muted"> · {r.id}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <SettingsPage
+          s={s}
+          lang={lang}
+          langPref={langPref}
+          onLangPref={setLangPref}
+          theme={theme}
+          onTheme={setTheme}
+          settings={settings}
+          save={saveSettings}
+          edit={setSettings}
+          drives={allDrives}
+          portable={portable}
+          checkingUpdate={updateState === "checking"}
+          onCheckUpdate={() => runCheckUpdate(true)}
+          onOpenReleases={() => openUrl("https://github.com/nethero23/ai-disk-cleaner/releases")}
+          onAddExcluded={addExcludedFolder}
+          library={library}
+          updatingRules={updatingRules}
+          onUpdateRules={runRulesUpdate}
+          onPickRulesDir={pickCustomRulesDir}
+          onClearRulesDir={async () => {
+            await saveSettings({ ...settings, custom_rules_dir: null });
+            setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+          }}
+          onToggleRule={toggleRule}
+        />
       )}
 
       {view === "history" && (
