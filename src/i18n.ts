@@ -1,6 +1,34 @@
 import type { Category, SafetyLevel } from "./types";
+import zhTW from "./locales/zh-TW";
+import ja from "./locales/ja";
+import ko from "./locales/ko";
+import de from "./locales/de";
+import fr from "./locales/fr";
+import es from "./locales/es";
+import pt from "./locales/pt";
+import ru from "./locales/ru";
+import ar from "./locales/ar";
+import hi from "./locales/hi";
 
-export type Lang = "zh" | "en";
+/// zh and en below are the source of truth: add new keys to both. Every other
+/// language lives in src/locales/<code>.ts as a Partial and falls back to
+/// English per key; `node tools/i18n_check.mjs` lists what is missing.
+export const LANGS = [
+  { code: "zh", name: "简体中文" },
+  { code: "zh-TW", name: "繁體中文" },
+  { code: "en", name: "English" },
+  { code: "ja", name: "日本語" },
+  { code: "ko", name: "한국어" },
+  { code: "de", name: "Deutsch" },
+  { code: "fr", name: "Français" },
+  { code: "es", name: "Español" },
+  { code: "pt", name: "Português" },
+  { code: "ru", name: "Русский" },
+  { code: "ar", name: "العربية" },
+  { code: "hi", name: "हिन्दी" },
+] as const;
+
+export type Lang = (typeof LANGS)[number]["code"];
 
 const strings = {
   zh: {
@@ -278,7 +306,10 @@ const strings = {
     merge: "合并为硬链接（保留第一个）",
     mergeDiffVolume: "不在同一个盘，无法硬链接",
     merged: (size: string) => `已合并，释放 ${size}`,
-    language: "English",
+    language: "界面语言",
+    languageAuto: "跟随系统",
+    listSep: "，",
+    sentenceEnd: "。",
   },
   en: {
     appName: "AI Disk Cleaner",
@@ -555,14 +586,87 @@ const strings = {
     merge: "Merge into hard links (keep first)",
     mergeDiffVolume: "On different drives; cannot hard-link",
     merged: (size: string) => `Merged, freed ${size}`,
-    language: "中文",
+    language: "Language",
+    languageAuto: "Follow system",
+    listSep: ", ",
+    sentenceEnd: ".",
   },
 };
 
 export type Strings = (typeof strings)["zh"];
 
+const partials: Record<Exclude<Lang, "zh" | "en">, Partial<Strings>> = {
+  "zh-TW": zhTW, ja, ko, de, fr, es, pt, ru, ar, hi,
+};
+const merged = new Map<Lang, Strings>();
+
 export function t(lang: Lang): Strings {
-  return strings[lang] as Strings;
+  if (lang === "zh" || lang === "en") return strings[lang] as Strings;
+  let m = merged.get(lang);
+  if (!m) {
+    m = { ...(strings.en as Strings), ...(partials[lang] ?? {}) } as Strings;
+    merged.set(lang, m);
+  }
+  return m;
+}
+
+function isLang(v: string | null): v is Lang {
+  return !!v && LANGS.some((l) => l.code === v);
+}
+
+/// Best match for a BCP 47 tag such as "zh-Hant-HK", "pt-BR" or "ar-EG".
+export function matchLang(tag: string): Lang | null {
+  const t = tag.toLowerCase();
+  if (t.startsWith("zh")) return /hant|tw|hk|mo/.test(t) ? "zh-TW" : "zh";
+  const base = t.split("-")[0];
+  return isLang(base) ? base : null;
+}
+
+/// The OS language as WebView2 reports it; English when we don't speak it.
+export function systemLang(): Lang {
+  const tags = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const tag of tags) {
+    const m = tag && matchLang(tag);
+    if (m) return m;
+  }
+  return "en";
+}
+
+/// What the user picked: a language, or "auto" to follow the system.
+export type LangPref = Lang | "auto";
+
+export function loadLangPref(): LangPref {
+  try {
+    const v = localStorage.getItem("uiLang");
+    if (v === "auto" || isLang(v)) return v;
+    // Before v0.8 the app wrote "lang" on every start, so only an explicit
+    // switch to English carries over; everyone else starts on "auto".
+    if (localStorage.getItem("lang") === "en") return "en";
+  } catch {}
+  return "auto";
+}
+
+export function saveLangPref(p: LangPref) {
+  try {
+    localStorage.setItem("uiLang", p);
+  } catch {}
+}
+
+export function resolveLang(p: LangPref): Lang {
+  return p === "auto" ? systemLang() : p;
+}
+
+/// The Rust core only speaks zh and en; everything else gets English there.
+export function coreLang(lang: Lang): "zh" | "en" {
+  return lang === "zh" || lang === "zh-TW" ? "zh" : "en";
+}
+
+export function htmlLang(lang: Lang): string {
+  return lang === "zh" ? "zh-CN" : lang;
+}
+
+export function isRtl(lang: Lang): boolean {
+  return lang === "ar";
 }
 
 export function humanSize(bytes: number): string {
@@ -578,6 +682,7 @@ export function humanSize(bytes: number): string {
 
 /// "3 个月" / "3mo": how long ago, without the "ago".
 export function sinceDuration(iso: string, lang: Lang): string {
+  if (lang !== "zh" && lang !== "en") return intlSpan(iso, lang, false);
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   if (days < 30) return lang === "zh" ? `${days} 天` : `${days}d`;
   if (days < 365) return lang === "zh" ? `${Math.floor(days / 30)} 个月` : `${Math.floor(days / 30)}mo`;
@@ -586,9 +691,22 @@ export function sinceDuration(iso: string, lang: Lang): string {
 
 export function relativeDate(iso: string | null, lang: Lang): string {
   if (!iso) return t(lang).never;
+  if (lang !== "zh" && lang !== "en") return intlSpan(iso, lang, true);
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   if (days <= 0) return lang === "zh" ? "今天" : "today";
   if (days < 30) return lang === "zh" ? `${days} 天前` : `${days}d ago`;
   if (days < 365) return lang === "zh" ? `${Math.floor(days / 30)} 个月前` : `${Math.floor(days / 30)}mo ago`;
   return lang === "zh" ? `${Math.floor(days / 365)} 年前` : `${Math.floor(days / 365)}y ago`;
+}
+
+function intlSpan(iso: string, lang: Lang, ago: boolean): string {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+  const [n, unit]: [number, "day" | "month" | "year"] =
+    days < 30 ? [days, "day"] : days < 365 ? [Math.floor(days / 30), "month"] : [Math.floor(days / 365), "year"];
+  try {
+    if (ago) return new Intl.RelativeTimeFormat(lang, { numeric: "auto" }).format(-n, unit);
+    return new Intl.NumberFormat(lang, { style: "unit", unit, unitDisplay: "long" }).format(n);
+  } catch {
+    return `${n} ${unit}`;
+  }
 }

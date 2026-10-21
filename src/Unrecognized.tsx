@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useState } from "react";
-import { humanSize, relativeDate, t, type Lang } from "./i18n";
+import { coreLang, humanSize, relativeDate, t, type Lang } from "./i18n";
 import type { Unrecognized } from "./types";
 
 /// "Unrecognized large folders": profile folders no rule claims, with a
@@ -23,7 +23,7 @@ export function UnrecognizedPanel({ lang, onError }: { lang: Lang; onError: (msg
 
   async function suggest(entry: Unrecognized) {
     try {
-      const url = await invoke<string>("suggest_rule_url", { entry, lang });
+      const url = await invoke<string>("suggest_rule_url", { entry, lang: coreLang(lang) });
       await openUrl(url);
     } catch (e) {
       onError(String(e));
