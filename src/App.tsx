@@ -9,6 +9,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
 import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
+import { DrivePicker } from "./DrivePicker";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 
@@ -1147,6 +1148,10 @@ export function App() {
           <p>
             <button className="ghost" onClick={addExcludedFolder}>{s.addFolder}</button>
           </p>
+          <h2>{s.scanDrives}</h2>
+          <p className="muted">{s.scanDrivesHint}</p>
+          <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} align="start" />
+          {allDrives.length < 2 && <p className="empty">{s.scanDrivesOnlyOne}</p>}
           <p>
             {s.setMinSize}{" "}
             <select
@@ -1416,30 +1421,7 @@ export function App() {
         <section className="empty">
           <h2>{s.emptyTitle}</h2>
           <p>{s.emptyBody}</p>
-          {allDrives.length > 1 && settings && (
-            <div className="drive-pick" title={s.scanDrivesHint}>
-              <span className="muted">{s.scanDrives}</span>
-              {allDrives.map((d) => {
-                const on = d.system || settings.scan_drives.includes(d.path);
-                return (
-                  <label key={d.path}>
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      disabled={d.system}
-                      onChange={() =>
-                        saveSettings({
-                          ...settings,
-                          scan_drives: on ? settings.scan_drives.filter((p) => p !== d.path) : [...settings.scan_drives, d.path],
-                        })
-                      }
-                    />
-                    {d.path}{d.name ? ` ${d.name}` : ""}{d.system ? ` (${s.systemDrive})` : ""}
-                  </label>
-                );
-              })}
-            </div>
-          )}
+          {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} />}
           <p>
             <button
               className="ghost"
@@ -1481,6 +1463,7 @@ export function App() {
               )}
             </div>
             {summaryLine && <p className="summary-line">{summaryLine}</p>}
+            {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} note={s.scanDrivesNext} align="start" />}
             {report.cancelled && <div className="banner">{s.scanPartial}</div>}
             {growth.some((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024) && (
               <div className="growth" title={s.growthHint}>
