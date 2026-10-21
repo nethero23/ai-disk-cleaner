@@ -113,7 +113,12 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 .dup-files { list-style: none; margin: 4px 0 0; padding: 0; font-size: 12px; color: var(--muted); }
 .dup-files li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-ul.plain { list-style: none; padding: 0; margin: 8px 0; font-size: 13px; }
-ul.plain li { padding: 2px 0; word-break: break-all; }
 .export-opt { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 14px; }
 .export-opt p { margin: 6px 0 0; }
+.settings { padding: 16px 24px; max-width: 900px; }
+.settings h2 { font-size: 16px; margin: 24px 0 4px; }
+.settings h2:first-child { margin-top: 0; }
+.settings input.wide { width: 100%; max-width: 640px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: inherit; }
+ul.plain { list-style: none; padding: 0; margin: 8px 0; font-size: 13px; }
+ul.plain li { padding: 3px 0; word-break: break-all; }
+ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }

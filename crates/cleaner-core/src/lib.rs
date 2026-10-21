@@ -19,6 +19,7 @@ pub mod process;
 pub mod relocate;
 pub mod rules;
 pub mod scan;
+pub mod settings;
 pub mod vhdx;
 
 pub use model::{Category, SafetyLevel, ScanItem, ScanReport};

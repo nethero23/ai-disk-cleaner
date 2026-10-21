@@ -106,3 +106,32 @@ export interface ExportResult {
   files: number;
   bytes: number;
 }
+
+export interface Settings {
+  excluded_paths: string[];
+  disabled_rules: string[];
+  custom_rules_dir: string | null;
+  rules_update_url: string;
+  rules_updated_at: string | null;
+  min_item_bytes: number;
+}
+
+export interface RuleInfo {
+  id: string;
+  tool: string;
+  name_zh: string;
+  name_en: string;
+  safety: SafetyLevel;
+  enabled: boolean;
+}
+
+export interface RuleLibrary {
+  rules: RuleInfo[];
+  errors: [string, string][];
+}
+
+export interface RulesUpdate {
+  files: number;
+  rules: number;
+  updated_at: string;
+}

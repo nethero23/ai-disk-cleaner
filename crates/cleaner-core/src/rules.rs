@@ -6,6 +6,7 @@
 
 use crate::model::{Category, SafetyLevel};
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
 /// Which inspector names the contents of a location. `Plain` just sizes it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -43,7 +44,9 @@ pub struct Rule {
     #[serde(default)]
     pub inspector: Inspector,
     /// Consequence of deletion, Chinese ("工具会自动重建").
+    #[serde(default)]
     pub consequence_zh: String,
+    #[serde(default)]
     pub consequence_en: String,
     /// Only report when at least this big, to keep the list readable.
     #[serde(default)]
@@ -102,12 +105,115 @@ impl RuleSet {
     pub fn get(&self, id: &str) -> Option<&Rule> {
         self.rules.iter().find(|r| r.id == id)
     }
+
+    /// File names of the builtin rule files, for the updater.
+    pub fn builtin_file_names() -> Vec<&'static str> {
+        BUILTIN.iter().map(|(n, _)| *n).collect()
+    }
+
+    /// Every `*.toml` in `dir`, in name order. A file that fails to parse is
+    /// reported in the second half and the rest still load.
+    pub fn from_dir(dir: &Path) -> (Self, Vec<(PathBuf, String)>) {
+        let mut set = RuleSet::default();
+        let mut errors = Vec::new();
+        let Ok(rd) = std::fs::read_dir(dir) else {
+            return (set, errors);
+        };
+        let mut files: Vec<PathBuf> = rd
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|x| x == "toml"))
+            .collect();
+        files.sort();
+        for f in files {
+            match std::fs::read_to_string(&f)
+                .map_err(|e| e.to_string())
+                .and_then(|t| RuleSet::parse(&t).map_err(|e| e.to_string()))
+            {
+                Ok(s) => set.rules.extend(s.rules),
+                Err(e) => errors.push((f, e)),
+            }
+        }
+        (set, errors)
+    }
+
+    /// Adds `other`'s rules; one with an id already present replaces it in
+    /// place, so a downloaded or custom file can fix a builtin rule.
+    pub fn merge(&mut self, other: RuleSet) {
+        for r in other.rules {
+            match self.rules.iter_mut().find(|x| x.id == r.id) {
+                Some(slot) => *slot = r,
+                None => self.rules.push(r),
+            }
+        }
+    }
+
+    /// Builtin, then the downloaded folder, then the user's folder; then the
+    /// rules the user switched off are dropped.
+    pub fn effective(
+        downloaded_dir: Option<&Path>,
+        settings: &crate::settings::Settings,
+    ) -> (Self, Vec<(PathBuf, String)>) {
+        let mut set = RuleSet::builtin();
+        let mut errors = Vec::new();
+        for dir in [downloaded_dir, settings.custom_rules_dir.as_deref()]
+            .into_iter()
+            .flatten()
+        {
+            let (extra, errs) = RuleSet::from_dir(dir);
+            set.merge(extra);
+            errors.extend(errs);
+        }
+        set.rules
+            .retain(|r| !settings.disabled_rules.iter().any(|d| d == &r.id));
+        (set, errors)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::collections::HashSet;
+
+    #[test]
+    fn merge_overrides_by_id_and_dir_loads_toml() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("mine.toml"),
+            r#"
+[[rule]]
+id = "pip.cache"
+tool = "pip"
+category = "package_cache"
+name_zh = "改过的 pip"
+name_en = "patched pip"
+paths = ["${USERPROFILE}/nowhere"]
+safety = "review"
+
+[[rule]]
+id = "my.tool"
+tool = "Mine"
+category = "system"
+name_zh = "我的"
+name_en = "mine"
+paths = ["${USERPROFILE}/mine"]
+safety = "safe"
+"#,
+        )
+        .unwrap();
+        std::fs::write(tmp.path().join("broken.toml"), "not toml [[").unwrap();
+        let settings = crate::settings::Settings {
+            disabled_rules: vec!["uv.cache".into()],
+            ..Default::default()
+        };
+        let (set, errors) = RuleSet::effective(Some(tmp.path()), &settings);
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(set.get("pip.cache").unwrap().name_en, "patched pip");
+        assert!(set.get("my.tool").is_some());
+        assert!(set.get("uv.cache").is_none());
+        let n = set.rules.iter().filter(|r| r.id == "pip.cache").count();
+        assert_eq!(n, 1);
+    }
 
     #[test]
     fn builtin_rules_parse_and_have_unique_ids() {
