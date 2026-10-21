@@ -25,4 +25,4 @@ log = "0.4"
 sha2 = "0.10"
 same-file = "1"
 zip = { version = "9", default-features = false, features = ["deflate"] }
-sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+sysinfo = { version = "0.39", default-features = false, features = ["system", "disk"] }

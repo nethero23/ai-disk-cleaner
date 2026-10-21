@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { Category, CleanRecord, CleanSummary, CompactResult, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
+import type { Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -37,7 +37,15 @@ export function App() {
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<Category>>(new Set());
-  const [view, setView] = useState<"scan" | "history" | "settings">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles">("scan");
+  const [bigDrives, setBigDrives] = useState<Drive[]>([]);
+  const [bigPick, setBigPick] = useState<Set<string>>(new Set());
+  const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
+  const [bigScanning, setBigScanning] = useState(false);
+  const [bigProgress, setBigProgress] = useState<{ seen: number; bytes: number; dir: string } | null>(null);
+  const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
+  const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
+  const [bigConfirm, setBigConfirm] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [library, setLibrary] = useState<RuleLibrary | null>(null);
   const [updatingRules, setUpdatingRules] = useState(false);
@@ -213,6 +221,58 @@ export function App() {
     setUpdatingRules(false);
   }
 
+  async function openBigFiles() {
+    try {
+      const d = await invoke<Drive[]>("drives");
+      setBigDrives(d);
+      setBigPick((prev) => (prev.size ? prev : new Set(d.map((x) => x.path))));
+    } catch (e) {
+      setError(String(e));
+    }
+    setView("bigfiles");
+  }
+
+  async function runBigScan() {
+    if (bigPick.size === 0) {
+      setError(s.bigPickDrive);
+      return;
+    }
+    setError(null);
+    setBigScanning(true);
+    setBigProgress({ seen: 0, bytes: 0, dir: "" });
+    const unlisten = await listen<{ seen: number; bytes: number; dir: string }>("bigfiles-progress", (e) => {
+      setBigProgress(e.payload);
+    });
+    try {
+      const items = await invoke<ScanItem[]>("scan_big_files", { roots: [...bigPick], minBytes: bigMin, lang });
+      setBigItems(items);
+      setBigSelected(new Set());
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      unlisten();
+      setBigScanning(false);
+      setBigProgress(null);
+    }
+  }
+
+  const bigSelectedItems = useMemo(() => (bigItems ?? []).filter((i) => bigSelected.has(i.id)), [bigItems, bigSelected]);
+
+  async function runBigClean() {
+    setBigConfirm(false);
+    setPhase("cleaning");
+    try {
+      const summary = await invoke<CleanSummary>("clean_items", { items: bigSelectedItems });
+      setResult(summary);
+      const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
+      setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || failed.has(i.path)) : prev));
+      setBigSelected(new Set());
+    } catch (e) {
+      setError(String(e));
+    }
+    setPhase("ready");
+  }
+
   async function openHistory() {
     try {
       setHistory(await invoke<CleanRecord[]>("clean_log"));
@@ -363,6 +423,7 @@ export function App() {
           ) : (
             <>
               <button className="ghost" onClick={openHistory}>{s.history}</button>
+              <button className="ghost" onClick={openBigFiles}>{s.bigFiles}</button>
               <button className="ghost" onClick={openSettings}>{s.settings}</button>
             </>
           )}
@@ -384,6 +445,141 @@ export function App() {
           {result.records.some((r) => !r.ok) && (
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
           )}
+        </div>
+      )}
+
+      {view === "bigfiles" && (
+        <section className="bigfiles">
+          <h2>{s.bigTitle}</h2>
+          <p className="muted">{s.bigBody}</p>
+          <div className="big-controls">
+            <div>
+              <span className="muted">{s.bigDrives}</span>
+              {bigDrives.map((d) => (
+                <label key={d.path} className="drive">
+                  <input
+                    type="checkbox"
+                    checked={bigPick.has(d.path)}
+                    disabled={bigScanning}
+                    onChange={(e) => {
+                      const next = new Set(bigPick);
+                      if (e.target.checked) next.add(d.path);
+                      else next.delete(d.path);
+                      setBigPick(next);
+                    }}
+                  />{" "}
+                  <b>{d.path}</b> {d.name && <span className="muted">{d.name}</span>}{" "}
+                  <span className="muted">
+                    {humanSize(d.total_bytes - d.free_bytes)} / {humanSize(d.total_bytes)}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div>
+              {s.bigMin}{" "}
+              <select value={bigMin} disabled={bigScanning} onChange={(e) => setBigMin(Number(e.target.value))}>
+                <option value={100 * 1024 * 1024}>100 MB</option>
+                <option value={500 * 1024 * 1024}>500 MB</option>
+                <option value={1024 * 1024 * 1024}>1 GB</option>
+                <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
+              </select>{" "}
+              {bigScanning ? (
+                <button className="ghost" onClick={() => invoke("cancel_big_scan")}>{s.bigCancel}</button>
+              ) : (
+                <button className="primary" onClick={runBigScan}>{s.bigScan}</button>
+              )}
+            </div>
+          </div>
+          {bigScanning && bigProgress && (
+            <p className="muted big-progress">{s.bigScanning(bigProgress.seen, bigProgress.dir)}</p>
+          )}
+          {!bigScanning && bigItems && (
+            <>
+              <p className="stat-label">
+                {bigItems.length === 0 ? s.bigNone : s.bigFound(bigItems.length, humanSize(bigItems.reduce((a, i) => a + i.size_bytes, 0)))}
+              </p>
+              <main className="groups">
+                {[...new Set(bigItems.map((i) => i.tool))].map((kind) => {
+                  const items = bigItems.filter((i) => i.tool === kind);
+                  const allOn = items.every((i) => bigSelected.has(i.id));
+                  return (
+                    <section key={kind} className="group">
+                      <header className="group-head">
+                        <input
+                          type="checkbox"
+                          checked={allOn}
+                          onChange={() => {
+                            const next = new Set(bigSelected);
+                            for (const i of items) {
+                              if (allOn) next.delete(i.id);
+                              else next.add(i.id);
+                            }
+                            setBigSelected(next);
+                          }}
+                        />
+                        <span className="group-title">{kind} · {items.length}</span>
+                        <span className="group-size">{humanSize(items.reduce((a, i) => a + i.size_bytes, 0))}</span>
+                      </header>
+                      <ul className="items">
+                        {items.map((it) => (
+                          <li key={it.id} className={`item ${bigSelected.has(it.id) ? "on" : ""}`}>
+                            <input
+                              type="checkbox"
+                              checked={bigSelected.has(it.id)}
+                              onChange={() => {
+                                const next = new Set(bigSelected);
+                                if (next.has(it.id)) next.delete(it.id);
+                                else next.add(it.id);
+                                setBigSelected(next);
+                              }}
+                            />
+                            <div className="item-main">
+                              <div className="item-line">
+                                <span className="name">{it.name}</span>
+                              </div>
+                              <div className="item-path" title={it.path}>
+                                {it.detail}
+                                <button className="link" onClick={() => revealItemInDir(it.path)}>
+                                  {s.openFolder}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="item-meta">
+                              <div className="size">{humanSize(it.size_bytes)}</div>
+                              <div className="muted">
+                                {s.lastUsed} {relativeDate(it.last_used, lang)}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })}
+              </main>
+              {bigSelectedItems.length > 0 && (
+                <footer className="actionbar">
+                  <span>{s.selected(bigSelectedItems.length, humanSize(bigSelectedItems.reduce((a, i) => a + i.size_bytes, 0)))}</span>
+                  <button className="primary" disabled={phase === "cleaning"} onClick={() => setBigConfirm(true)}>
+                    {phase === "cleaning" ? s.cleaning : s.clean}
+                  </button>
+                </footer>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {bigConfirm && (
+        <div className="modal-backdrop" onClick={() => setBigConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{s.confirmTitle}</h3>
+            <p>{s.confirmBody(bigSelectedItems.length, humanSize(bigSelectedItems.reduce((a, i) => a + i.size_bytes, 0)))}</p>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setBigConfirm(false)}>{s.cancel}</button>
+              <button className="primary danger" onClick={runBigClean}>{s.confirm}</button>
+            </div>
+          </div>
         </div>
       )}
 

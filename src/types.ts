@@ -135,3 +135,10 @@ export interface RulesUpdate {
   rules: number;
   updated_at: string;
 }
+
+export interface Drive {
+  path: string;
+  name: string;
+  total_bytes: number;
+  free_bytes: number;
+}
