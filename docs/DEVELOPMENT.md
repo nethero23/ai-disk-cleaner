@@ -75,7 +75,7 @@ consequence_en = "…"
 ```
 disk-cleaner windows c-drive-cleaner disk-space junk-cleaner storage-cleanup
 ai-tools ollama huggingface lm-studio llm cursor claude-code
-pip-cache conda docker wsl tauri rust cleaner ccleaner-alternative
+pip-cache conda docker wsl tauri rust ccleaner-alternative
 ```
 
 About 描述建议：`最懂 AI 的硬盘清理工具 · Free Windows disk cleaner for AI developers, all drives: clean Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / pip / conda caches, WSL & Docker vhdx. Scan first, undo anytime.`
