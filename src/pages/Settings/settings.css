@@ -1,0 +1,25 @@
+.settings-page { padding: 8px 24px 32px; display: grid; gap: 16px; align-content: start; max-width: 880px; }
+.set-section { padding: 8px 0; }
+.set-section > h2 { font: var(--md-title-m); color: var(--md-primary); margin: 8px 24px 4px; display: flex; align-items: center; gap: 12px; }
+.set-section > h2 .md-icon { font-size: 22px; }
+.set-section > .set-hint { font: var(--md-body-m); color: var(--md-on-surface-variant); margin: 0 24px 4px; }
+.set-row { display: flex; align-items: center; gap: 16px; padding: 12px 24px; min-height: 56px; flex-wrap: wrap; }
+.set-row + .set-row { border-top: 1px solid var(--md-outline-variant); }
+.set-row .md-switch { display: flex; width: 100%; }
+.set-text { flex: 1 1 240px; min-width: 0; display: grid; gap: 2px; }
+.set-text .t { font: var(--md-body-l); color: var(--md-on-surface); }
+.set-text .d { font: var(--md-body-m); color: var(--md-on-surface-variant); }
+.set-row select, .set-row input.wide, .settings-page .lang-select { font: var(--md-body-m); padding: 8px 12px; border-radius: var(--md-shape-xs); border: 1px solid var(--md-outline); background: var(--md-surface); color: var(--md-on-surface); min-height: 40px; }
+.set-row input.wide { flex: 1 1 360px; }
+.set-row .drive-pick { margin: 0; }
+.set-paths { list-style: none; margin: 0; padding: 0; width: 100%; }
+.set-paths li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font: var(--md-body-m); }
+.set-paths li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-rules { list-style: none; margin: 0; padding: 0 8px; max-height: 420px; overflow: auto; }
+.set-rules li { display: flex; align-items: center; gap: 12px; padding: 4px 16px; min-height: 48px; }
+.set-rules li + li { border-top: 1px solid var(--md-outline-variant); }
+.set-rules .tool { font: var(--md-label-l); color: var(--md-on-surface-variant); min-width: 96px; }
+.set-rules .name { flex: 1; min-width: 0; font: var(--md-body-m); }
+.set-rules .id { font: var(--md-body-s); color: var(--md-on-surface-variant); }
+.set-errors { margin: 0 24px; }
+.set-row .drive-pick > .muted { display: none; }

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="AI Disk Cleaner 아이콘">
+<img src="src-tauri/icons/128x128.png" width="96" alt="Clearwisp 아이콘">
 
-# AI Disk Cleaner: AI 도구를 이해하는 디스크 정리 프로그램
+# Clearwisp: AI 도구를 이해하는 디스크 정리 프로그램
 
 **AI 개발자를 위한 무료 오픈소스 Windows 디스크 정리 도구. C 드라이브, D 드라이브 등 모든 드라이브에서 Ollama / Hugging Face / LM Studio 모델, Cursor / Claude Code / VS Code 캐시, pip / conda / npm 캐시, WSL / Docker 가상 디스크가 차지한 공간을 찾아 비워 줍니다. 먼저 스캔하고, 선택은 사용자가 하며, 모든 삭제는 되돌릴 수 있습니다.**
 
@@ -23,9 +23,9 @@
 
 AI 작업용 PC에서 디스크를 채우는 것은 흔한 시스템 쓰레기가 아닙니다. **로컬 LLM 가중치, Python 환경, AI 코드 에디터 캐시, WSL / Docker 가상 디스크**가 수백 GB씩 차지하는 경우가 많습니다. CCleaner 같은 도구는 이런 곳을 보지 않고, WizTree는 어떤 폴더가 큰지는 알려 주지만 그게 무엇인지, 지워도 되는지는 알려 주지 않습니다.
 
-게다가 C 드라이브만의 문제가 아닙니다. 모델 라이브러리, conda 환경, Docker 디스크, 프로젝트의 `node_modules`는 D, E 드라이브에도 쌓입니다. AI Disk Cleaner는 선택한 모든 드라이브를 스캔합니다.
+게다가 C 드라이브만의 문제가 아닙니다. 모델 라이브러리, conda 환경, Docker 디스크, 프로젝트의 `node_modules`는 D, E 드라이브에도 쌓입니다. Clearwisp는 선택한 모든 드라이브를 스캔합니다.
 
-AI Disk Cleaner는 1 GB마다 설명해 줍니다. **어떤 모델인지, 어떤 conda 환경인지, 어떤 도구의 캐시인지, 마지막으로 언제 사용했는지, 지우면 어떻게 되는지.** 항목마다 안전 등급이 표시되고, 체크하기 전에는 아무것도 삭제되지 않으며, 삭제는 휴지통으로 이동하고, 마지막 정리는 클릭 한 번으로 되돌릴 수 있습니다.
+Clearwisp는 1 GB마다 설명해 줍니다. **어떤 모델인지, 어떤 conda 환경인지, 어떤 도구의 캐시인지, 마지막으로 언제 사용했는지, 지우면 어떻게 되는지.** 항목마다 안전 등급이 표시되고, 체크하기 전에는 아무것도 삭제되지 않으며, 삭제는 휴지통으로 이동하고, 마지막 정리는 클릭 한 번으로 되돌릴 수 있습니다.
 
 <a id="features"></a>
 ## 기능
@@ -94,7 +94,7 @@ Ollama 매니페스트, Hugging Face 캐시 구조, conda 환경, LM Studio 모�
 <a id="comparison"></a>
 ## 다른 도구와 비교
 
-| | AI Disk Cleaner | CCleaner | BleachBit | Dism++ | WizTree |
+| | Clearwisp | CCleaner | BleachBit | Dism++ | WizTree |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Ollama / HF / LM Studio 모델 | ✅ 모델 이름까지 | ❌ | ❌ | ❌ | ❌ 크기만 |
 | Cursor / Claude Code / VS Code 캐시 | ✅ | ❌ | ✅ (6.0부터) | ❌ | ❌ |

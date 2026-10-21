@@ -654,7 +654,7 @@ pub fn run() {
             // %LOCALAPPDATA%, where it would be shared with an installed copy.
             let mut wb =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::default())
-                    .title("AI Disk Cleaner")
+                    .title("Clearwisp")
                     .inner_size(1100.0, 740.0)
                     .min_inner_size(860.0, 560.0);
             if let Some(dir) = portable_dir() {

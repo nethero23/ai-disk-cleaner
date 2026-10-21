@@ -1,7 +1,7 @@
 import type { Strings } from "../i18n";
 
 const zhTW: Partial<Strings> = {
-  appName: "AI Disk Cleaner",
+  appName: "Clearwisp",
   tagline: "先看清每一 GB 是什麼，再決定刪不刪",
   scan: "開始掃描",
   rescan: "重新掃描",
@@ -277,6 +277,12 @@ const zhTW: Partial<Strings> = {
   clear: "清除",
   language: "介面語言",
   languageAuto: "跟隨系統",
+  setAppearance: "外觀與語言",
+  theme: "主題",
+  themeSystem: "跟隨系統",
+  themeLight: "淺色",
+  themeDark: "深色",
+  setScanSection: "掃描",
   listSep: "，",
   sentenceEnd: "。",
 };
