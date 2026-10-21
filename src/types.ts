@@ -142,6 +142,7 @@ export interface Settings {
   auto_update_check: boolean;
   scan_drives: string[];
   growth_notify_bytes: number;
+  onboarded: boolean;
 }
 
 export interface RuleInfo {

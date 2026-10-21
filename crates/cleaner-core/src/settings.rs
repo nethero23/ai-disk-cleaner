@@ -40,6 +40,8 @@ pub struct Settings {
     pub scan_drives: Vec<PathBuf>,
     /// Notify when one tool grows by at least this much within a week; 0 = never.
     pub growth_notify_bytes: u64,
+    /// The first-run walkthrough has been shown (or skipped).
+    pub onboarded: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -64,6 +66,7 @@ impl Default for Settings {
             auto_update_check: true,
             scan_drives: Vec::new(),
             growth_notify_bytes: 2 * 1024 * 1024 * 1024,
+            onboarded: false,
         }
     }
 }
