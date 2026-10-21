@@ -18,15 +18,36 @@ use tauri::{AppHandle, Emitter, Manager};
 
 mod background;
 
+/// Portable build: a file named `portable` next to the exe makes the app
+/// keep settings and logs in `data` beside it instead of AppData.
+pub(crate) fn portable_dir() -> Option<PathBuf> {
+    let exe_dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
+    exe_dir
+        .join("portable")
+        .is_file()
+        .then(|| exe_dir.join("data"))
+}
+
+#[tauri::command]
+fn is_portable() -> bool {
+    portable_dir().is_some()
+}
+
 /// Where the clean log lives: the app's own data folder, never the user's documents.
 pub(crate) fn log_path(app: &AppHandle) -> PathBuf {
-    let dir = app.path().app_data_dir().unwrap_or_else(|_| {
-        dirs::data_local_dir()
-            .unwrap_or_else(std::env::temp_dir)
-            .join("ai-disk-cleaner")
+    let dir = portable_dir().unwrap_or_else(|| {
+        app.path().app_data_dir().unwrap_or_else(|_| {
+            dirs::data_local_dir()
+                .unwrap_or_else(std::env::temp_dir)
+                .join("ai-disk-cleaner")
+        })
     });
     let _ = std::fs::create_dir_all(&dir);
     dir.join("clean-log.jsonl")
+}
+
+pub(crate) fn growth_path(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("growth.jsonl")
 }
 
 fn relocate_log_path(app: &AppHandle) -> PathBuf {
@@ -78,6 +99,7 @@ struct ScanStep {
 async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
     let (rules, _, settings) = effective_rules(&app);
     SCAN_CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
+    let growth = growth_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let opts = ScanOptions {
             lang,
@@ -86,7 +108,7 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
             extra_roots: settings.scan_drives,
             ..ScanOptions::default()
         };
-        scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
+        let report = scan_all_with(&rules, &opts, &SCAN_CANCEL, &mut |p: ScanProgress| {
             let _ = app.emit(
                 "scan-progress",
                 ScanStep {
@@ -97,7 +119,9 @@ async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
                     millis: p.millis,
                 },
             );
-        })
+        });
+        cleaner_core::growth::record(&growth, &report);
+        report
     })
     .await
     .map_err(|e| e.to_string())
@@ -135,6 +159,12 @@ async fn preview_item(path: PathBuf, limit: usize) -> Result<Preview, String> {
     tauri::async_runtime::spawn_blocking(move || preview::preview(&path, limit.clamp(1, 50)))
         .await
         .map_err(|e| e.to_string())
+}
+
+/// Who grew over the last week, biggest first (needs at least two scans).
+#[tauri::command]
+fn growth_report(app: AppHandle) -> Vec<cleaner_core::growth::Growth> {
+    cleaner_core::growth::growth(&cleaner_core::growth::read(&growth_path(&app)), 7)
 }
 
 #[tauri::command]
@@ -378,6 +408,61 @@ async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
         .map_err(|e| e.to_string())?
 }
 
+/// Big profile folders no rule claims (≥ 1 GB), for rule suggestions.
+#[tauri::command]
+async fn unrecognized(
+    app: AppHandle,
+) -> Result<Vec<cleaner_core::unrecognized::Unrecognized>, String> {
+    let (rules, _, settings) = effective_rules(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let ctx = cleaner_core::paths::PathContext::from_env();
+        cleaner_core::unrecognized::find(&rules, &ctx, 1024 * 1024 * 1024, &settings.excluded_paths)
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// The prefilled GitHub issue URL for one unrecognized folder.
+#[tauri::command]
+fn suggest_rule_url(entry: cleaner_core::unrecognized::Unrecognized, lang: String) -> String {
+    cleaner_core::unrecognized::issue_url("nethero23/ai-disk-cleaner", &entry, &lang)
+}
+
+/// Deep clean: the catalogue with cheap estimates.
+#[tauri::command]
+fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
+    cleaner_core::system::tasks(&lang)
+}
+
+/// Deep clean: elevated analysis (one UAC prompt).
+#[tauri::command]
+async fn deep_analyze() -> Result<cleaner_core::system::DeepAnalysis, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        cleaner_core::system::analyze().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Deep clean: run the ticked tasks (one UAC prompt).
+#[tauri::command]
+async fn deep_run(ids: Vec<String>) -> Result<cleaner_core::system::DeepSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        cleaner_core::system::run(&ids).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn hibernate_on() -> Result<cleaner_core::system::DeepResult, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        cleaner_core::system::hibernate_on().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Rule ids whose items are chat history that can be exported first.
 #[tauri::command]
 fn exportable() -> Vec<String> {
@@ -558,6 +643,8 @@ pub fn run() {
             cancel_scan,
             clean_items,
             clean_log,
+            is_portable,
+            growth_report,
             restore_status,
             restore_items,
             rules,
@@ -573,6 +660,12 @@ pub fn run() {
             compactable,
             vhdx_files,
             compact_vhdx,
+            unrecognized,
+            suggest_rule_url,
+            deep_tasks,
+            deep_analyze,
+            deep_run,
+            hibernate_on,
             exportable,
             export_items,
             drives,

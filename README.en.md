@@ -63,6 +63,10 @@ It reads Ollama manifests, the Hugging Face cache layout, conda environments, LM
 ### ⚡ Convenient
 
 - "Where did my space go?" drive overview
+- Growth monitor: see which folders are growing, with a notification when weekly growth passes a threshold
+- Idle-model hints: find models you have not used in a long time
+- Deep system clean: WinSxS component store, restore points, hibernation file, Delivery Optimization cache, Windows Update cache
+- Unrecognized big folders: large folders no rule knows yet are listed too, with a one-click rule suggestion
 - Multi-drive scan, big-file scan, project build output (`node_modules`, `target`, `.venv`…)
 - Group by tool, search, sort; parallel scan with progress and cancel
 - Tray icon, scheduled background scans, notification when junk passes a threshold, optional auto-clean of Safe items (off by default)
@@ -77,14 +81,16 @@ No registry cleaning, no nag pop-ups, no bundled software, no uploading of your 
 ## Install
 
 1. Open the [latest release](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
-2. Download `AI.Disk.Cleaner_x.y.z_x64-setup.exe` (recommended) or the `.msi`
+2. Download `*_x64-setup.exe` (recommended, supports in-app updates) or the `.msi`
 3. Run it and click **Scan**
+
+**Portable**: download `*_x64-portable.zip`, unzip and run `AI Disk Cleaner.exe`. Settings and logs live in the `data` folder next to it. The portable build does not auto-update.
 
 Requires Windows 10 / 11 x64 with WebView2 (built into Windows 11; the installer handles Windows 10).
 
 > The installer is not code-signed yet, so SmartScreen may show "Windows protected your PC". Click "More info → Run anyway". All code is open source; you can review it or build from source.
 
-**Coming soon**: `winget install`, Scoop, and a portable zip.
+**Coming soon**: `winget install nethero23.AIDiskCleaner` and `scoop install aidc` (manifests are generated with every release and are being submitted).
 
 CLI for developers: `cargo run -p cleaner-core --bin aidc -- scan` (also `scan --json`, `dupes`, `move`, `compact`).
 
@@ -149,7 +155,8 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [x] v0.1–v0.3 Scan, safety levels, Recycle Bin delete, running-process check, move to drive / move back, model dedup, vhdx compaction, chat export, online rules
 - [x] v0.4–v0.5 Big-file scan, tray + scheduled scans, parallel scan, preview, one-click Safe clean, 126 rules
 - [x] v0.6 Search / group / sort, multi-drive scan, auto-update, drive overview
-- [ ] v0.7 Undo ✅, first-run guide ✅, growth monitoring, idle-model hints, deep system clean (WinSxS), unknown-big-folder reports, portable + winget / Scoop
+- [x] v0.7 Undo, first-run guide, growth monitoring, idle-model hints, deep system clean (WinSxS etc.), unknown-big-folder reports, portable build
+- [ ] winget / Scoop listing, installer code signing
 - [ ] v0.8 Material Design 3 UI, AI-tool config management (skills / MCP / plugins)
 
 ## Contributing

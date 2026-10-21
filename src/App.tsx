@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
-import { humanSize, relativeDate, t, type Lang } from "./i18n";
+import { UnrecognizedPanel } from "./Unrecognized";
+import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
+import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
+import { DrivePicker } from "./DrivePicker";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 
@@ -43,7 +45,7 @@ export function App() {
   const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
-  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview" | "deep">("scan");
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [ovRoot, setOvRoot] = useState<string | null>(null);
@@ -80,7 +82,9 @@ export function App() {
   const [dups, setDups] = useState<DuplicateGroup[] | null>(null);
   const [dupsBusy, setDupsBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [growth, setGrowth] = useState<Growth[]>([]);
   const [obStep, setObStep] = useState<number | null>(null);
+  const [portable, setPortable] = useState(false);
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateState, setUpdateState] = useState<"idle" | "checking" | "downloading" | "installed">("idle");
   const [updatePct, setUpdatePct] = useState(0);
@@ -203,15 +207,26 @@ export function App() {
   useEffect(() => {
     invoke<Drive[]>("drives").then(setAllDrives).catch(() => {});
     invoke<Settings>("get_settings")
-      .then((st) => {
+      .then(async (st) => {
         setSettings(st);
         if (!st.onboarded) setObStep(0);
-        if (st.auto_update_check) runCheckUpdate(false);
+        const p = await invoke<boolean>("is_portable").catch(() => false);
+        setPortable(p);
+        if (st.auto_update_check && !p) runCheckUpdate(false);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Models nobody has touched for a while: the AI-specific "what can go" list.
+  const idleModels = useMemo(() => {
+    if (!report) return [];
+    const days = settings?.idle_model_days ?? 90;
+    const cutoff = Date.now() - days * 86_400_000;
+    return report.items
+      .filter((i) => i.category === "models" && i.last_used && new Date(i.last_used).getTime() < cutoff)
+      .sort((a, b) => b.size_bytes - a.size_bytes);
+  }, [report, settings]);
   function finishOnboarding() {
     setObStep(null);
     if (settings && !settings.onboarded) saveSettings({ ...settings, onboarded: true });
@@ -309,6 +324,67 @@ export function App() {
       setError(String(e));
     }
     setUpdatingRules(false);
+  }
+
+  const [deepTasks, setDeepTasks] = useState<DeepTask[]>([]);
+  const [deepSel, setDeepSel] = useState<Set<string>>(new Set());
+  const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null);
+  const [deepBusy, setDeepBusy] = useState<"analyze" | "run" | "hiber" | null>(null);
+  const [deepConfirm, setDeepConfirm] = useState(false);
+  const [deepResult, setDeepResult] = useState<DeepSummary | null>(null);
+
+  async function openDeep() {
+    setError(null);
+    setView("deep");
+    try {
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  async function runDeepAnalyze() {
+    setDeepBusy("analyze");
+    setError(null);
+    try {
+      setDeepAnalysis(await invoke<DeepAnalysis>("deep_analyze"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
+  }
+
+  async function runDeep() {
+    setDeepConfirm(false);
+    setDeepBusy("run");
+    setError(null);
+    try {
+      const sum = await invoke<DeepSummary>("deep_run", { ids: [...deepSel] });
+      setDeepResult(sum);
+      const failed = sum.results.filter((r) => !r.ok);
+      setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
+      if (failed.length) setError(failed.map((r) => `${r.id}: ${r.message}`).join("\n"));
+      setDeepSel(new Set());
+      setDeepAnalysis(null);
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
+  }
+
+  async function runHibernateOn() {
+    setDeepBusy("hiber");
+    setError(null);
+    try {
+      const r = await invoke<{ ok: boolean; message: string }>("hibernate_on");
+      if (r.ok) setNotice(s.hiberOnDone);
+      else setError(r.message);
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+    } catch (e) {
+      setError(String(e));
+    }
+    setDeepBusy(null);
   }
 
   async function openOverview() {
@@ -555,6 +631,7 @@ export function App() {
     });
     const p = listen<ScanReport>("background-scan", (e) => {
       setReport(e.payload);
+      invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
       setPhase("ready");
       setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgBanner(humanSize(e.payload.total_bytes)));
@@ -576,6 +653,7 @@ export function App() {
     try {
       const r = await invoke<ScanReport>("scan", { lang });
       setReport(r);
+      invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.
       const safe = r.items.filter(isDefaultTicked).map((i) => i.id);
       setSelected(new Set(safe));
@@ -720,6 +798,7 @@ export function App() {
               <button className="ghost" onClick={openHistory}>{s.history}</button>
               <button className="ghost" onClick={openBigFiles}>{s.bigFiles}</button>
               <button className="ghost" onClick={openOverview}>{s.overview}</button>
+              <button className="ghost" onClick={openDeep}>{s.deep}</button>
               <button className="ghost" onClick={openSettings}>{s.settings}</button>
             </>
           )}
@@ -768,6 +847,86 @@ export function App() {
               {restoring ? s.restoring : s.undo}
             </button>
           )}
+        </div>
+      )}
+
+      {view === "deep" && (
+        <section className="bigfiles deep">
+          <h2>{s.deepTitle}</h2>
+          <p className="muted">{s.deepBody}</p>
+          <div className="big-controls">
+            <button className="ghost" disabled={deepBusy !== null} onClick={runDeepAnalyze}>
+              {deepBusy === "analyze" ? s.deepAnalyzing : s.deepAnalyze}
+            </button>
+            <button className="primary" disabled={deepBusy !== null || deepSel.size === 0} onClick={() => setDeepConfirm(true)}>
+              {deepBusy === "run" ? s.deepRunning : s.deepRun(deepSel.size)}
+            </button>
+          </div>
+          <ul className="deep-list">
+            {deepTasks.map((t) => {
+              const est =
+                t.id === "winsxs" && deepAnalysis?.winsxs_reclaimable_bytes != null
+                  ? s.deepWinsxs(humanSize(deepAnalysis.winsxs_actual_bytes ?? 0), humanSize(deepAnalysis.winsxs_reclaimable_bytes), !!deepAnalysis.winsxs_cleanup_recommended)
+                  : t.id === "restore_points" && deepAnalysis?.shadow_used_bytes != null
+                    ? s.deepShadow(deepAnalysis.shadow_count ?? 0, humanSize(deepAnalysis.shadow_used_bytes))
+                    : t.estimate_bytes != null
+                      ? s.deepEstimate(humanSize(t.estimate_bytes))
+                      : t.needs_analysis
+                        ? s.deepUnknown
+                        : "";
+              const hiberOff = t.id === "hibernation" && !t.applicable;
+              return (
+                <li key={t.id} className={`deep-item${t.applicable ? "" : " muted"}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      disabled={!t.applicable || deepBusy !== null}
+                      checked={deepSel.has(t.id)}
+                      onChange={(e) =>
+                        setDeepSel((prev) => {
+                          const n = new Set(prev);
+                          if (e.target.checked) n.add(t.id);
+                          else n.delete(t.id);
+                          return n;
+                        })
+                      }
+                    />
+                    <strong>{t.title}</strong>
+                    <span className="size">{hiberOff ? "" : est || (t.applicable ? "" : s.deepNotApplicable)}</span>
+                  </label>
+                  <p>{hiberOff ? s.hiberOff : t.body}</p>
+                  {!hiberOff && <p className="warn">{t.consequence}</p>}
+                  {hiberOff && (
+                    <button className="ghost" disabled={deepBusy !== null} onClick={runHibernateOn}>{s.hiberOn}</button>
+                  )}
+                  {deepResult?.results.find((r) => r.id === t.id && !r.ok) && (
+                    <p className="warn">{deepResult.results.find((r) => r.id === t.id)?.message}</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {deepConfirm && (
+        <div className="modal-backdrop" onClick={() => setDeepConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{s.deepConfirmTitle}</h3>
+            <p>{s.deepConfirmBody}</p>
+            <ul>
+              {deepTasks.filter((t) => deepSel.has(t.id)).map((t) => (
+                <li key={t.id}>
+                  <strong>{t.title}</strong>
+                  <span className="warn"> · {t.consequence}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="modal-actions">
+              <button className="ghost" onClick={() => setDeepConfirm(false)}>{s.cancel}</button>
+              <button className="primary" onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -989,6 +1148,10 @@ export function App() {
           <p>
             <button className="ghost" onClick={addExcludedFolder}>{s.addFolder}</button>
           </p>
+          <h2>{s.scanDrives}</h2>
+          <p className="muted">{s.scanDrivesHint}</p>
+          <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} align="start" />
+          {allDrives.length < 2 && <p className="empty">{s.scanDrivesOnlyOne}</p>}
           <p>
             {s.setMinSize}{" "}
             <select
@@ -1043,22 +1206,52 @@ export function App() {
               {s.setAutoClean}
             </label>
           </p>
+          <p>
+            {s.setIdleDays}{" "}
+            <select value={settings.idle_model_days} onChange={(e) => saveSettings({ ...settings, idle_model_days: Number(e.target.value) })}>
+              {[30, 60, 90, 180, 365].map((d) => (
+                <option key={d} value={d}>{s.days(d)}</option>
+              ))}
+            </select>
+          </p>
+          <p>
+            {s.setGrowthNotify}{" "}
+            <select
+              value={settings.growth_notify_bytes}
+              onChange={(e) => saveSettings({ ...settings, growth_notify_bytes: Number(e.target.value) })}
+            >
+              <option value={0}>{s.growthOff}</option>
+              <option value={1024 * 1024 * 1024}>1 GB</option>
+              <option value={2 * 1024 * 1024 * 1024}>2 GB</option>
+              <option value={5 * 1024 * 1024 * 1024}>5 GB</option>
+              <option value={10 * 1024 * 1024 * 1024}>10 GB</option>
+            </select>
+          </p>
           {settings.last_background_scan && (
             <p className="muted">{s.lastBackground(new Date(settings.last_background_scan).toLocaleString())}</p>
           )}
 
           <h2>{s.setAppUpdate}</h2>
-          <p>
-            <label>
-              <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
-              {s.setAutoUpdateCheck}
-            </label>
-          </p>
-          <p>
-            <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
-              {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
-            </button>
-          </p>
+          {portable ? (
+            <p className="muted">
+              {s.portableNoUpdate}{" "}
+              <button className="linkish" onClick={() => openUrl("https://github.com/nethero23/ai-disk-cleaner/releases")}>{s.portableReleases}</button>
+            </p>
+          ) : (
+            <>
+              <p>
+                <label>
+                  <input type="checkbox" checked={settings.auto_update_check} onChange={(e) => saveSettings({ ...settings, auto_update_check: e.target.checked })} />{" "}
+                  {s.setAutoUpdateCheck}
+                </label>
+              </p>
+              <p>
+                <button className="ghost" disabled={updateState === "checking"} onClick={() => runCheckUpdate(true)}>
+                  {updateState === "checking" ? s.checkingUpdate : s.checkUpdate}
+                </button>
+              </p>
+            </>
+          )}
 
           <h2>{s.setUpdate}</h2>
           <p className="muted">{s.setUpdateBody}</p>
@@ -1228,30 +1421,7 @@ export function App() {
         <section className="empty">
           <h2>{s.emptyTitle}</h2>
           <p>{s.emptyBody}</p>
-          {allDrives.length > 1 && settings && (
-            <div className="drive-pick" title={s.scanDrivesHint}>
-              <span className="muted">{s.scanDrives}</span>
-              {allDrives.map((d) => {
-                const on = d.system || settings.scan_drives.includes(d.path);
-                return (
-                  <label key={d.path}>
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      disabled={d.system}
-                      onChange={() =>
-                        saveSettings({
-                          ...settings,
-                          scan_drives: on ? settings.scan_drives.filter((p) => p !== d.path) : [...settings.scan_drives, d.path],
-                        })
-                      }
-                    />
-                    {d.path}{d.name ? ` ${d.name}` : ""}{d.system ? ` (${s.systemDrive})` : ""}
-                  </label>
-                );
-              })}
-            </div>
-          )}
+          {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} />}
           <p>
             <button
               className="ghost"
@@ -1293,7 +1463,23 @@ export function App() {
               )}
             </div>
             {summaryLine && <p className="summary-line">{summaryLine}</p>}
+            {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} note={s.scanDrivesNext} align="start" />}
             {report.cancelled && <div className="banner">{s.scanPartial}</div>}
+            {growth.some((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024) && (
+              <div className="growth" title={s.growthHint}>
+                <span className="muted">{s.growthTitle}</span>
+                {growth
+                  .filter((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024)
+                  .slice(0, 5)
+                  .map((g) => (
+                    <span key={g.tool} className={`growth-chip ${g.delta_bytes > 0 ? "up" : "down"}`}>
+                      {g.delta_bytes > 0
+                        ? s.growthRow(g.tool, humanSize(g.delta_bytes), new Date(g.since).toLocaleDateString())
+                        : s.growthShrank(g.tool, humanSize(-g.delta_bytes))}
+                    </span>
+                  ))}
+              </div>
+            )}
             <div className="stat-row">
               <Pill level="safe" label={s.safety.safe} size={humanSize(report.safe_bytes)} hint={s.safetyHint.safe} />
               <Pill level="redownload" label={s.safety.redownload} size={humanSize(report.redownload_bytes)} hint={s.safetyHint.redownload} />
@@ -1355,6 +1541,47 @@ export function App() {
                     ))}
                   </>
                 )}
+              </div>
+            )}
+            <UnrecognizedPanel lang={lang} onError={setError} />
+            {idleModels.length > 0 && (
+              <div className="idle" title={s.idleHint}>
+                <div className="idle-head">
+                  <strong>{s.idleTitle(idleModels.length, humanSize(idleModels.reduce((a, i) => a + i.size_bytes, 0)))}</strong>
+                  <button className="link" onClick={() => setSelected((prev) => new Set([...prev, ...idleModels.map((i) => i.id)]))}>{s.idleTickAll}</button>
+                </div>
+                <p className="muted">{s.idleHint}</p>
+                <table className="log">
+                  <tbody>
+                    {idleModels.slice(0, 10).map((it) => (
+                      <tr key={it.id}>
+                        <td>{it.name}</td>
+                        <td className="muted">{it.tool}</td>
+                        <td className="size">{humanSize(it.size_bytes)}</td>
+                        <td className="muted">{it.last_used && s.idleSince(sinceDuration(it.last_used, lang))}</td>
+                        <td>
+                          <button
+                            className="link"
+                            onClick={() =>
+                              setSelected((prev) => {
+                                const n = new Set(prev);
+                                if (n.has(it.id)) n.delete(it.id);
+                                else n.add(it.id);
+                                return n;
+                              })
+                            }
+                          >
+                            {selected.has(it.id) ? s.idleUntick : s.idleTick}
+                          </button>
+                          {relocatable.has(it.rule_id) && !it.in_use_by && (
+                            <button className="link" onClick={() => pickMoveTarget(it)}>{s.move}</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {idleModels.length > 10 && <p className="muted">{s.idleMore(idleModels.length - 10)}</p>}
               </div>
             )}
             {report.unreadable.length > 0 && (

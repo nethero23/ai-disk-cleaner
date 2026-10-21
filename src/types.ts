@@ -141,6 +141,8 @@ export interface Settings {
   auto_clean_safe: boolean;
   auto_update_check: boolean;
   scan_drives: string[];
+  idle_model_days: number;
+  growth_notify_bytes: number;
   onboarded: boolean;
 }
 
@@ -201,4 +203,49 @@ export interface Drive {
   total_bytes: number;
   free_bytes: number;
   system: boolean;
+}
+
+export interface Unrecognized {
+  name: string;
+  path: string;
+  bytes: number;
+  files: number;
+  newest: string | null;
+}
+
+export interface DeepTask {
+  id: string;
+  title: string;
+  body: string;
+  consequence: string;
+  estimate_bytes: number | null;
+  needs_analysis: boolean;
+  applicable: boolean;
+}
+
+export interface DeepAnalysis {
+  winsxs_actual_bytes: number | null;
+  winsxs_reclaimable_bytes: number | null;
+  winsxs_cleanup_recommended: boolean | null;
+  shadow_used_bytes: number | null;
+  shadow_count: number | null;
+}
+
+export interface DeepResult {
+  id: string;
+  ok: boolean;
+  message: string;
+}
+
+export interface DeepSummary {
+  results: DeepResult[];
+  freed_bytes: number;
+}
+
+export interface Growth {
+  tool: string;
+  now_bytes: number;
+  before_bytes: number;
+  delta_bytes: number;
+  since: string;
 }

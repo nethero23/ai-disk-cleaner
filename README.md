@@ -63,6 +63,10 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 ### ⚡ 好用
 
 - 「空间去哪儿了」概览：一眼看清 C 盘被谁占了
+- 增长监控：看哪个目录最近在长，一周涨幅超过阈值就通知
+- 闲置模型建议：按最后使用时间找出很久没用的模型
+- 系统深度清理：WinSxS 组件存储、系统还原点、休眠文件、传递优化缓存、Windows 更新缓存
+- 未识别的大目录：规则库还不认识的大文件夹也会列出来，可一键提交规则建议
 - 多盘扫描、全盘大文件扫描、项目构建产物（`node_modules`、`target`、`.venv`…）扫描
 - 结果按工具分组、搜索、排序；并行扫描，带进度可取消
 - 托盘常驻、定时后台扫描、垃圾超阈值通知、可选自动清理安全项（默认关）
@@ -77,14 +81,16 @@ AI Disk Cleaner 把每一 GB 翻译成人话：**这是哪个模型、哪个 con
 ## 下载安装
 
 1. 打开 [Releases 最新版](https://github.com/nethero23/ai-disk-cleaner/releases/latest)
-2. 下载 `AI.Disk.Cleaner_x.y.z_x64-setup.exe`（推荐）或 `.msi`
+2. 下载 `*_x64-setup.exe`（推荐，支持应用内自动更新）或 `*.msi`
 3. 安装后打开，点「扫描」
+
+**便携版**：下载 `*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹，不写注册表；便携版不自动更新。
 
 系统要求：Windows 10 / 11 x64，需要 WebView2（Windows 11 自带，Windows 10 安装程序会自动处理）。
 
 > 安装包暂未做代码签名，首次运行 Windows SmartScreen 可能提示「已保护你的电脑」，点「更多信息 → 仍要运行」即可。代码全部开源，可自行审查或从源码构建。
 
-**即将支持**：`winget install` 和 Scoop 安装、免安装便携版。
+**即将支持**：`winget install nethero23.AIDiskCleaner` 和 `scoop install aidc`（清单已随每次发布生成，正在提交到官方仓库）。
 
 命令行版（开发者）：`cargo run -p cleaner-core --bin aidc -- scan`，支持 `scan --json`、`dupes`、`move`、`compact`。
 
@@ -150,7 +156,8 @@ CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境
 - [x] v0.1–v0.3 扫描、安全等级、回收站删除、运行中检测、搬到其他盘 / 搬回来、模型去重、vhdx 压缩、导出对话记录、在线规则更新
 - [x] v0.4–v0.5 全盘大文件、托盘 + 定时扫描、并行扫描、清理前预览、一键清理安全项、规则库 126 条
 - [x] v0.6 搜索 / 分组 / 排序、多盘扫描、应用内自动更新、「空间去哪儿了」概览
-- [ ] v0.7 一键撤销 ✅、首次运行引导 ✅、增长监控、闲置模型建议、系统深度清理（WinSxS）、未识别大目录上报、便携版 + winget / Scoop
+- [x] v0.7 一键撤销、首次运行引导、增长监控、闲置模型建议、系统深度清理（WinSxS 等）、未识别大目录上报、便携版
+- [ ] 上架 winget / Scoop、安装包代码签名
 - [ ] v0.8 Material Design 3 新界面、AI 工具配置管理（skills / MCP / 插件去重整理）
 
 ## 参与贡献

@@ -13,6 +13,7 @@ pub mod bigfiles;
 pub mod clean;
 pub mod dedup;
 pub mod export;
+pub mod growth;
 pub mod inspect;
 pub mod model;
 pub mod overview;
@@ -24,6 +25,8 @@ pub mod restore;
 pub mod rules;
 pub mod scan;
 pub mod settings;
+pub mod system;
+pub mod unrecognized;
 pub mod vhdx;
 
 pub use model::{Category, SafetyLevel, ScanItem, ScanReport};
