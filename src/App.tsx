@@ -10,7 +10,10 @@ import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
 import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
 import { DrivePicker } from "./DrivePicker";
-import { Fab, NavigationRail, Tabs } from "./ui";
+import { Button, Card, Checkbox, Fab, FloatingToolbar, Icon, NavigationRail, SearchBar, SegmentedButton, Tabs } from "./ui";
+import { Hero } from "./pages/Clean/Hero";
+import { ResultItem } from "./pages/Clean/ResultItem";
+import { ScanProgress } from "./pages/Clean/ScanProgress";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 type Page = "clean" | "space" | "history" | "settings";
@@ -44,6 +47,7 @@ export function App() {
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
@@ -717,6 +721,7 @@ export function App() {
     [report, selected],
   );
   const selectedBytes = selectedItems.reduce((a, i) => a + i.size_bytes, 0);
+  const safeItems = useMemo(() => (report ? report.items.filter(isDefaultTicked) : []), [report]);
   const selectedReview = selectedItems.filter((i) => i.safety === "review").length;
   const selectedExportable = selectedItems.filter((i) => exportable.has(i.rule_id));
 
@@ -1453,204 +1458,188 @@ export function App() {
       )}
 
       {view === "scan" && !report && phase !== "scanning" && (
-        <section className="empty">
-          <h2>{s.emptyTitle}</h2>
-          <p>{s.emptyBody}</p>
-          {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} />}
-          <p>
-            <button
-              className="ghost"
-              onClick={() => {
-                autoConfirmRef.current = true;
-                runScan();
-              }}
-            >
-              {s.scanAndCleanSafe}
-            </button>
-          </p>
-        </section>
+        <div className="clean-page">
+          <Card className="clean-empty">
+            <h2>{s.emptyTitle}</h2>
+            <p>{s.emptyBody}</p>
+            {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} />}
+            <div className="row">
+              <Button icon="radar" onClick={runScan}>{s.scan}</Button>
+              <Button
+                variant="text"
+                onClick={() => {
+                  autoConfirmRef.current = true;
+                  runScan();
+                }}
+              >
+                {s.scanAndCleanSafe}
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
       {view === "scan" && phase === "scanning" && (
-        <section className="empty">
-          <div className="spinner" />
-          <p>{s.scanning}</p>
-          {scanStep && (
-            <>
-              <progress className="scan-bar" value={scanStep.done} max={scanStep.total} />
-              <p className="muted">{s.scanStep(scanStep.done, scanStep.total, scanStep.rule_name)}</p>
-            </>
-          )}
-          <p>
-            <button className="ghost" onClick={() => invoke("cancel_scan")}>{s.scanCancel}</button>
-          </p>
-        </section>
+        <div className="clean-page">
+          <ScanProgress s={s} step={scanStep} onCancel={() => invoke("cancel_scan")} />
+        </div>
       )}
 
       {view === "scan" && report && phase !== "scanning" && (
-        <>
-          <section className="summary">
-            <div className="stat">
-              <span className="stat-label">{s.found(report.items.length, humanSize(report.total_bytes))}</span>
-              {report.started_at && report.finished_at && (
-                <span className="muted scan-took" title={report.timings ? `${s.slowest} ${report.timings.slice(0, 5).map(([id, ms]) => `${id} ${(ms / 1000).toFixed(1)}s`).join(", ")}` : undefined}>
-                  {" "}{s.scanTook(((new Date(report.finished_at).getTime() - new Date(report.started_at).getTime()) / 1000).toFixed(1))}
-                </span>
-              )}
-            </div>
-            {summaryLine && <p className="summary-line">{summaryLine}</p>}
-            {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} note={s.scanDrivesNext} align="start" />}
-            {report.cancelled && <div className="banner">{s.scanPartial}</div>}
-            {growth.some((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024) && (
-              <div className="growth" title={s.growthHint}>
-                <span className="muted">{s.growthTitle}</span>
-                {growth
-                  .filter((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024)
-                  .slice(0, 5)
-                  .map((g) => (
-                    <span key={g.tool} className={`growth-chip ${g.delta_bytes > 0 ? "up" : "down"}`}>
-                      {g.delta_bytes > 0
-                        ? s.growthRow(g.tool, humanSize(g.delta_bytes), new Date(g.since).toLocaleDateString())
-                        : s.growthShrank(g.tool, humanSize(-g.delta_bytes))}
-                    </span>
-                  ))}
-              </div>
-            )}
-            <div className="stat-row">
-              <Pill level="safe" label={s.safety.safe} size={humanSize(report.safe_bytes)} hint={s.safetyHint.safe} />
-              <Pill level="redownload" label={s.safety.redownload} size={humanSize(report.redownload_bytes)} hint={s.safetyHint.redownload} />
-              <Pill level="review" label={s.safety.review} size={humanSize(report.review_bytes)} hint={s.safetyHint.review} />
-            </div>
-            <div className="quick">
-              <button className="ghost" onClick={() => setSelected(new Set(report.items.filter(isDefaultTicked).map((i) => i.id)))}>
-                {s.selectAllSafe}
-              </button>
-              {report.items.some(isDefaultTicked) && (
-                <button
-                  className="primary"
-                  disabled={phase === "cleaning"}
-                  onClick={() => {
-                    setSelected(new Set(report.items.filter(isDefaultTicked).map((i) => i.id)));
-                    setConfirming(true);
-                  }}
-                >
-                  {s.cleanSafeNow}
-                </button>
-              )}
-              <button className="ghost" onClick={() => setSelected(new Set())}>
-                {s.selectNone}
-              </button>
-              <button className="ghost" disabled={dupsBusy} onClick={runFindDups}>
-                {dupsBusy ? s.findingDups : s.findDups}
-              </button>
-            </div>
-            {dups && (
-              <div className="dups">
-                {dups.length === 0 ? (
-                  <p className="muted">{s.dupsNone}</p>
-                ) : (
-                  <>
-                    <p className="stat-label">
-                      {s.dupsTitle(dups.length, humanSize(dups.reduce((a, g) => a + g.reclaimable_bytes, 0)))}
-                    </p>
-                    <p className="muted">{s.dupsHow}</p>
-                    {dups.map((g, i) => (
-                      <div key={i} className="dup-group">
-                        <div className="dup-head">
-                          <span className="size">{humanSize(g.size_bytes)}</span>
-                          <span className="muted"> × {g.files.length}</span>
-                          <span style={{ flex: 1 }} />
-                          {g.same_volume ? (
-                            <button className="ghost" onClick={() => runMerge(g)}>{s.merge}</button>
-                          ) : (
-                            <span className="muted">{s.mergeDiffVolume}</span>
-                          )}
-                        </div>
-                        <ul className="dup-files">
-                          {g.files.map((f) => (
-                            <li key={f.path} title={f.path}>
-                              <span className="tool">{f.tool}</span> {f.path}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </>
+        <div className="clean-page">
+          <Hero
+            report={report}
+            s={s}
+            meta={
+              <>
+                {s.found(report.items.length, humanSize(report.total_bytes))}
+                {report.started_at && report.finished_at && (
+                  <span title={report.timings ? `${s.slowest} ${report.timings.slice(0, 5).map(([id, ms]) => `${id} ${(ms / 1000).toFixed(1)}s`).join(", ")}` : undefined}>
+                    {" · "}{s.scanTook(((new Date(report.finished_at).getTime() - new Date(report.started_at).getTime()) / 1000).toFixed(1))}
+                  </span>
                 )}
+              </>
+            }
+            summaryLine={summaryLine}
+            safeCount={safeItems.length}
+            safeBytes={safeItems.reduce((a, i) => a + i.size_bytes, 0)}
+            busy={phase === "cleaning"}
+            onCleanSafe={() => {
+              setSelected(new Set(safeItems.map((i) => i.id)));
+              setConfirming(true);
+            }}
+            onViewAll={() => document.getElementById("clean-results")?.scrollIntoView({ behavior: "smooth" })}
+          >
+            {settings && <DrivePicker drives={allDrives} settings={settings} s={s} onChange={saveSettings} note={s.scanDrivesNext} align="start" />}
+            {report.cancelled && <p className="muted">{s.scanPartial}</p>}
+  {report.unreadable.length > 0 && (
+                <p className="muted" title={report.unreadable.join("\n")}>
+                  {s.unreadable(report.unreadable.length)}
+                </p>
+              )}
+          </Hero>
+{growth.some((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024) && (
+            <div className="growth" title={s.growthHint}>
+              <span className="muted">{s.growthTitle}</span>
+              {growth
+                .filter((g) => Math.abs(g.delta_bytes) >= 100 * 1024 * 1024)
+                .slice(0, 5)
+                .map((g) => (
+                  <span key={g.tool} className={`growth-chip ${g.delta_bytes > 0 ? "up" : "down"}`}>
+                    {g.delta_bytes > 0
+                      ? s.growthRow(g.tool, humanSize(g.delta_bytes), new Date(g.since).toLocaleDateString())
+                      : s.growthShrank(g.tool, humanSize(-g.delta_bytes))}
+                  </span>
+                ))}
+            </div>
+          )}
+{idleModels.length > 0 && (
+            <div className="idle" title={s.idleHint}>
+              <div className="idle-head">
+                <strong>{s.idleTitle(idleModels.length, humanSize(idleModels.reduce((a, i) => a + i.size_bytes, 0)))}</strong>
+                <button className="link" onClick={() => setSelected((prev) => new Set([...prev, ...idleModels.map((i) => i.id)]))}>{s.idleTickAll}</button>
               </div>
-            )}
-            <UnrecognizedPanel lang={lang} onError={setError} />
-            {idleModels.length > 0 && (
-              <div className="idle" title={s.idleHint}>
-                <div className="idle-head">
-                  <strong>{s.idleTitle(idleModels.length, humanSize(idleModels.reduce((a, i) => a + i.size_bytes, 0)))}</strong>
-                  <button className="link" onClick={() => setSelected((prev) => new Set([...prev, ...idleModels.map((i) => i.id)]))}>{s.idleTickAll}</button>
-                </div>
-                <p className="muted">{s.idleHint}</p>
-                <table className="log">
-                  <tbody>
-                    {idleModels.slice(0, 10).map((it) => (
-                      <tr key={it.id}>
-                        <td>{it.name}</td>
-                        <td className="muted">{it.tool}</td>
-                        <td className="size">{humanSize(it.size_bytes)}</td>
-                        <td className="muted">{it.last_used && s.idleSince(sinceDuration(it.last_used, lang))}</td>
-                        <td>
-                          <button
-                            className="link"
-                            onClick={() =>
-                              setSelected((prev) => {
-                                const n = new Set(prev);
-                                if (n.has(it.id)) n.delete(it.id);
-                                else n.add(it.id);
-                                return n;
-                              })
-                            }
-                          >
-                            {selected.has(it.id) ? s.idleUntick : s.idleTick}
-                          </button>
-                          {relocatable.has(it.rule_id) && !it.in_use_by && (
-                            <button className="link" onClick={() => pickMoveTarget(it)}>{s.move}</button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {idleModels.length > 10 && <p className="muted">{s.idleMore(idleModels.length - 10)}</p>}
-              </div>
-            )}
-            {report.unreadable.length > 0 && (
-              <p className="muted" title={report.unreadable.join("\n")}>
-                {s.unreadable(report.unreadable.length)}
-              </p>
-            )}
-          </section>
+              <p className="muted">{s.idleHint}</p>
+              <table className="log">
+                <tbody>
+                  {idleModels.slice(0, 10).map((it) => (
+                    <tr key={it.id}>
+                      <td>{it.name}</td>
+                      <td className="muted">{it.tool}</td>
+                      <td className="size">{humanSize(it.size_bytes)}</td>
+                      <td className="muted">{it.last_used && s.idleSince(sinceDuration(it.last_used, lang))}</td>
+                      <td>
+                        <button
+                          className="link"
+                          onClick={() =>
+                            setSelected((prev) => {
+                              const n = new Set(prev);
+                              if (n.has(it.id)) n.delete(it.id);
+                              else n.add(it.id);
+                              return n;
+                            })
+                          }
+                        >
+                          {selected.has(it.id) ? s.idleUntick : s.idleTick}
+                        </button>
+                        {relocatable.has(it.rule_id) && !it.in_use_by && (
+                          <button className="link" onClick={() => pickMoveTarget(it)}>{s.move}</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {idleModels.length > 10 && <p className="muted">{s.idleMore(idleModels.length - 10)}</p>}
+            </div>
+          )}
+{dups && (
+            <div className="dups">
+              {dups.length === 0 ? (
+                <p className="muted">{s.dupsNone}</p>
+              ) : (
+                <>
+                  <p className="stat-label">
+                    {s.dupsTitle(dups.length, humanSize(dups.reduce((a, g) => a + g.reclaimable_bytes, 0)))}
+                  </p>
+                  <p className="muted">{s.dupsHow}</p>
+                  {dups.map((g, i) => (
+                    <div key={i} className="dup-group">
+                      <div className="dup-head">
+                        <span className="size">{humanSize(g.size_bytes)}</span>
+                        <span className="muted"> × {g.files.length}</span>
+                        <span style={{ flex: 1 }} />
+                        {g.same_volume ? (
+                          <button className="ghost" onClick={() => runMerge(g)}>{s.merge}</button>
+                        ) : (
+                          <span className="muted">{s.mergeDiffVolume}</span>
+                        )}
+                      </div>
+                      <ul className="dup-files">
+                        {g.files.map((f) => (
+                          <li key={f.path} title={f.path}>
+                            <span className="tool">{f.tool}</span> {f.path}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+          <UnrecognizedPanel lang={lang} onError={setError} />
 
           {report.items.length > 0 && (
-            <div className="toolbar">
-              <input
-                type="search"
-                className="search"
-                placeholder={s.searchPlaceholder}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
+            <div className="clean-tools" id="clean-results">
+              <SearchBar value={query} onChange={setQuery} placeholder={s.searchPlaceholder} clearLabel={s.clear} />
+              <SegmentedButton
+                small
+                label={s.groupBy}
+                value={groupBy}
+                onChange={(v) => {
+                  setGroupBy(v);
+                  localStorage.setItem("groupBy", v);
+                  setCollapsed(new Set());
+                }}
+                options={[
+                  { value: "category", label: s.groupByCategory },
+                  { value: "tool", label: s.groupByTool },
+                ]}
               />
-              <label>
-                {s.groupBy}
-                <select value={groupBy} onChange={(e) => { const v = e.target.value as "category" | "tool"; setGroupBy(v); localStorage.setItem("groupBy", v); setCollapsed(new Set()); }}>
-                  <option value="category">{s.groupByCategory}</option>
-                  <option value="tool">{s.groupByTool}</option>
-                </select>
-              </label>
-              <label>
-                {s.sortBy}
-                <select value={sortBy} onChange={(e) => { const v = e.target.value as "size" | "recent" | "safety" | "name"; setSortBy(v); localStorage.setItem("sortBy", v); }}>
+              <label className="md-chip select">
+                <Icon name="sort" />
+                <select aria-label={s.sortBy} value={sortBy} onChange={(e) => { const v = e.target.value as "size" | "recent" | "safety" | "name"; setSortBy(v); localStorage.setItem("sortBy", v); }}>
                   <option value="size">{s.sortSize}</option>
                   <option value="recent">{s.sortRecent}</option>
                   <option value="safety">{s.sortSafety}</option>
                   <option value="name">{s.sortName}</option>
                 </select>
               </label>
+              <Button variant="text" small onClick={() => setSelected(new Set(safeItems.map((i) => i.id)))}>{s.selectAllSafe}</Button>
+              <Button variant="text" small onClick={() => setSelected(new Set())}>{s.selectNone}</Button>
+              <Button variant="text" small icon="content_copy" disabled={dupsBusy} onClick={runFindDups}>
+                {dupsBusy ? s.findingDups : s.findDups}
+              </Button>
               {query && (
                 <span className="muted">{s.matched(visibleItems.length, humanSize(visibleItems.reduce((a, i) => a + i.size_bytes, 0)))}</span>
               )}
@@ -1660,22 +1649,19 @@ export function App() {
           {report.items.length === 0 && <p className="empty">{s.nothing}</p>}
           {report.items.length > 0 && visibleItems.length === 0 && <p className="empty">{s.noMatch}</p>}
 
-          <main className="groups">
+          <div className="clean-groups">
             {groups.map((g) => {
               const open = !collapsed.has(g.key);
               const allOn = g.items.every((i) => selected.has(i.id));
               const someOn = g.items.some((i) => selected.has(i.id));
               return (
-                <section key={g.key} className="group">
-                  <header className="group-head">
-                    <input
-                      type="checkbox"
-                      checked={allOn}
-                      ref={(el) => el && (el.indeterminate = !allOn && someOn)}
-                      onChange={() => toggleGroup(g.items)}
-                    />
+                <section key={g.key} className="cg">
+                  <header className="cg-head">
+                    <Checkbox label={g.title} checked={allOn} indeterminate={someOn} onChange={() => toggleGroup(g.items)} />
                     <button
-                      className="group-title"
+                      type="button"
+                      className="md-interactive cg-title"
+                      aria-expanded={open}
                       onClick={() =>
                         setCollapsed((prev) => {
                           const next = new Set(prev);
@@ -1685,118 +1671,58 @@ export function App() {
                         })
                       }
                     >
-                      <span className={`chev ${open ? "open" : ""}`}>▸</span>
+                      <Icon name="chevron_right" />
                       {g.title}
-                      <span className="count">{g.items.length}</span>
+                      <span className="cg-count">{g.items.length}</span>
                     </button>
-                    <span className="group-size">{humanSize(g.bytes)}</span>
+                    <span className="cg-size md-ltr">{humanSize(g.bytes)}</span>
                   </header>
                   {open && (
-                    <ul className="items">
+                    <ul>
                       {g.items.map((it) => (
-                        <li key={it.id} className={`item ${selected.has(it.id) ? "on" : ""} ${it.in_use_by ? "inuse" : ""}`}>
-                          <input
-                            type="checkbox"
-                            checked={selected.has(it.id)}
-                            disabled={!!it.in_use_by}
-                            title={it.in_use_by ? s.inUse(it.in_use_by) : undefined}
-                            onChange={() => toggle(it.id)}
-                          />
-                          <div className="item-main">
-                            <div className="item-line">
-                              <span className="tool">{it.tool}</span>
-                              <span className="name">{it.name}</span>
-                              <span className={`tag ${it.safety}`} title={s.safetyHint[it.safety]}>
-                                {s.safety[it.safety]}
-                              </span>
-                              {it.in_use_by && (
-                                <span className="tag inuse" title={s.inUse(it.in_use_by)}>
-                                  ● {it.in_use_by}
-                                </span>
-                              )}
-                            </div>
-                            <div className="item-sub">
-                              <span className="consequence">{it.consequence}</span>
-                              {it.detail && <span className="detail"> · {it.detail}</span>}
-                            </div>
-                            <div className="item-path" title={it.path}>
-                              {it.path}
-                              <button className="link" onClick={() => revealItemInDir(it.path)}>
-                                {s.openFolder}
-                              </button>
-                              <button className="link" onClick={() => togglePeek(it)}>
-                                {peeks.has(it.id) ? s.peekHide : s.peek}
-                              </button>
-                              <button className="link" onClick={() => excludeItem(it)}>
-                                {s.exclude}
-                              </button>
-                              {relocatable.has(it.rule_id) && !it.in_use_by && (
-                                <button className="link" onClick={() => pickMoveTarget(it)}>
-                                  {s.move}
-                                </button>
-                              )}
-                              {compactable.has(it.rule_id) && (
-                                <button className="link" onClick={() => openCompact(it)}>
-                                  {s.compact}
-                                </button>
-                              )}
-                            </div>
-                            {peeks.has(it.id) && (
-                              <div className="peek">
-                                {peeks.get(it.id) === "loading" ? (
-                                  <span className="muted">{s.peekLoading}</span>
-                                ) : (
-                                  (() => {
-                                    const p = peeks.get(it.id) as Preview;
-                                    return p.files === 0 ? (
-                                      <span className="muted">{s.peekEmpty}</span>
-                                    ) : (
-                                      <>
-                                        <div className="muted">{s.peekSummary(p.files, p.dirs, p.largest.length)}</div>
-                                        <ul className="plain peek-list">
-                                          {p.largest.map((f) => (
-                                            <li key={f.path} title={f.path}>
-                                              <span className="peek-rel">{f.rel}</span>
-                                              <span className="peek-size">{humanSize(f.size_bytes)}</span>
-                                              <span className="muted">{relativeDate(f.modified, lang)}</span>
-                                              <button className="link" onClick={() => revealItemInDir(f.path)}>{s.openFolder}</button>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </>
-                                    );
-                                  })()
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div className="item-meta">
-                            <div className="size">{humanSize(it.size_bytes)}</div>
-                            <div className="muted">{s.files(it.file_count)}</div>
-                            <div className="muted">
-                              {s.lastUsed} {relativeDate(it.last_used, lang)}
-                            </div>
-                          </div>
-                        </li>
+                        <ResultItem
+                          key={it.id}
+                          it={it}
+                          s={s}
+                          lang={lang}
+                          selected={selected.has(it.id)}
+                          expanded={expanded.has(it.id)}
+                          peek={peeks.get(it.id)}
+                          canMove={relocatable.has(it.rule_id) && !it.in_use_by}
+                          canCompact={compactable.has(it.rule_id)}
+                          onToggle={() => toggle(it.id)}
+                          onExpand={() =>
+                            setExpanded((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(it.id)) next.delete(it.id);
+                              else next.add(it.id);
+                              return next;
+                            })
+                          }
+                          onReveal={(path) => revealItemInDir(path)}
+                          onPeek={() => togglePeek(it)}
+                          onExclude={() => excludeItem(it)}
+                          onMove={() => pickMoveTarget(it)}
+                          onCompact={() => openCompact(it)}
+                        />
                       ))}
                     </ul>
                   )}
                 </section>
               );
             })}
-          </main>
+          </div>
 
-          <footer className="actionbar">
-            <span>{s.selected(selectedItems.length, humanSize(selectedBytes))}</span>
-            <button
-              className="primary"
-              disabled={selectedItems.length === 0 || phase === "cleaning"}
-              onClick={() => setConfirming(true)}
-            >
-              {phase === "cleaning" ? (exporting ? s.exporting : s.cleaning) : s.clean}
-            </button>
-          </footer>
-        </>
+          {(selectedItems.length > 0 || phase === "cleaning") && (
+            <FloatingToolbar label={s.clean}>
+              <span>{s.selected(selectedItems.length, humanSize(selectedBytes))}</span>
+              <Button variant="text" disabled={phase === "cleaning"} onClick={() => setSelected(new Set())}>{s.selectNone}</Button>
+              <Button icon="delete" disabled={selectedItems.length === 0 || phase === "cleaning"} onClick={() => setConfirming(true)}>
+                {phase === "cleaning" ? (exporting ? s.exporting : s.cleaning) : s.clean}
+              </Button>
+            </FloatingToolbar>
+          )}
+        </div>
       )}
 
       {moving && (
