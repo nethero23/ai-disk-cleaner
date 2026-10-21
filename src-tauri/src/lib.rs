@@ -414,6 +414,12 @@ async fn merge_duplicates(group: DuplicateGroup, keep: PathBuf) -> Result<u64, S
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Must be the first plugin: a second launch (autostart entry plus a
+        // click on the shortcut) hands its args to the running instance and
+        // exits instead of starting a second tray icon and scheduler.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            background::show_window(app);
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())

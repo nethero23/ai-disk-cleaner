@@ -288,7 +288,7 @@ export function App() {
   const stats = useMemo(() => {
     const ok = history.filter((r) => r.ok);
     const toolOf = (ruleId: string) =>
-      ruleId === "bigfiles" ? s.bigFiles : (library?.rules.find((r) => r.id === ruleId)?.tool ?? ruleId.split(".")[0]);
+      ruleId.startsWith("bigfiles") ? s.bigFiles : (library?.rules.find((r) => r.id === ruleId)?.tool ?? ruleId.split(".")[0]);
     const byTool = new Map<string, number>();
     const byMonth = new Map<string, number>();
     for (const r of ok) {
@@ -558,6 +558,7 @@ export function App() {
                             <input
                               type="checkbox"
                               checked={bigSelected.has(it.id)}
+                              disabled={it.rule_id === "bigfiles.hiberfil"}
                               onChange={() => {
                                 const next = new Set(bigSelected);
                                 if (next.has(it.id)) next.delete(it.id);
@@ -569,6 +570,14 @@ export function App() {
                               <div className="item-line">
                                 <span className="name">{it.name}</span>
                               </div>
+                              {it.rule_id !== "bigfiles" && (
+                                <div className="item-sub">
+                                  <span className="consequence warn">{it.consequence}</span>
+                                  {it.rule_id === "bigfiles.vdisk" && it.path.toLowerCase().endsWith(".vhdx") && (
+                                    <button className="link" onClick={() => openCompact(it)}>{s.compactTitle}</button>
+                                  )}
+                                </div>
+                              )}
                               <div className="item-path" title={it.path}>
                                 {it.detail}
                                 <button className="link" onClick={() => revealItemInDir(it.path)}>

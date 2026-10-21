@@ -168,14 +168,62 @@ fn skip_dir(p: &Path) -> bool {
     ) || (p.components().count() == 2 && n == "windows")
 }
 
+/// Page and swap files are managed by Windows and never deletable; they are
+/// not listed. The hibernation file is listed as information only, since
+/// `powercfg /h off` is the way to get that space back.
 fn skip_file(p: &Path) -> bool {
     let Some(name) = p.file_name().and_then(|n| n.to_str()) else {
         return false;
     };
     matches!(
         name.to_ascii_lowercase().as_str(),
-        "pagefile.sys" | "hiberfil.sys" | "swapfile.sys"
+        "pagefile.sys" | "swapfile.sys"
     )
+}
+
+fn is_hiberfil(p: &Path) -> bool {
+    p.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.eq_ignore_ascii_case("hiberfil.sys"))
+}
+
+/// Rule ids used for big-file items. The UI treats everything starting with
+/// `bigfiles` as a big file; the suffix says which ones need special care.
+pub const RULE_FILE: &str = "bigfiles";
+pub const RULE_VDISK: &str = "bigfiles.vdisk";
+pub const RULE_HIBERFIL: &str = "bigfiles.hiberfil";
+
+fn describe(kind: FileKind, path: &Path, size: u64, lang: &str) -> (&'static str, String) {
+    let zh = lang == "zh";
+    if is_hiberfil(path) {
+        let s = crate::model::human_size(size);
+        return (
+            RULE_HIBERFIL,
+            if zh {
+                format!("休眠文件，不能直接删除。以管理员身份运行 powercfg /h off 可释放 {s}（同时关闭休眠和快速启动）")
+            } else {
+                format!("Hibernation file; cannot be deleted. Run powercfg /h off as administrator to free {s} (also turns off hibernate and fast startup)")
+            },
+        );
+    }
+    match kind {
+        FileKind::VirtualDisk => (
+            RULE_VDISK,
+            if zh {
+                "虚拟磁盘（WSL / Docker / 虚拟机 / Claude Desktop 等），里面是整个系统的数据，删除等于删掉那个系统。想省空间请用「压缩虚拟磁盘」".into()
+            } else {
+                "A virtual disk (WSL / Docker / a VM / Claude Desktop): deleting it deletes that whole system. To save space, compact it instead".into()
+            },
+        ),
+        _ => (
+            RULE_FILE,
+            if zh {
+                "单个大文件，删除前请确认不再需要".into()
+            } else {
+                "A single large file; make sure it is no longer needed".into()
+            },
+        ),
+    }
 }
 
 /// Progress callback: (files seen, bytes matched so far, folder being walked).
@@ -241,9 +289,10 @@ pub fn scan(
         .into_iter()
         .map(|(size, path, used)| {
             let kind = FileKind::of(&path);
+            let (rule_id, consequence) = describe(kind, &path, size, lang);
             ScanItem {
                 id: format!("bigfile:{}", path.display()),
-                rule_id: "bigfiles".into(),
+                rule_id: rule_id.into(),
                 tool: kind.label(lang).into(),
                 category: Category::System,
                 name: path
@@ -254,12 +303,7 @@ pub fn scan(
                 file_count: 1,
                 last_used: used,
                 safety: SafetyLevel::Review,
-                consequence: if lang == "zh" {
-                    "单个大文件，删除前请确认不再需要"
-                } else {
-                    "A single large file; make sure it is no longer needed"
-                }
-                .into(),
+                consequence,
                 detail: path.parent().map(|p| p.to_string_lossy().to_string()),
                 in_use_by: None,
                 path,
@@ -312,6 +356,37 @@ mod tests {
             &mut |_, _, _| {},
         );
         assert!(items.is_empty());
+    }
+
+    #[test]
+    fn virtual_disks_and_hiberfil_get_their_own_rule_ids() {
+        let tmp = tempfile::tempdir().unwrap();
+        fs::write(tmp.path().join("ext4.vhdx"), vec![0u8; 3000]).unwrap();
+        fs::write(tmp.path().join("hiberfil.sys"), vec![0u8; 2000]).unwrap();
+        fs::write(tmp.path().join("pagefile.sys"), vec![0u8; 2000]).unwrap();
+        fs::write(tmp.path().join("movie.mkv"), vec![0u8; 1000]).unwrap();
+        let items = scan(
+            &[tmp.path().to_path_buf()],
+            500,
+            &[],
+            "zh",
+            &AtomicBool::new(false),
+            &mut |_, _, _| {},
+        );
+        let ids: Vec<(&str, &str)> = items
+            .iter()
+            .map(|i| (i.name.as_str(), i.rule_id.as_str()))
+            .collect();
+        assert_eq!(
+            ids,
+            vec![
+                ("ext4.vhdx", RULE_VDISK),
+                ("hiberfil.sys", RULE_HIBERFIL),
+                ("movie.mkv", RULE_FILE)
+            ]
+        );
+        assert!(items[1].consequence.contains("powercfg /h off"));
+        assert!(items[1].consequence.contains("2.0 KB") || items[1].consequence.contains("KB"));
     }
 
     #[test]
