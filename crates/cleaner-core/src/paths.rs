@@ -45,6 +45,12 @@ impl PathContext {
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from(r"C:\Windows")),
         );
+        vars.insert(
+            "SYSTEMDRIVE".into(),
+            std::env::var_os("SYSTEMDRIVE")
+                .map(|d| PathBuf::from(format!("{}\\", d.to_string_lossy())))
+                .unwrap_or_else(|| PathBuf::from(r"C:\")),
+        );
         // Tool-specific overrides the user may have set. These win over defaults
         // because that is where the tool actually writes.
         for key in [

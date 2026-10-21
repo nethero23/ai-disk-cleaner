@@ -229,3 +229,68 @@ paths = ["${LOCALAPPDATA}/Composer", "${USERPROFILE}/.cache/composer"]
 safety = "safe"
 consequence_zh = "下次 composer install 时重新下载"
 consequence_en = "Re-downloaded on next composer install"
+
+[[rule]]
+id = "windows.old"
+tool = "Windows"
+category = "system"
+name_zh = "Windows.old（上一个系统版本）"
+name_en = "Windows.old (previous Windows)"
+paths = ["${SYSTEMDRIVE}/Windows.old"]
+safety = "review"
+min_bytes = 1073741824
+consequence_zh = "删除后无法回退到升级前的 Windows；升级 10 天后系统本来也会自动删除。需要管理员权限，若失败请用「磁盘清理」"
+consequence_en = "You can no longer roll back to the previous Windows; Windows deletes it itself 10 days after an upgrade. Needs admin rights; use Disk Cleanup if this fails"
+windows_only = true
+
+[[rule]]
+id = "office.file_cache"
+tool = "Microsoft Office"
+category = "system"
+name_zh = "Office 文档缓存"
+name_en = "Office document cache"
+paths = ["${LOCALAPPDATA}/Microsoft/Office/16.0/OfficeFileCache"]
+safety = "review"
+min_bytes = 104857600
+consequence_zh = "OneDrive / SharePoint 文档的本地缓存；尚未上传的修改会丢失，关闭 Office 再清"
+consequence_en = "Local cache of OneDrive / SharePoint documents; unsynced edits are lost, close Office first"
+windows_only = true
+processes = ["WINWORD", "EXCEL", "POWERPNT", "OUTLOOK"]
+
+[[rule]]
+id = "teams.cache"
+tool = "Microsoft Teams"
+category = "system"
+name_zh = "Teams 缓存"
+name_en = "Teams cache"
+paths = ["${LOCALAPPDATA}/Packages/MSTeams_8wekyb3d8bbwe/LocalCache/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/Cache", "${LOCALAPPDATA}/Packages/MSTeams_8wekyb3d8bbwe/LocalCache/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/Code Cache", "${APPDATA}/Microsoft/Teams/Cache", "${APPDATA}/Microsoft/Teams/Code Cache", "${APPDATA}/Microsoft/Teams/GPUCache"]
+all_paths = true
+safety = "safe"
+consequence_zh = "Teams 会自动重建"
+consequence_en = "Teams rebuilds it"
+windows_only = true
+processes = ["ms-teams", "Teams"]
+
+[[rule]]
+id = "onedrive.logs"
+tool = "OneDrive"
+category = "system"
+name_zh = "OneDrive 日志"
+name_en = "OneDrive logs"
+paths = ["${LOCALAPPDATA}/Microsoft/OneDrive/logs"]
+safety = "safe"
+min_bytes = 52428800
+consequence_zh = "只是同步日志"
+consequence_en = "Sync logs only"
+windows_only = true
+
+[[rule]]
+id = "precommit.cache"
+tool = "pre-commit"
+category = "package_cache"
+name_zh = "pre-commit 钩子环境缓存"
+name_en = "pre-commit hook environments"
+paths = ["${PRE_COMMIT_HOME}", "${USERPROFILE}/.cache/pre-commit"]
+safety = "safe"
+consequence_zh = "下次 git commit 时重新安装钩子环境"
+consequence_en = "Hook environments reinstall on next commit"

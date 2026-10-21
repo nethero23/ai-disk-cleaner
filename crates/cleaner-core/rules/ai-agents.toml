@@ -144,3 +144,51 @@ safety = "review"
 inspector = "children"
 consequence_zh = "每个任务的对话记录和文件快照会丢失"
 consequence_en = "Each task's conversation and file snapshots are lost"
+
+[[rule]]
+id = "claude_code.file_history"
+tool = "Claude Code"
+category = "ai_agent"
+name_zh = "Claude Code 文件快照 (file-history)"
+name_en = "Claude Code file snapshots (file-history)"
+paths = ["${USERPROFILE}/.claude/file-history"]
+safety = "review"
+min_bytes = 52428800
+consequence_zh = "用于 /rewind 回退改动；删除后旧会话无法回退，当前会话不受影响"
+consequence_en = "Backs /rewind; old sessions can no longer be rewound, the current one is unaffected"
+
+[[rule]]
+id = "codex.archived_sessions"
+tool = "Codex"
+category = "ai_agent"
+name_zh = "Codex 归档会话"
+name_en = "Codex archived sessions"
+paths = ["${USERPROFILE}/.codex/archived_sessions"]
+safety = "review"
+consequence_zh = "已归档的对话记录会丢失"
+consequence_en = "Archived conversations are lost"
+
+[[rule]]
+id = "kilo_code.tasks"
+tool = "Kilo Code"
+category = "ai_agent"
+name_zh = "Kilo Code 任务历史"
+name_en = "Kilo Code task history"
+paths = ["${APPDATA}/Code/User/globalStorage/kilocode.kilo-code/tasks", "${APPDATA}/Cursor/User/globalStorage/kilocode.kilo-code/tasks"]
+all_paths = true
+safety = "review"
+inspector = "children"
+consequence_zh = "每个任务的对话记录和文件快照会丢失"
+consequence_en = "Each task's conversation and file snapshots are lost"
+
+[[rule]]
+id = "goose.sessions"
+tool = "Goose"
+category = "ai_agent"
+name_zh = "Goose 会话与日志"
+name_en = "Goose sessions and logs"
+paths = ["${APPDATA}/Block/goose/data/sessions", "${APPDATA}/Block/goose/data/logs", "${USERPROFILE}/.local/share/goose/sessions", "${USERPROFILE}/.local/state/goose/logs"]
+all_paths = true
+safety = "review"
+consequence_zh = "历史会话会丢失"
+consequence_en = "Past sessions are lost"

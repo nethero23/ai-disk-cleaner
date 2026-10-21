@@ -267,3 +267,52 @@ safety = "safe"
 consequence_zh = "安装脚本的下载缓存，需要时重新下载"
 consequence_en = "Installer downloads; re-fetched when needed"
 processes = ["Pinokio"]
+
+[[rule]]
+id = "huggingface.datasets"
+tool = "Hugging Face"
+category = "models"
+name_zh = "Hugging Face 数据集缓存"
+name_en = "Hugging Face datasets cache"
+paths = ["${HF_DATASETS_CACHE}", "${HF_HOME}/datasets", "${USERPROFILE}/.cache/huggingface/datasets"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "下次 load_dataset 时重新下载 {size}"
+consequence_en = "Re-downloaded ({size}) on next load_dataset"
+
+[[rule]]
+id = "huggingface.transformers_legacy"
+tool = "Hugging Face"
+category = "models"
+name_zh = "Hugging Face 旧版 transformers 缓存"
+name_en = "Hugging Face legacy transformers cache"
+paths = ["${USERPROFILE}/.cache/huggingface/transformers"]
+safety = "redownload"
+consequence_zh = "旧版 transformers 的缓存目录，新版本已改用 hub 目录，基本不会再被读到"
+consequence_en = "Used by old transformers versions only; current ones use the hub folder"
+
+[[rule]]
+id = "llamacpp.cache"
+tool = "llama.cpp"
+category = "models"
+name_zh = "llama.cpp 下载缓存"
+name_en = "llama.cpp download cache"
+paths = ["${LLAMA_CACHE}", "${USERPROFILE}/.cache/llama.cpp"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "用 -hf 参数下载的模型，下次运行时重新下载 {size}"
+consequence_en = "Models fetched with -hf; re-downloaded ({size}) on next run"
+
+[[rule]]
+id = "gpt4all.models"
+tool = "GPT4All"
+category = "models"
+name_zh = "GPT4All 模型"
+name_en = "GPT4All models"
+paths = ["${LOCALAPPDATA}/nomic.ai/GPT4All"]
+safety = "redownload"
+inspector = "children"
+consequence_zh = "需要在 GPT4All 里重新下载 {size}"
+consequence_en = "Re-download {size} inside GPT4All"
+windows_only = true
+processes = ["gpt4all", "chat"]
