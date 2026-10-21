@@ -9,6 +9,7 @@
 //! Nothing in this crate writes to disk except [`clean`], and that only
 //! moves to the Recycle Bin and appends to a log.
 
+pub mod aiconfig;
 pub mod bigfiles;
 pub mod clean;
 pub mod dedup;

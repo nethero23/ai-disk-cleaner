@@ -129,17 +129,38 @@ pub fn mask(value: &str) -> String {
 /// Whether a config key or value looks like a credential.
 pub fn looks_secret(key: &str, value: &str) -> bool {
     let k = key.to_ascii_uppercase();
-    let by_key = ["KEY", "TOKEN", "SECRET", "PASSWORD", "PASSWD", "CREDENTIAL", "AUTH"]
-        .iter()
-        .any(|w| k.contains(w));
+    let by_key = [
+        "KEY",
+        "TOKEN",
+        "SECRET",
+        "PASSWORD",
+        "PASSWD",
+        "CREDENTIAL",
+        "AUTH",
+    ]
+    .iter()
+    .any(|w| k.contains(w));
     let v = value.trim();
     // `${ENV}` / `$ENV` references are fine: the secret lives elsewhere.
     if v.is_empty() || v.starts_with("${") || v.starts_with('$') || v.len() < 8 {
         return false;
     }
     let by_value = [
-        "sk-", "ghp_", "gho_", "github_pat_", "glpat-", "xoxb-", "xoxp-", "AKIA", "ya29.", "AIza",
-        "Bearer ", "pplx-", "hf_", "npm_", "sk_live_",
+        "sk-",
+        "ghp_",
+        "gho_",
+        "github_pat_",
+        "glpat-",
+        "xoxb-",
+        "xoxp-",
+        "AKIA",
+        "ya29.",
+        "AIza",
+        "Bearer ",
+        "pplx-",
+        "hf_",
+        "npm_",
+        "sk_live_",
     ]
     .iter()
     .any(|p| v.starts_with(p));
@@ -149,6 +170,65 @@ pub fn looks_secret(key: &str, value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
+    #[test]
+    fn inventory_over_a_fake_home_finds_servers_skills_and_findings() {
+        let tmp = tempfile::tempdir().unwrap();
+        let home = tmp.path();
+        let w = |rel: &str, body: &str| {
+            let p = home.join(rel);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, body).unwrap();
+        };
+        w(
+            ".cursor/mcp.json",
+            r#"{"mcpServers": {"github": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-github@1.0.0"], "env": {"GITHUB_TOKEN": "ghp_0123456789abcdefghij"}}}}"#,
+        );
+        w(
+            ".codex/config.toml",
+            "[mcp_servers.gh]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-github@2.0.0\"]\n",
+        );
+        w(
+            ".claude/skills/web/SKILL.md",
+            "---\ndescription: web\n---\n",
+        );
+        w(".codex/skills/web/SKILL.md", "---\ndescription: web\n---\n");
+        w(
+            ".agents/skills/web/SKILL.md",
+            "---\ndescription: web (edited)\n---\n",
+        );
+        let mut vars = HashMap::new();
+        vars.insert("USERPROFILE".to_string(), home.to_path_buf());
+        vars.insert("APPDATA".to_string(), home.join("AppData/Roaming"));
+        let ctx = PathContext::with_vars(vars);
+        let inv = inventory(&Catalog::builtin(), &ctx);
+        let present: Vec<&str> = inv
+            .tools
+            .iter()
+            .filter(|t| t.present)
+            .map(|t| t.id.as_str())
+            .collect();
+        assert_eq!(
+            present,
+            vec!["claude_code", "cursor", "codex", "agents_shared"]
+        );
+        assert_eq!(inv.analysis.mcp_total, 2);
+        assert_eq!(inv.analysis.mcp_unique, 1);
+        let kinds: Vec<FindingKind> = inv.analysis.findings.iter().map(|f| f.kind).collect();
+        assert!(kinds.contains(&FindingKind::McpVersionConflict));
+        assert!(kinds.contains(&FindingKind::SecretExposed));
+        assert!(kinds.contains(&FindingKind::SkillDiverged));
+        // The raw token never appears anywhere in the serialised inventory.
+        let json = serde_json::to_string(&inv).unwrap();
+        assert!(!json.contains("0123456789abcdefghij"));
+        assert!(json.contains("ghp…ghij"));
+        // Missing config files are listed but not errors.
+        let trae = inv.tools.iter().find(|t| t.id == "trae").unwrap();
+        assert!(!trae.present && !trae.verified && trae.configs.iter().all(|c| !c.exists));
+        let _: PathBuf = trae.configs[0].path.clone();
+    }
 
     #[test]
     fn mask_keeps_only_the_ends() {

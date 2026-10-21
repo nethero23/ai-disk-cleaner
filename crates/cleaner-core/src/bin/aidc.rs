@@ -4,6 +4,7 @@
 //!   aidc scan --drive D:\\  # also walk a whole drive for caches by shape
 //!   aidc rules           # the rule library
 //!   aidc dupes           # duplicate model files across tools (read only)
+//!   aidc ai-config       # MCP servers / skills / plugins per AI tool (read only, keys masked)
 //!   aidc move <rule_id> <path> <dest_folder>   # move a cache to another drive
 
 use cleaner_core::model::human_size;
@@ -20,6 +21,48 @@ fn main() {
         "zh"
     };
     match args.first().map(String::as_str) {
+        Some("ai-config") => {
+            let inv = cleaner_core::aiconfig::inventory(
+                &cleaner_core::aiconfig::Catalog::builtin(),
+                &PathContext::from_env(),
+            );
+            if json {
+                println!("{}", serde_json::to_string_pretty(&inv).unwrap());
+                return;
+            }
+            for t in inv.tools.iter().filter(|t| t.present) {
+                println!(
+                    "{:<18} mcp {:>2}  skills {:>3}  plugins {:>2}  ext {:>3}{}",
+                    t.name,
+                    t.mcp.len(),
+                    t.skills.len(),
+                    t.plugins.len(),
+                    t.extensions.len(),
+                    if t.running { "  [running]" } else { "" }
+                );
+                for m in &t.mcp {
+                    println!(
+                        "    {:<24} {}{}",
+                        m.name,
+                        m.identity,
+                        if m.disabled { "  (off)" } else { "" }
+                    );
+                }
+            }
+            let a = &inv.analysis;
+            println!(
+                "\n{} servers ({} unique), {} skills ({} unique), {} findings, {} reclaimable",
+                a.mcp_total,
+                a.mcp_unique,
+                a.skills_total,
+                a.skills_unique,
+                a.findings.len(),
+                human_size(a.reclaimable_bytes)
+            );
+            for f in &a.findings {
+                println!("  {:?} {:<40} {}", f.kind, f.subject, f.detail);
+            }
+        }
         Some("rules") => {
             for r in RuleSet::builtin().rules {
                 println!("{:<32} {:<14} {:?}", r.id, r.tool, r.safety);

@@ -97,7 +97,12 @@ pub fn read_config(tool: &str, path: &Path, src: &McpSource) -> (ConfigFile, Vec
 }
 
 /// The parsing half of [`read_config`], for tests and for extension manifests.
-pub fn parse_text(tool: &str, path: &Path, src: &McpSource, text: &str) -> Result<Vec<McpServer>, String> {
+pub fn parse_text(
+    tool: &str,
+    path: &Path,
+    src: &McpSource,
+    text: &str,
+) -> Result<Vec<McpServer>, String> {
     let root: Value = if src.format == "toml" {
         let t: toml::Value = toml::from_str(text).map_err(|e| e.to_string())?;
         serde_json::to_value(t).map_err(|e| e.to_string())?
@@ -117,7 +122,9 @@ pub fn parse_text(tool: &str, path: &Path, src: &McpSource, text: &str) -> Resul
             for (dir, pv) in projects {
                 if let Some(map) = pv.get(&src.root).and_then(Value::as_object) {
                     for (name, v) in map {
-                        if let Some(s) = server_from_value(tool, path, &format!("project:{dir}"), name, v) {
+                        if let Some(s) =
+                            server_from_value(tool, path, &format!("project:{dir}"), name, v)
+                        {
                             out.push(s);
                         }
                     }
@@ -149,17 +156,30 @@ fn str_of(v: &Value) -> Option<String> {
 
 fn string_list(v: Option<&Value>) -> Vec<String> {
     v.and_then(Value::as_array)
-        .map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|x| x.as_str().map(str::to_string))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
-pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &Value) -> Option<McpServer> {
+pub fn server_from_value(
+    tool: &str,
+    path: &Path,
+    scope: &str,
+    name: &str,
+    v: &Value,
+) -> Option<McpServer> {
     let obj = v.as_object()?;
     // Command: string, array (opencode) or object (Zed).
     let (mut command, mut args) = match obj.get("command") {
         Some(Value::String(s)) => (Some(s.clone()), string_list(obj.get("args"))),
         Some(Value::Array(a)) => {
-            let mut parts: Vec<String> = a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect();
+            let mut parts: Vec<String> = a
+                .iter()
+                .filter_map(|x| x.as_str().map(str::to_string))
+                .collect();
             if parts.is_empty() {
                 (None, Vec::new())
             } else {
@@ -169,15 +189,17 @@ pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &V
             }
         }
         Some(Value::Object(o)) => (
-            o.get("path").and_then(str_of).or_else(|| o.get("command").and_then(str_of)),
+            o.get("path")
+                .and_then(str_of)
+                .or_else(|| o.get("command").and_then(str_of)),
             string_list(o.get("args")),
         ),
         _ => (None, Vec::new()),
     };
     // A single "command" string holding the whole line ("npx -y pkg").
     if args.is_empty() {
-        if let Some(c) = &command {
-            if c.contains(' ') && !Path::new(c).exists() {
+        if let Some(c) = command.clone() {
+            if c.contains(' ') && !Path::new(&c).exists() {
                 let mut parts = c.split_whitespace().map(str::to_string);
                 command = parts.next();
                 args = parts.collect();
@@ -191,13 +213,20 @@ pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &V
         // Zed `{"source": "extension"}` and the like: nothing to launch.
         return None;
     }
-    let disabled = obj.get("disabled").and_then(Value::as_bool).unwrap_or(false)
+    let disabled = obj
+        .get("disabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
         || obj.get("enabled").and_then(Value::as_bool) == Some(false)
         || obj.get("enable").and_then(Value::as_bool) == Some(false);
 
     let mut secrets = Vec::new();
     let mut env_keys = Vec::new();
-    for (section, key_name) in [("env", "env"), ("headers", "headers"), ("environment", "env")] {
+    for (section, key_name) in [
+        ("env", "env"),
+        ("headers", "headers"),
+        ("environment", "env"),
+    ] {
         if let Some(map) = obj.get(section).and_then(Value::as_object) {
             for (k, val) in map {
                 if key_name == "env" {
@@ -242,7 +271,8 @@ pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &V
         } else {
             masked_args.push(a.clone());
         }
-        prev_flag_secret = val.is_none() && a.starts_with('-') && looks_secret(a, "placeholder-value");
+        prev_flag_secret =
+            val.is_none() && a.starts_with('-') && looks_secret(a, "placeholder-value");
     }
     let mut url_out = url.clone();
     if let Some(u) = &url {
@@ -266,7 +296,12 @@ pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &V
             let (id, pkg, ver) = stdio_identity(c, &args);
             (McpTransport::Stdio, id, pkg, ver)
         }
-        (None, Some(u)) => (McpTransport::Remote, format!("url:{}", normalise_url(u)), None, None),
+        (None, Some(u)) => (
+            McpTransport::Remote,
+            format!("url:{}", normalise_url(u)),
+            None,
+            None,
+        ),
         (None, None) => unreachable!(),
     };
     Some(McpServer {
@@ -288,11 +323,20 @@ pub fn server_from_value(tool: &str, path: &Path, scope: &str, name: &str, v: &V
 }
 
 fn normalise_url(u: &str) -> String {
-    let u = u.trim().split('?').next().unwrap_or("").trim_end_matches('/');
+    let u = u
+        .trim()
+        .split('?')
+        .next()
+        .unwrap_or("")
+        .trim_end_matches('/');
     match u.split_once("://") {
         Some((scheme, rest)) => {
             let (host, path) = rest.split_once('/').unwrap_or((rest, ""));
-            let mut s = format!("{}://{}", scheme.to_ascii_lowercase(), host.to_ascii_lowercase());
+            let mut s = format!(
+                "{}://{}",
+                scheme.to_ascii_lowercase(),
+                host.to_ascii_lowercase()
+            );
             if !path.is_empty() {
                 s.push('/');
                 s.push_str(path);
@@ -304,8 +348,15 @@ fn normalise_url(u: &str) -> String {
 }
 
 fn basename(cmd: &str) -> String {
-    let b = cmd.rsplit(['/', '\\']).next().unwrap_or(cmd).to_ascii_lowercase();
-    b.trim_end_matches(".exe").trim_end_matches(".cmd").trim_end_matches(".bat").to_string()
+    let b = cmd
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(cmd)
+        .to_ascii_lowercase();
+    b.trim_end_matches(".exe")
+        .trim_end_matches(".cmd")
+        .trim_end_matches(".bat")
+        .to_string()
 }
 
 /// Splits `pkg@1.2.3`, `@scope/pkg@1.2.3`, `pkg==1.2.3` into name and version.
@@ -361,14 +412,19 @@ fn stdio_identity(command: &str, args: &[String]) -> (String, Option<String>, Op
             if b == "cmd" {
                 rest.retain(|a| !a.eq_ignore_ascii_case("/c"));
                 let inner = rest.first().map(|c| basename(c)).unwrap_or_default();
-                if !["npx", "bunx", "pnpx", "npm", "pnpm", "yarn", "uvx", "uv"].contains(&inner.as_str()) {
+                if !["npx", "bunx", "pnpx", "npm", "pnpm", "yarn", "uvx", "uv"]
+                    .contains(&inner.as_str())
+                {
                     return (joined("cmd:"), None, None);
                 }
                 let c = rest.remove(0);
                 return stdio_identity(&c, &rest);
             }
             if ["npm", "pnpm", "yarn"].contains(&b.as_str()) {
-                if !rest.first().is_some_and(|a| a == "exec" || a == "dlx" || a == "x") {
+                if !rest
+                    .first()
+                    .is_some_and(|a| a == "exec" || a == "dlx" || a == "x")
+                {
                     return (joined("cmd:"), None, None);
                 }
                 rest.remove(0);
@@ -376,7 +432,11 @@ fn stdio_identity(command: &str, args: &[String]) -> (String, Option<String>, Op
             match first_positional(&rest, &["-p", "--package", "--registry", "--cache", "-c"]) {
                 Some(spec) => {
                     let (name, ver) = split_version(&spec);
-                    (format!("npm:{}", name.to_ascii_lowercase()), Some(name), ver)
+                    (
+                        format!("npm:{}", name.to_ascii_lowercase()),
+                        Some(name),
+                        ver,
+                    )
                 }
                 None => (joined("cmd:"), None, None),
             }
@@ -405,7 +465,17 @@ fn stdio_identity(command: &str, args: &[String]) -> (String, Option<String>, Op
                 .find(|w| w[0] == "--from")
                 .map(|w| w[1].clone());
             let spec = from.or_else(|| {
-                first_positional(&rest, &["--python", "-p", "--with", "--index", "--index-url", "--from"])
+                first_positional(
+                    &rest,
+                    &[
+                        "--python",
+                        "-p",
+                        "--with",
+                        "--index",
+                        "--index-url",
+                        "--from",
+                    ],
+                )
             });
             match spec {
                 Some(spec) => {
@@ -428,7 +498,11 @@ fn stdio_identity(command: &str, args: &[String]) -> (String, Option<String>, Op
                         Some((n, t)) if !t.contains('/') => (n.to_string(), Some(t.to_string())),
                         _ => (img.clone(), None),
                     };
-                    (format!("docker:{}", name.to_ascii_lowercase()), Some(name), tag)
+                    (
+                        format!("docker:{}", name.to_ascii_lowercase()),
+                        Some(name),
+                        tag,
+                    )
                 }
                 None => (joined("cmd:"), None, None),
             }
@@ -436,10 +510,16 @@ fn stdio_identity(command: &str, args: &[String]) -> (String, Option<String>, Op
         "node" | "python" | "python3" | "deno" | "bun" | "tsx" | "ts-node" => {
             let script = args.iter().find(|a| {
                 let l = a.to_ascii_lowercase();
-                [".js", ".mjs", ".cjs", ".ts", ".py"].iter().any(|e| l.ends_with(e))
+                [".js", ".mjs", ".cjs", ".ts", ".py"]
+                    .iter()
+                    .any(|e| l.ends_with(e))
             });
             match script {
-                Some(s) => (format!("script:{}", s.replace('\\', "/").to_ascii_lowercase()), None, None),
+                Some(s) => (
+                    format!("script:{}", s.replace('\\', "/").to_ascii_lowercase()),
+                    None,
+                    None,
+                ),
                 None => (joined("cmd:"), None, None),
             }
         }
@@ -545,18 +625,19 @@ mod tests {
             }}"#,
         );
         assert_eq!(s.len(), 4);
-        let gh = &s[0];
+        let by = |n: &str| s.iter().find(|x| x.name == n).unwrap();
+        let gh = by("github");
         assert_eq!(gh.identity, "npm:@modelcontextprotocol/server-github");
         assert_eq!(gh.version.as_deref(), Some("1.2.0"));
         assert_eq!(gh.env_keys, vec!["GITHUB_TOKEN"]);
         assert_eq!(gh.secrets.len(), 1);
         assert_eq!(gh.secrets[0].location, "env.GITHUB_TOKEN");
         assert_eq!(gh.secrets[0].masked, "ghp…wxyz");
-        assert_eq!(s[1].identity, "pypi:mcp-server-fetch");
-        assert_eq!(s[1].version.as_deref(), Some("0.6"));
-        assert_eq!(s[2].identity, "npm:@upstash/context7-mcp");
-        assert_eq!(s[3].identity, "script:c:/mcp/server.js");
-        assert!(s[3].disabled);
+        assert_eq!(by("fetch").identity, "pypi:mcp-server-fetch");
+        assert_eq!(by("fetch").version.as_deref(), Some("0.6"));
+        assert_eq!(by("win").identity, "npm:@upstash/context7-mcp");
+        assert_eq!(by("off").identity, "script:c:/mcp/server.js");
+        assert!(by("off").disabled);
     }
 
     #[test]
@@ -568,12 +649,14 @@ mod tests {
               "local": {"type": "local", "command": ["npx", "-y", "some-pkg"], "enabled": false}
             }}"#,
         );
-        assert_eq!(s[0].transport, McpTransport::Remote);
-        assert_eq!(s[0].identity, "url:https://mcp.context7.com/mcp");
-        assert_eq!(s[0].url.as_deref(), Some("https://MCP.Context7.com/mcp/?…"));
-        assert_eq!(s[0].secrets[0].location, "url");
-        assert_eq!(s[1].identity, "npm:some-pkg");
-        assert!(s[1].disabled);
+        let ctx = s.iter().find(|x| x.name == "ctx").unwrap();
+        let local = s.iter().find(|x| x.name == "local").unwrap();
+        assert_eq!(ctx.transport, McpTransport::Remote);
+        assert_eq!(ctx.identity, "url:https://mcp.context7.com/mcp");
+        assert_eq!(ctx.url.as_deref(), Some("https://MCP.Context7.com/mcp/?…"));
+        assert_eq!(ctx.secrets[0].location, "url");
+        assert_eq!(local.identity, "npm:some-pkg");
+        assert!(local.disabled);
     }
 
     #[test]
@@ -608,7 +691,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(s.len(), 2);
-        assert_eq!(s[1].scope, "project:C:\\proj");
+        assert!(s.iter().any(|x| x.scope == "project:C:\\proj"));
     }
 
     #[test]
