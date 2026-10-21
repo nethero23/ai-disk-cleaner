@@ -15,6 +15,7 @@ pub mod dedup;
 pub mod export;
 pub mod inspect;
 pub mod model;
+pub mod overview;
 pub mod paths;
 pub mod preview;
 pub mod process;

@@ -131,6 +131,14 @@ ul.plain li { padding: 3px 0; word-break: break-all; }
 ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 
 .bigfiles { padding: 16px 24px 80px; }
+.overview .big-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.ov-stack { display: flex; height: 18px; border-radius: 6px; overflow: hidden; background: var(--line); margin: 6px 0 10px; }
+.ov-seg { display: block; height: 100%; }
+.ov-seg.c0 { background: #4f8cff; } .ov-seg.c1 { background: #f59e0b; } .ov-seg.c2 { background: #10b981; } .ov-seg.c3 { background: #ef4444; }
+.ov-seg.c4 { background: #8b5cf6; } .ov-seg.c5 { background: #ec4899; } .ov-seg.c6 { background: #14b8a6; } .ov-seg.c7 { background: #6b7280; }
+.ov-seg.free { background: transparent; }
+.ov-row { grid-template-columns: 220px 1fr 80px auto; }
+.linkish { background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .bigfiles h2 { margin: 0 0 4px; font-size: 16px; }
 .bigfiles .groups { padding: 0; margin-top: 8px; }
 .big-controls { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin: 12px 0; }

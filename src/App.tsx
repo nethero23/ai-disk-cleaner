@@ -6,7 +6,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
+import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
@@ -43,8 +43,13 @@ export function App() {
   const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<"category" | "tool">(() => (localStorage.getItem("groupBy") as "category" | "tool") || "category");
   const [sortBy, setSortBy] = useState<"size" | "recent" | "safety" | "name">(() => (localStorage.getItem("sortBy") as "size" | "recent" | "safety" | "name") || "size");
-  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles">("scan");
+  const [view, setView] = useState<"scan" | "history" | "settings" | "bigfiles" | "overview">("scan");
   const [bigDrives, setBigDrives] = useState<Drive[]>([]);
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [ovRoot, setOvRoot] = useState<string | null>(null);
+  const [ovBusy, setOvBusy] = useState(false);
+  const [ovProgress, setOvProgress] = useState<{ seen: number; bytes: number; dir: string } | null>(null);
+  const [ovOpen, setOvOpen] = useState<Set<string>>(new Set());
   const [allDrives, setAllDrives] = useState<Drive[]>([]);
   const [bigPick, setBigPick] = useState<Set<string>>(new Set());
   const [bigMin, setBigMin] = useState(500 * 1024 * 1024);
@@ -278,6 +283,82 @@ export function App() {
       setError(String(e));
     }
     setUpdatingRules(false);
+  }
+
+  async function openOverview() {
+    setError(null);
+    try {
+      const last = await invoke<Overview | null>("last_overview");
+      if (last) {
+        setOverview(last);
+        setOvRoot(last.root);
+      }
+      if (!allDrives.length) setAllDrives(await invoke<Drive[]>("drives"));
+    } catch (e) {
+      setError(String(e));
+    }
+    setView("overview");
+  }
+
+  async function runOverview(root: string) {
+    setError(null);
+    setOvBusy(true);
+    setOvRoot(root);
+    setOvProgress({ seen: 0, bytes: 0, dir: "" });
+    const unlisten = await listen<{ seen: number; bytes: number; dir: string }>("overview-progress", (e) => {
+      setOvProgress(e.payload);
+    });
+    try {
+      const ov = await invoke<Overview>("drive_overview", { root });
+      setOverview(ov);
+      setOvOpen(new Set());
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      unlisten();
+      setOvBusy(false);
+      setOvProgress(null);
+    }
+  }
+
+  function OverviewRows({ entries, base, depth }: { entries: OverviewEntry[]; base: number; depth: number }) {
+    return (
+      <>
+        {entries.slice(0, depth === 0 ? 40 : 12).map((en) => {
+          const open = ovOpen.has(en.path);
+          const pct = base ? (en.bytes / base) * 100 : 0;
+          return (
+            <div key={en.path}>
+              <div className="bar-row ov-row" style={{ paddingLeft: depth * 18 }} title={`${en.path} · ${s.ovFiles(en.files)}`}>
+                <span className="bar-label">
+                  {en.children.length > 0 ? (
+                    <button
+                      className="linkish"
+                      onClick={() =>
+                        setOvOpen((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(en.path)) next.delete(en.path);
+                          else next.add(en.path);
+                          return next;
+                        })
+                      }
+                    >
+                      <span className={`chev ${open ? "open" : ""}`}>▸</span> {en.name}
+                    </button>
+                  ) : (
+                    <span>{en.name}</span>
+                  )}
+                </span>
+                <span className="bar"><span className="bar-fill" style={{ width: `${Math.max(0.5, pct)}%` }} /></span>
+                <span className="bar-value">{humanSize(en.bytes)}</span>
+                <button className="linkish muted" onClick={() => revealItemInDir(en.path)}>{s.openFolder}</button>
+              </div>
+              {open && <OverviewRows entries={en.children} base={base} depth={depth + 1} />}
+            </div>
+          );
+        })}
+      </>
+    );
   }
 
   async function openBigFiles() {
@@ -580,6 +661,7 @@ export function App() {
             <>
               <button className="ghost" onClick={openHistory}>{s.history}</button>
               <button className="ghost" onClick={openBigFiles}>{s.bigFiles}</button>
+              <button className="ghost" onClick={openOverview}>{s.overview}</button>
               <button className="ghost" onClick={openSettings}>{s.settings}</button>
             </>
           )}
@@ -624,6 +706,59 @@ export function App() {
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
           )}
         </div>
+      )}
+
+      {view === "overview" && (
+        <section className="bigfiles overview">
+          <h2>{s.ovTitle}</h2>
+          <p className="muted">{s.ovBody}</p>
+          <div className="big-controls">
+            <span className="muted">{s.ovDrive}</span>
+            {allDrives.map((d) => (
+              <label key={d.path}>
+                <input type="radio" name="ov-drive" checked={(ovRoot ?? allDrives.find((x) => x.system)?.path) === d.path} disabled={ovBusy} onChange={() => setOvRoot(d.path)} />
+                {d.path}{d.name ? ` ${d.name}` : ""}
+              </label>
+            ))}
+            {ovBusy ? (
+              <button className="ghost" onClick={() => invoke("cancel_overview")}>{s.ovCancel}</button>
+            ) : (
+              <button className="primary" onClick={() => runOverview(ovRoot ?? allDrives.find((x) => x.system)?.path ?? allDrives[0]?.path ?? "C:\\")}>
+                {overview && overview.root === ovRoot ? s.ovRerun : s.ovRun}
+              </button>
+            )}
+          </div>
+          {ovBusy && ovProgress && (
+            <p className="muted">{s.ovRunning} {ovProgress.seen.toLocaleString()} · {humanSize(ovProgress.bytes)} · {ovProgress.dir}</p>
+          )}
+          {overview && !ovBusy && (
+            <>
+              <p>
+                <strong>{overview.root}</strong>{" "}
+                {s.ovSummary(humanSize(overview.total_bytes), humanSize(overview.total_bytes - overview.free_bytes), humanSize(overview.free_bytes))}
+                <span className="muted"> · {s.ovComputedAt(new Date(overview.computed_at).toLocaleString())}</span>
+              </p>
+              {overview.cancelled && <div className="banner">{s.ovPartial}</div>}
+              <div className="ov-stack" title={s.ovSummary(humanSize(overview.total_bytes), humanSize(overview.total_bytes - overview.free_bytes), humanSize(overview.free_bytes))}>
+                {overview.entries.slice(0, 8).map((en, i) => (
+                  <span key={en.path} className={`ov-seg c${i % 8}`} style={{ width: `${(en.bytes / Math.max(1, overview.total_bytes)) * 100}%` }} title={`${en.name} ${humanSize(en.bytes)}`} />
+                ))}
+                <span className="ov-seg free" style={{ width: `${(overview.free_bytes / Math.max(1, overview.total_bytes)) * 100}%` }} />
+              </div>
+              <p className="muted">
+                {report
+                  ? <>{s.ovCleanable(humanSize(report.total_bytes))} <span title={s.ovCleanableHint}>ⓘ</span></>
+                  : s.ovNoScan}
+                {overview.total_bytes - overview.free_bytes > overview.scanned_bytes + 1024 * 1024 * 1024 && (
+                  <> · {s.ovUnread(humanSize(overview.total_bytes - overview.free_bytes - overview.scanned_bytes))}</>
+                )}
+              </p>
+              <div className="stat-panel">
+                <OverviewRows entries={overview.entries} base={Math.max(1, overview.total_bytes - overview.free_bytes)} depth={0} />
+              </div>
+            </>
+          )}
+        </section>
       )}
 
       {view === "bigfiles" && (

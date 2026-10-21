@@ -435,6 +435,64 @@ fn cancel_big_scan() {
     BIG_SCAN_CANCEL.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
+static OVERVIEW_CANCEL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn overview_path(app: &AppHandle) -> PathBuf {
+    log_path(app).with_file_name("overview.json")
+}
+
+/// Walks one drive and splits its used space by top-level folder. The
+/// result is cached next to the settings so the page opens instantly.
+#[tauri::command]
+async fn drive_overview(
+    app: AppHandle,
+    root: PathBuf,
+) -> Result<cleaner_core::overview::Overview, String> {
+    use std::sync::atomic::Ordering;
+    OVERVIEW_CANCEL.store(false, Ordering::Relaxed);
+    let (total, free) = bigfiles::drives()
+        .into_iter()
+        .find(|d| d.path == root)
+        .map(|d| (d.total_bytes, d.free_bytes))
+        .unwrap_or((0, 0));
+    let cache = overview_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut progress = |seen: u64, bytes: u64, dir: &std::path::Path| {
+            let _ = app.emit(
+                "overview-progress",
+                BigScanProgress {
+                    seen,
+                    bytes,
+                    dir: dir.to_string_lossy().to_string(),
+                },
+            );
+        };
+        let ov =
+            cleaner_core::overview::overview(&root, total, free, &OVERVIEW_CANCEL, &mut progress);
+        if !ov.cancelled {
+            if let Ok(text) = serde_json::to_string(&ov) {
+                let _ = std::fs::write(&cache, text);
+            }
+        }
+        ov
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn cancel_overview() {
+    OVERVIEW_CANCEL.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The last computed overview, if any.
+#[tauri::command]
+fn last_overview(app: AppHandle) -> Option<cleaner_core::overview::Overview> {
+    std::fs::read_to_string(overview_path(&app))
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+}
+
 #[tauri::command]
 async fn find_duplicates(items: Vec<ScanItem>) -> Result<Vec<DuplicateGroup>, String> {
     tauri::async_runtime::spawn_blocking(move || dedup::find_duplicates(&items))
@@ -498,6 +556,9 @@ pub fn run() {
             drives,
             scan_big_files,
             cancel_big_scan,
+            drive_overview,
+            cancel_overview,
+            last_overview,
             find_duplicates,
             merge_duplicates
         ])
