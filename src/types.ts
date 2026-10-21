@@ -57,3 +57,25 @@ export interface CleanSummary {
   freed_bytes: number;
   records: CleanRecord[];
 }
+
+export interface RelocateResult {
+  from: string;
+  to: string;
+  bytes: number;
+  files: number;
+  redirect: { kind: "env_var"; value: string } | { kind: "junction" };
+  note: string;
+}
+
+export interface DupFile {
+  path: string;
+  tool: string;
+  item_id: string;
+}
+
+export interface DuplicateGroup {
+  size_bytes: number;
+  files: DupFile[];
+  reclaimable_bytes: number;
+  same_volume: boolean;
+}

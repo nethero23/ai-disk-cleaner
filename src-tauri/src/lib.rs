@@ -2,10 +2,12 @@
 //! All heavy work runs off the main thread so the window stays responsive.
 
 use cleaner_core::clean::{self, CleanRecord, CleanSummary};
+use cleaner_core::dedup::{self, DuplicateGroup};
+use cleaner_core::relocate::{self, RelocateResult};
 use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 /// Where the clean log lives: the app's own data folder, never the user's documents.
 fn log_path(app: &AppHandle) -> PathBuf {
@@ -82,6 +84,60 @@ fn rules() -> Vec<RuleInfo> {
         .collect()
 }
 
+#[derive(Serialize, Clone)]
+struct RelocateProgress {
+    copied: u64,
+    total: u64,
+}
+
+/// Which rule ids can be moved to another drive (the UI shows a Move button for them).
+#[tauri::command]
+fn relocatable() -> Vec<String> {
+    RuleSet::builtin()
+        .rules
+        .into_iter()
+        .filter(|r| relocate::redirect_for(&r.id).is_some())
+        .map(|r| r.id)
+        .collect()
+}
+
+#[tauri::command]
+async fn relocate_item(
+    app: AppHandle,
+    rule_id: String,
+    path: PathBuf,
+    dest_root: PathBuf,
+) -> Result<RelocateResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut last_emit = std::time::Instant::now();
+        let mut progress = |copied: u64, total: u64| {
+            if last_emit.elapsed().as_millis() > 200 || copied == total {
+                let _ = app.emit("relocate-progress", RelocateProgress { copied, total });
+                last_emit = std::time::Instant::now();
+            }
+        };
+        relocate::relocate(&rule_id, &path, &dest_root, &mut progress).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn find_duplicates(items: Vec<ScanItem>) -> Result<Vec<DuplicateGroup>, String> {
+    tauri::async_runtime::spawn_blocking(move || dedup::find_duplicates(&items))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn merge_duplicates(group: DuplicateGroup, keep: PathBuf) -> Result<u64, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        dedup::merge_group(&group, &keep).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -91,7 +147,11 @@ pub fn run() {
             scan,
             clean_items,
             clean_log,
-            rules
+            rules,
+            relocatable,
+            relocate_item,
+            find_duplicates,
+            merge_duplicates
         ])
         .run(tauri::generate_context!())
         .expect("error while running ai-disk-cleaner");

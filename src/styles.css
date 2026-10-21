@@ -104,3 +104,9 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent);
 .log { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
 .log td { padding: 8px 10px; border-bottom: 1px solid var(--line); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log tr.failed td { color: var(--review); }
+
+.dups { margin-top: 10px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.dup-group { border-top: 1px solid var(--line); padding: 8px 0; }
+.dup-head { display: flex; align-items: center; gap: 6px; }
+.dup-files { list-style: none; margin: 4px 0 0; padding: 0; font-size: 12px; color: var(--muted); }
+.dup-files li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
