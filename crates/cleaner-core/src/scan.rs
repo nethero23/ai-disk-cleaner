@@ -6,6 +6,8 @@ use crate::paths::PathContext;
 use crate::rules::{Inspector, Rule, RuleSet};
 use chrono::{DateTime, Utc};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::mpsc;
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone)]
@@ -77,16 +79,89 @@ fn readable_dir(p: &Path) -> Option<bool> {
 
 /// Scans every rule in `rules` and returns the report, largest items first.
 pub fn scan_all(rules: &RuleSet, opts: &ScanOptions) -> ScanReport {
+    scan_all_with(rules, opts, &AtomicBool::new(false), &mut |_| {})
+}
+
+/// What the scan reports as it goes: a rule just finished.
+#[derive(Debug, Clone)]
+pub struct ScanProgress {
+    pub done: usize,
+    pub total: usize,
+    /// The rule that just finished and how long it took.
+    pub rule_id: String,
+    pub rule_name: String,
+    pub millis: u64,
+}
+
+/// Number of rules walked at the same time. Walking is I/O bound, so a few
+/// threads hide most of the latency without thrashing a laptop disk.
+const WORKERS: usize = 4;
+
+/// Like [`scan_all`], but walks rules in parallel, reports each finished
+/// rule through `progress`, and stops early when `cancel` is set (the
+/// report then holds what was found so far and `cancelled` is true).
+pub fn scan_all_with(
+    rules: &RuleSet,
+    opts: &ScanOptions,
+    cancel: &AtomicBool,
+    progress: &mut dyn FnMut(ScanProgress),
+) -> ScanReport {
     let mut report = ScanReport {
         started_at: Some(Utc::now()),
         ..Default::default()
     };
-    for rule in &rules.rules {
-        if rule.windows_only && !cfg!(windows) {
-            continue;
+    let todo: Vec<&Rule> = rules
+        .rules
+        .iter()
+        .filter(|r| !(r.windows_only && !cfg!(windows)))
+        .collect();
+    let total = todo.len();
+    let next = AtomicUsize::new(0);
+    let (tx, rx) = mpsc::channel::<(usize, ScanReport, u64)>();
+
+    std::thread::scope(|scope| {
+        for _ in 0..WORKERS.min(total.max(1)) {
+            let tx = tx.clone();
+            let todo = &todo;
+            let next = &next;
+            scope.spawn(move || loop {
+                if cancel.load(Ordering::Relaxed) {
+                    break;
+                }
+                let i = next.fetch_add(1, Ordering::Relaxed);
+                let Some(rule) = todo.get(i) else { break };
+                let started = std::time::Instant::now();
+                let mut part = ScanReport::default();
+                scan_rule(rule, opts, &mut part);
+                if tx
+                    .send((i, part, started.elapsed().as_millis() as u64))
+                    .is_err()
+                {
+                    break;
+                }
+            });
         }
-        scan_rule(rule, opts, &mut report);
-    }
+        drop(tx);
+        for (n, (i, part, millis)) in rx.into_iter().enumerate() {
+            let done = n + 1;
+            let rule = todo[i];
+            for item in part.items {
+                report.push(item);
+            }
+            report.unreadable.extend(part.unreadable);
+            report.timings.push((rule.id.clone(), millis));
+            progress(ScanProgress {
+                done,
+                total,
+                rule_id: rule.id.clone(),
+                rule_name: rule_name(rule, opts),
+                millis,
+            });
+        }
+    });
+
+    report.cancelled = cancel.load(Ordering::Relaxed) && report.timings.len() < total;
+    report.timings.sort_by_key(|(_, ms)| std::cmp::Reverse(*ms));
     report.sort_by_size();
     report.finished_at = Some(Utc::now());
     report
@@ -245,6 +320,46 @@ mod tests {
         o.excluded = vec![home.join("ws")];
         let mut report = ScanReport::default();
         scan_rule(&r, &o, &mut report);
+        assert!(report.items.is_empty());
+    }
+
+    #[test]
+    fn parallel_scan_reports_every_rule_and_can_be_cancelled() {
+        let tmp = tempfile::tempdir().unwrap();
+        let home = tmp.path();
+        for i in 0..6 {
+            fs::create_dir_all(home.join(format!("c{i}"))).unwrap();
+            fs::write(home.join(format!("c{i}/f")), [0u8; 10]).unwrap();
+        }
+        let set = RuleSet {
+            rules: (0..6)
+                .map(|i| {
+                    rule(
+                        &format!("r{i}"),
+                        &[&format!("${{USERPROFILE}}/c{i}")],
+                        Inspector::Plain,
+                    )
+                })
+                .collect(),
+        };
+        let o = opts(home);
+        let mut seen = Vec::new();
+        let report = scan_all_with(&set, &o, &AtomicBool::new(false), &mut |p| {
+            seen.push((p.done, p.total));
+        });
+        assert_eq!(report.items.len(), 6);
+        assert_eq!(report.timings.len(), 6);
+        assert!(!report.cancelled);
+        assert_eq!(seen.last(), Some(&(6, 6)));
+        // Items stay largest-first across workers.
+        assert!(report
+            .items
+            .windows(2)
+            .all(|w| w[0].size_bytes >= w[1].size_bytes));
+
+        // A cancel set before the start finishes with nothing walked.
+        let report = scan_all_with(&set, &o, &AtomicBool::new(true), &mut |_| {});
+        assert!(report.cancelled);
         assert!(report.items.is_empty());
     }
 

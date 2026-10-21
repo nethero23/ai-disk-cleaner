@@ -141,3 +141,6 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
 
 .consequence.warn { color: var(--review); }
+
+.scan-bar { width: 320px; max-width: 80%; height: 8px; }
+.scan-took { font-size: 12px; cursor: help; }
