@@ -210,6 +210,8 @@ export interface Unrecognized {
   bytes: number;
   files: number;
   newest: string | null;
+}
+
 export interface Growth {
   tool: string;
   now_bytes: number;

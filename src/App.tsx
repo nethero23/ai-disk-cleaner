@@ -6,7 +6,6 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { check as checkUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
-import type { Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx } from "./types";
 import { humanSize, relativeDate, t, type Lang } from "./i18n";
