@@ -13,6 +13,7 @@ pub mod drives;
 pub mod huggingface;
 pub mod lmstudio;
 pub mod ollama;
+pub mod versions;
 
 use crate::model::ScanItem;
 use crate::rules::Rule;

@@ -24,6 +24,13 @@ pub enum Inspector {
     ClaudeProjects,
     /// Walks the user's folders for node_modules / .venv / target next to a manifest.
     ProjectArtifacts,
+    /// Like `Children`, but folders named `<name>-<version>` are grouped and
+    /// every version except the newest is marked Safe ("old version").
+    VersionedChildren,
+    /// Only the old versions of `<name>-<version>` folders (and of Claude
+    /// Code's `cache/<marketplace>/<plugin>/<version>` layout); the current
+    /// version of anything is never listed.
+    StaleVersions,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
