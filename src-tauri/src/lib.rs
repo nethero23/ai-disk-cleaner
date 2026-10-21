@@ -378,6 +378,41 @@ async fn compact_vhdx(path: PathBuf) -> Result<CompactResult, String> {
         .map_err(|e| e.to_string())?
 }
 
+/// Deep clean: the catalogue with cheap estimates.
+#[tauri::command]
+fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
+    cleaner_core::system::tasks(&lang)
+}
+
+/// Deep clean: elevated analysis (one UAC prompt).
+#[tauri::command]
+async fn deep_analyze() -> Result<cleaner_core::system::DeepAnalysis, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        cleaner_core::system::analyze().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Deep clean: run the ticked tasks (one UAC prompt).
+#[tauri::command]
+async fn deep_run(ids: Vec<String>) -> Result<cleaner_core::system::DeepSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        cleaner_core::system::run(&ids).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn hibernate_on() -> Result<cleaner_core::system::DeepResult, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        cleaner_core::system::hibernate_on().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Rule ids whose items are chat history that can be exported first.
 #[tauri::command]
 fn exportable() -> Vec<String> {
@@ -573,6 +608,10 @@ pub fn run() {
             compactable,
             vhdx_files,
             compact_vhdx,
+            deep_tasks,
+            deep_analyze,
+            deep_run,
+            hibernate_on,
             exportable,
             export_items,
             drives,
