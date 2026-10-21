@@ -235,6 +235,8 @@ pub fn scan_rule(rule: &Rule, opts: &ScanOptions, report: &mut ScanReport) {
             Inspector::CondaEnvs => inspect::conda::envs(rule, &root, opts),
             Inspector::ClaudeProjects => inspect::claude::projects(rule, &root, opts),
             Inspector::ProjectArtifacts => inspect::artifacts::artifacts(rule, &root, opts),
+            Inspector::VersionedChildren => inspect::versions::versioned(rule, &root, opts),
+            Inspector::StaleVersions => inspect::versions::stale(rule, &root, opts),
         };
         let floor = rule.min_bytes.max(opts.global_min_bytes);
         for item in items

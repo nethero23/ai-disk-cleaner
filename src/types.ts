@@ -144,6 +144,7 @@ export interface Settings {
   idle_model_days: number;
   growth_notify_bytes: number;
   onboarded: boolean;
+  mcp_version_check: boolean;
 }
 
 export interface RuleInfo {
@@ -248,4 +249,113 @@ export interface Growth {
   before_bytes: number;
   delta_bytes: number;
   since: string;
+}
+
+// ---- AI tool configuration inventory (crates/cleaner-core/src/aiconfig) ----
+
+export interface AiConfigFile {
+  tool: string;
+  path: string;
+  exists: boolean;
+  bytes: number;
+  error: string | null;
+  servers: number;
+}
+
+export interface AiSecretHit {
+  location: string;
+  masked: string;
+}
+
+export interface AiMcpServer {
+  tool: string;
+  config_path: string;
+  scope: string;
+  name: string;
+  transport: "stdio" | "remote";
+  command: string | null;
+  args: string[];
+  url: string | null;
+  package: string | null;
+  version: string | null;
+  identity: string;
+  env_keys: string[];
+  secrets: AiSecretHit[];
+  disabled: boolean;
+}
+
+export interface AiSkill {
+  tool: string;
+  name: string;
+  path: string;
+  bytes: number;
+  files: number;
+  modified: string | null;
+  hash: string;
+  description: string | null;
+  link: boolean;
+}
+
+export interface AiPlugin {
+  tool: string;
+  name: string;
+  version: string | null;
+  path: string;
+  bytes: number;
+  stale_versions: string[];
+  stale_bytes: number;
+}
+
+export type AiExtension = AiPlugin;
+
+export interface AiToolInventory {
+  id: string;
+  name: string;
+  present: boolean;
+  verified: boolean;
+  running: boolean;
+  configs: AiConfigFile[];
+  mcp: AiMcpServer[];
+  skills: AiSkill[];
+  plugins: AiPlugin[];
+  extensions: AiExtension[];
+}
+
+export type AiFindingKind =
+  | "mcp_duplicate"
+  | "mcp_version_conflict"
+  | "skill_copies"
+  | "skill_diverged"
+  | "mcp_broken"
+  | "secret_exposed"
+  | "stale_versions";
+
+export interface AiFinding {
+  kind: AiFindingKind;
+  subject: string;
+  tools: string[];
+  paths: string[];
+  detail: string;
+  reclaimable_bytes: number;
+}
+
+export interface AiAnalysis {
+  findings: AiFinding[];
+  mcp_total: number;
+  mcp_unique: number;
+  skills_total: number;
+  skills_unique: number;
+  reclaimable_bytes: number;
+}
+
+export interface AiInventory {
+  tools: AiToolInventory[];
+  analysis: AiAnalysis;
+  computed_at: string | null;
+}
+
+export interface AiVersionInfo {
+  identity: string;
+  latest: string | null;
+  error: string | null;
 }

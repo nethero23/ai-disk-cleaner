@@ -192,3 +192,27 @@ all_paths = true
 safety = "review"
 consequence_zh = "历史会话会丢失"
 consequence_en = "Past sessions are lost"
+
+[[rule]]
+id = "claude_code.plugins_stale"
+tool = "Claude Code"
+category = "ai_agent"
+name_zh = "Claude Code 插件旧版本"
+name_en = "Claude Code plugin old versions"
+paths = ["${USERPROFILE}/.claude/plugins"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "只删旧版本文件夹，当前版本保留"
+consequence_en = "Only old version folders go; the current version stays"
+
+[[rule]]
+id = "gemini_cli.extensions_stale"
+tool = "Gemini CLI"
+category = "ai_agent"
+name_zh = "Gemini CLI 扩展旧版本"
+name_en = "Gemini CLI extension old versions"
+paths = ["${USERPROFILE}/.gemini/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "只删旧版本文件夹，当前版本保留"
+consequence_en = "Only old version folders go; the current version stays"
