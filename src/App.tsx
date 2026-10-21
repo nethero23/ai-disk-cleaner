@@ -8,7 +8,8 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
 import { UnrecognizedPanel } from "./Unrecognized";
 import type { Growth, Overview, OverviewEntry, Category, CleanRecord, CleanSummary, RestoreStatus, RestoreSummary, Whereabouts, CompactResult, Drive, DuplicateGroup, ExportResult, Preview, RelocateRecord, RelocateResult, RuleLibrary, RulesUpdate, ScanItem, ScanReport, Settings, Vhdx, DeepAnalysis, DeepSummary, DeepTask } from "./types";
-import { humanSize, relativeDate, t, type Lang, sinceDuration } from "./i18n";
+import { coreLang, htmlLang, humanSize, isRtl, loadLangPref, relativeDate, resolveLang, saveLangPref, t, type LangPref, sinceDuration } from "./i18n";
+import { LanguageSelect } from "./LanguageSelect";
 import { DrivePicker } from "./DrivePicker";
 import { Button, Card, Checkbox, Fab, FloatingToolbar, Icon, NavigationRail, SearchBar, SegmentedButton, Tabs } from "./ui";
 import { Hero } from "./pages/Clean/Hero";
@@ -38,8 +39,11 @@ function isDefaultTicked(i: ScanItem): boolean {
 }
 
 export function App() {
-  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("lang") as Lang) || "zh");
+  const [langPref, setLangPref] = useState<LangPref>(loadLangPref);
+  const lang = resolveLang(langPref);
   const s = t(lang);
+  const sRef = useRef(s);
+  sRef.current = s;
   const [phase, setPhase] = useState<Phase>("idle");
   const [report, setReport] = useState<ScanReport | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -253,8 +257,8 @@ export function App() {
     }
     if (report.redownload_bytes > 0) parts.push(s.sumRedownload(humanSize(report.redownload_bytes)));
     if (report.review_bytes > 0) parts.push(s.sumReview(humanSize(report.review_bytes)));
-    return parts.join(lang === "zh" ? "，" : ", ") + (lang === "zh" ? "。" : ".");
-  }, [report, s, lang]);
+    return parts.join(s.listSep) + s.sentenceEnd;
+  }, [report, s]);
 
   async function saveSettings(next: Settings) {
     setSettings(next);
@@ -344,7 +348,7 @@ export function App() {
     setError(null);
     setView("deep");
     try {
-      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) }));
     } catch (e) {
       setError(String(e));
     }
@@ -373,7 +377,7 @@ export function App() {
       if (failed.length) setError(failed.map((r) => `${r.id}: ${r.message}`).join("\n"));
       setDeepSel(new Set());
       setDeepAnalysis(null);
-      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) }));
     } catch (e) {
       setError(String(e));
     }
@@ -387,7 +391,7 @@ export function App() {
       const r = await invoke<{ ok: boolean; message: string }>("hibernate_on");
       if (r.ok) setNotice(s.hiberOnDone);
       else setError(r.message);
-      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang }));
+      setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) }));
     } catch (e) {
       setError(String(e));
     }
@@ -493,7 +497,7 @@ export function App() {
       setBigProgress(e.payload);
     });
     try {
-      const items = await invoke<ScanItem[]>("scan_big_files", { roots: [...bigPick], minBytes: bigMin, lang });
+      const items = await invoke<ScanItem[]>("scan_big_files", { roots: [...bigPick], minBytes: bigMin, lang: coreLang(lang) });
       setBigItems(items);
       setBigSelected(new Set());
     } catch (e) {
@@ -625,15 +629,16 @@ export function App() {
   }
 
   useEffect(() => {
-    localStorage.setItem("lang", lang);
-    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    saveLangPref(langPref);
+    document.documentElement.lang = htmlLang(lang);
+    document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr";
     invoke("set_lang", { lang }).catch(() => {});
-  }, [lang]);
+  }, [langPref, lang]);
 
   useEffect(() => {
     const c = listen<{ cleaned: number; freed_bytes: number }>("background-clean", (e) => {
       if (e.payload.cleaned > 0) {
-        setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgCleaned(e.payload.cleaned, humanSize(e.payload.freed_bytes)));
+        setNotice(sRef.current.bgCleaned(e.payload.cleaned, humanSize(e.payload.freed_bytes)));
       }
     });
     const p = listen<ScanReport>("background-scan", (e) => {
@@ -641,7 +646,7 @@ export function App() {
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
       setPhase("ready");
-      setNotice(t((localStorage.getItem("lang") as Lang) || "zh").bgBanner(humanSize(e.payload.total_bytes)));
+      setNotice(sRef.current.bgBanner(humanSize(e.payload.total_bytes)));
     });
     return () => {
       p.then((un) => un());
@@ -658,7 +663,7 @@ export function App() {
       setScanStep(e.payload);
     });
     try {
-      const r = await invoke<ScanReport>("scan", { lang });
+      const r = await invoke<ScanReport>("scan", { lang: coreLang(lang) });
       setReport(r);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.
@@ -820,9 +825,7 @@ export function App() {
       <header className="topbar">
         <h1>{{ clean: s.navClean, space: s.navSpace, history: s.navHistory, settings: s.settings }[page]}</h1>
         <div className="topbar-actions">
-          <button className="ghost" onClick={() => setLang(lang === "zh" ? "en" : "zh")}>
-            {s.language}
-          </button>
+          <LanguageSelect value={langPref} onChange={setLangPref} label={s.language} autoLabel={s.languageAuto} />
         </div>
       </header>
       {page === "clean" && (
@@ -1169,6 +1172,10 @@ export function App() {
 
       {view === "settings" && settings && (
         <section className="settings">
+          <h2>{s.language}</h2>
+          <p>
+            <LanguageSelect value={langPref} onChange={setLangPref} label={s.language} autoLabel={s.languageAuto} />
+          </p>
           <h2>{s.setExcluded}</h2>
           <p className="muted">{s.setExcludedBody}</p>
           {settings.excluded_paths.length === 0 ? (
@@ -1350,7 +1357,7 @@ export function App() {
                 <li key={r.id}>
                   <label>
                     <input type="checkbox" checked={r.enabled} onChange={(e) => toggleRule(r.id, e.target.checked)} />{" "}
-                    <span className="tool">{r.tool}</span> {lang === "zh" ? r.name_zh : r.name_en}{" "}
+                    <span className="tool">{r.tool}</span> {coreLang(lang) === "zh" ? r.name_zh : r.name_en}{" "}
                     <span className={`tag ${r.safety}`}>{s.safety[r.safety]}</span>
                     <span className="muted"> · {r.id}</span>
                   </label>
