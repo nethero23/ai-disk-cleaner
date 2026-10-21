@@ -1,0 +1,207 @@
+# Where each AI tool keeps its MCP servers, skills, plugins and extensions.
+# Paths use the same ${VAR} templates as the cleaning rules. `verified = false`
+# marks a path taken from docs or community guides that has not been seen on a
+# real machine yet; the inventory still probes it, nothing else changes.
+#
+# mcp.root: the key under which the servers live ("mcpServers", "servers",
+# "mcp", "context_servers", "mcp_servers"). mcp.format: "json" (JSON, comments
+# and trailing commas tolerated) or "toml".
+
+[[tool]]
+id = "claude_code"
+name = "Claude Code"
+processes = ["claude"]
+skills = ["${USERPROFILE}/.claude/skills"]
+plugins = "${USERPROFILE}/.claude/plugins"
+[[tool.mcp]]
+path = "${USERPROFILE}/.claude.json"
+root = "mcpServers"
+projects = true
+
+[[tool]]
+id = "claude_desktop"
+name = "Claude Desktop"
+processes = ["claude"]
+extensions = ["${APPDATA}/Claude/Claude Extensions"]
+[[tool.mcp]]
+path = "${APPDATA}/Claude/claude_desktop_config.json"
+root = "mcpServers"
+
+[[tool]]
+id = "cursor"
+name = "Cursor"
+processes = ["cursor"]
+skills = ["${USERPROFILE}/.cursor/skills"]
+extensions = ["${USERPROFILE}/.cursor/extensions"]
+[[tool.mcp]]
+path = "${USERPROFILE}/.cursor/mcp.json"
+root = "mcpServers"
+
+[[tool]]
+id = "windsurf"
+name = "Windsurf"
+processes = ["windsurf"]
+[[tool.mcp]]
+path = "${USERPROFILE}/.codeium/windsurf/mcp_config.json"
+root = "mcpServers"
+
+[[tool]]
+id = "cline"
+name = "Cline"
+skills = ["${USERPROFILE}/.cline/skills"]
+[[tool.mcp]]
+path = "${APPDATA}/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
+root = "mcpServers"
+[[tool.mcp]]
+path = "${APPDATA}/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "roo_code"
+name = "Roo Code"
+[[tool.mcp]]
+path = "${APPDATA}/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "vscode_copilot"
+name = "VS Code Copilot"
+processes = ["code"]
+skills = ["${USERPROFILE}/.copilot/skills"]
+[[tool.mcp]]
+path = "${APPDATA}/Code/User/mcp.json"
+root = "servers"
+
+[[tool]]
+id = "copilot_cli"
+name = "Copilot CLI"
+[[tool.mcp]]
+path = "${USERPROFILE}/.copilot/mcp-config.json"
+root = "mcpServers"
+
+[[tool]]
+id = "codex"
+name = "Codex CLI"
+processes = ["codex"]
+skills = ["${USERPROFILE}/.codex/skills"]
+[[tool.mcp]]
+path = "${USERPROFILE}/.codex/config.toml"
+root = "mcp_servers"
+format = "toml"
+
+[[tool]]
+id = "gemini_cli"
+name = "Gemini CLI"
+processes = ["gemini"]
+skills = ["${USERPROFILE}/.gemini/config/skills"]
+extensions = ["${USERPROFILE}/.gemini/extensions"]
+[[tool.mcp]]
+path = "${USERPROFILE}/.gemini/settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "antigravity"
+name = "Antigravity"
+skills = ["${USERPROFILE}/.gemini/antigravity-ide/skills", "${USERPROFILE}/.gemini/antigravity-backup/skills"]
+[[tool.mcp]]
+path = "${USERPROFILE}/.gemini/antigravity-ide/mcp_config.json"
+root = "mcpServers"
+[[tool.mcp]]
+path = "${USERPROFILE}/.gemini/config/mcp_config.json"
+root = "mcpServers"
+
+[[tool]]
+id = "kiro"
+name = "Kiro"
+[[tool.mcp]]
+path = "${USERPROFILE}/.kiro/settings/mcp.json"
+root = "mcpServers"
+
+[[tool]]
+id = "iflow"
+name = "iFlow CLI"
+[[tool.mcp]]
+path = "${USERPROFILE}/.iflow/settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "qwen_code"
+name = "Qwen Code"
+[[tool.mcp]]
+path = "${USERPROFILE}/.qwen/settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "qoder"
+name = "Qoder"
+skills = ["${USERPROFILE}/.qoder/skills"]
+extensions = ["${USERPROFILE}/.qoder/extensions"]
+
+[[tool]]
+id = "workbuddy"
+name = "WorkBuddy"
+skills = ["${USERPROFILE}/.workbuddy-ai/skills"]
+plugins = "${USERPROFILE}/.workbuddy-ai/plugins"
+[[tool.mcp]]
+path = "${USERPROFILE}/.workbuddy-ai/connectors/*/mcp.json"
+root = "mcpServers"
+
+[[tool]]
+id = "trae"
+name = "Trae"
+verified = false
+[[tool.mcp]]
+path = "${APPDATA}/Trae/User/mcp.json"
+root = "mcpServers"
+[[tool.mcp]]
+path = "${APPDATA}/Trae CN/User/mcp.json"
+root = "mcpServers"
+
+[[tool]]
+id = "lingma"
+name = "通义灵码"
+verified = false
+[[tool.mcp]]
+path = "${APPDATA}/Lingma/mcp-config.json"
+root = "mcpServers"
+
+[[tool]]
+id = "codebuddy"
+name = "CodeBuddy"
+verified = false
+[[tool.mcp]]
+path = "${APPDATA}/Codebuddy/mcp-settings.json"
+root = "mcpServers"
+
+[[tool]]
+id = "opencode"
+name = "opencode"
+[[tool.mcp]]
+path = "${USERPROFILE}/.config/opencode/opencode.json"
+root = "mcp"
+
+[[tool]]
+id = "kilo"
+name = "Kilo Code"
+[[tool.mcp]]
+path = "${USERPROFILE}/.config/kilo/kilo.jsonc"
+root = "mcp"
+
+[[tool]]
+id = "zed"
+name = "Zed"
+[[tool.mcp]]
+path = "${APPDATA}/Zed/settings.json"
+root = "context_servers"
+
+[[tool]]
+id = "lmstudio"
+name = "LM Studio"
+[[tool.mcp]]
+path = "${USERPROFILE}/.lmstudio/mcp.json"
+root = "mcpServers"
+
+[[tool]]
+id = "agents_shared"
+name = "共享 skills (~/.agents)"
+skills = ["${USERPROFILE}/.agents/skills"]
