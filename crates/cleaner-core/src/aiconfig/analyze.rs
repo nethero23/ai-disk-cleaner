@@ -201,7 +201,7 @@ pub fn analyze(tools: &[ToolInventory]) -> Analysis {
                     tools: vec![t.id.clone()],
                     paths: p.stale_versions.clone(),
                     detail: format!(
-                        "current {}, {} older version(s)",
+                        "highest detected {}, {} potential older version(s); verify usage before removal",
                         p.version.as_deref().unwrap_or("?"),
                         p.stale_versions.len()
                     ),
@@ -217,7 +217,7 @@ pub fn analyze(tools: &[ToolInventory]) -> Analysis {
                     tools: vec![t.id.clone()],
                     paths: e.stale_versions.clone(),
                     detail: format!(
-                        "current {}, {} older version(s)",
+                        "highest detected {}, {} potential older version(s); verify usage before removal",
                         e.version.as_deref().unwrap_or("?"),
                         e.stale_versions.len()
                     ),
@@ -422,6 +422,37 @@ mod tests {
         dead.command = Some("/nope/node".into());
         let a = analyze(&[tool("cursor", vec![dead], vec![])]);
         assert_eq!(a.findings[0].kind, FindingKind::McpBroken);
+    }
+
+    #[test]
+    fn stale_findings_never_claim_the_highest_version_is_active() {
+        let mut t = tool("cursor", vec![], vec![]);
+        t.plugins.push(crate::aiconfig::Plugin {
+            tool: "cursor".into(),
+            name: "plugin".into(),
+            version: Some("2.0.0".into()),
+            path: PathBuf::from("/plugins/2.0.0"),
+            bytes: 10,
+            stale_versions: vec![PathBuf::from("/plugins/1.0.0")],
+            stale_bytes: 5,
+        });
+        t.extensions.push(crate::aiconfig::Extension {
+            tool: "cursor".into(),
+            name: "extension".into(),
+            version: Some("2.0.0".into()),
+            path: PathBuf::from("/extensions/2.0.0"),
+            bytes: 10,
+            stale_versions: vec![PathBuf::from("/extensions/1.0.0")],
+            stale_bytes: 5,
+        });
+        let analysis = analyze(&[t]);
+        assert_eq!(analysis.findings.len(), 2);
+        for finding in analysis.findings {
+            assert_eq!(finding.kind, FindingKind::StaleVersions);
+            assert!(finding.detail.contains("highest detected 2.0.0"));
+            assert!(finding.detail.contains("verify usage"));
+            assert!(!finding.detail.contains("current"));
+        }
     }
 
     #[test]
