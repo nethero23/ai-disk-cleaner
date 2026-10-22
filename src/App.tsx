@@ -976,7 +976,7 @@ export function App() {
         </div>
       )}
 
-      {view === "aitools" && <AiTools lang={lang} />}
+      {view === "aitools" && <AiTools lang={lang} versionCheck={settings?.mcp_version_check ?? true} />}
 
       {view === "overview" && (
         <section className="bigfiles overview">
