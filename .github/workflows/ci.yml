@@ -49,6 +49,8 @@ jobs:
           workspaces: ". -> target"
       - run: npm ci
       - run: npm run build
+      - run: node tools/i18n_check.mjs
+      - run: node --test tools/*.test.mjs
       - run: cargo build -p ai-disk-cleaner
       - name: Resolve release tag
         shell: bash
