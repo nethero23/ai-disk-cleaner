@@ -52,6 +52,7 @@ jobs:
       - run: node tools/i18n_check.mjs
       - run: node --test tools/*.test.mjs
       - run: cargo build -p ai-disk-cleaner
+      - run: cargo test -p ai-disk-cleaner --lib
       - name: Resolve release tag
         shell: bash
         run: |

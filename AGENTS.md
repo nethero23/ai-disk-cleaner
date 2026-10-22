@@ -35,7 +35,7 @@ Keep filesystem logic in the engine. Synchronize Rust IPC models with `src/types
 
 Rust tests live beside implementations in `#[cfg(test)]` modules with descriptive `snake_case` names. Use `tempfile` fixtures, keep tests offline, and cover safety guards and rule changes. CI enforces no numeric coverage threshold.
 
-There is no configured `npm test` or frontend lint script; run `npm run build` and `node --test tools/*.test.mjs`. For translations, also run `node tools/i18n_check.mjs`. Validate desktop behavior manually for native/UI changes.
+There is no configured `npm test` or frontend lint script; run `npm run build` and `node --test tools/*.test.mjs`. For translations, also run `node tools/i18n_check.mjs`. Test native startup policy with `cargo test -p ai-disk-cleaner --lib`. Validate desktop behavior manually for native/UI changes.
 
 ## Commit & Pull Request Guidelines
 

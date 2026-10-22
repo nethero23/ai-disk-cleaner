@@ -18,6 +18,7 @@ npm run build
 node tools/i18n_check.mjs
 node --test tools/*.test.mjs
 cargo build -p ai-disk-cleaner
+cargo test -p ai-disk-cleaner --lib
 ```
 
 Node regression tests cover numeric version display and review-only stale-version
@@ -31,6 +32,8 @@ messaging in every UI language. Registry tests use injected responses, not live 
 - Verify scan results contain only fixtures; scan does not modify fixture content.
 - After explicit confirmation, verify Recycle Bin cleanup and undo restore identical bytes.
 - Verify settings, theme, and language persist after a complete restart.
+- A portable launch must not overwrite the installed app's autostart registration;
+  registration changes still require an explicit autostart-setting change.
 - Verify AI inventory never changes tool configuration files or exposes raw keys.
 - Check offline/version-query errors and late replies without losing inventory data.
 
@@ -71,6 +74,7 @@ their actual observations are recorded; frontend mock-IPC tests are not substitu
 | Additional locale completeness | 10 languages, each 301/301 |
 | Mock-IPC browser acceptance | 10 checks passed; includes offline, disabled checks, late replies, RTL/theme persistence |
 | Windows desktop compilation | Pass |
+| Native startup-policy tests | 2 passed; portable startup never invokes registration changes |
 | Local unsigned NSIS / MSI packaging | Pass; MSI ProductVersion verified as 0.8.0.1 |
 | Interactive Windows UI | Incomplete: black screenshot and window activation failure; awaiting an unlocked interactive desktop |
 | Installation / upgrade / signed updater | Not executed |

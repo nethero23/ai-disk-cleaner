@@ -12,6 +12,8 @@ This is not a published release. The latest local release tag remains `v0.7.1`.
 - Duplicate/conflict/broken-configuration hints with masked secrets.
 - Optional, bounded MCP package-version lookups to npm/PyPI; no configuration contents transmitted.
 - Older-version folders are manual-review candidates, never evidence that a version is unused.
+- Portable startup does not synchronize the installed app's autostart registration;
+  explicit autostart-setting changes retain their existing behavior.
 
 ## Release gate
 
