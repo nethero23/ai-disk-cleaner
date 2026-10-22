@@ -11,7 +11,7 @@ use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
 use cleaner_core::scan::{scan_all_with, ScanProgress};
 use cleaner_core::settings::Settings;
 use cleaner_core::vhdx::{self, CompactResult, Vhdx};
-use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
+use cleaner_core::{RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
@@ -443,6 +443,51 @@ async fn ai_inventory() -> Result<cleaner_core::aiconfig::Inventory, String> {
     .map_err(|e| e.to_string())
 }
 
+/// Asks npm / PyPI for the latest version of each MCP server package. The
+/// request carries the package name only. Off when the setting is off.
+#[tauri::command]
+async fn ai_version_check(
+    app: AppHandle,
+    identities: Vec<String>,
+) -> Result<Vec<cleaner_core::aiconfig::VersionInfo>, String> {
+    let path = settings_path(&app);
+    let enabled = Settings::load(&path).mcp_version_check;
+    if !enabled {
+        return Ok(Vec::new());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let agent = ureq::Agent::config_builder()
+            .https_only(true)
+            .max_redirects(0)
+            .build()
+            .new_agent();
+        cleaner_core::aiconfig::check_versions(
+            enabled,
+            identities,
+            std::time::Duration::from_secs(15),
+            |url, timeout| {
+                // Stop starting requests if the user disables checks mid-batch.
+                if !Settings::load(&path).mcp_version_check {
+                    return Err("Version checking is disabled".into());
+                }
+                let mut response = agent
+                    .get(url)
+                    .config()
+                    .timeout_global(Some(timeout))
+                    .build()
+                    .call()
+                    .map_err(|e| e.to_string())?;
+                response
+                    .body_mut()
+                    .read_to_string()
+                    .map_err(|e| e.to_string())
+            },
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Deep clean: the catalogue with cheap estimates.
 #[tauri::command]
 fn deep_tasks(lang: String) -> Vec<cleaner_core::system::DeepTask> {
@@ -694,6 +739,7 @@ pub fn run() {
             unrecognized,
             suggest_rule_url,
             ai_inventory,
+            ai_version_check,
             deep_tasks,
             deep_analyze,
             deep_run,

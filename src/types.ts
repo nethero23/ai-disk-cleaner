@@ -144,6 +144,7 @@ export interface Settings {
   idle_model_days: number;
   growth_notify_bytes: number;
   onboarded: boolean;
+  mcp_version_check: boolean;
 }
 
 export interface RuleInfo {
@@ -351,4 +352,10 @@ export interface AiInventory {
   tools: AiToolInventory[];
   analysis: AiAnalysis;
   computed_at: string | null;
+}
+
+export interface AiVersionInfo {
+  identity: string;
+  latest: string | null;
+  error: string | null;
 }

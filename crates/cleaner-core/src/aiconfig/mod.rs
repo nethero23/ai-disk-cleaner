@@ -14,11 +14,13 @@ pub mod analyze;
 pub mod catalog;
 pub mod mcp;
 pub mod skills;
+pub mod versions;
 
 pub use analyze::{analyze, Analysis, Finding, FindingKind};
 pub use catalog::{Catalog, McpSource, ToolDef};
 pub use mcp::{ConfigFile, McpServer, McpTransport, SecretHit};
 pub use skills::{Extension, Plugin, Skill};
+pub use versions::{check_versions, latest_from_response, registry_url, VersionInfo};
 
 use crate::paths::PathContext;
 use serde::{Deserialize, Serialize};
@@ -203,7 +205,23 @@ mod tests {
         vars.insert("USERPROFILE".to_string(), home.to_path_buf());
         vars.insert("APPDATA".to_string(), home.join("AppData/Roaming"));
         let ctx = PathContext::with_vars(vars);
+        let snapshot = || {
+            let mut files = walkdir::WalkDir::new(home)
+                .into_iter()
+                .map(|entry| entry.unwrap())
+                .filter(|entry| entry.file_type().is_file())
+                .map(|entry| {
+                    let path = entry.path().to_path_buf();
+                    let bytes = std::fs::read(&path).unwrap();
+                    (path, bytes)
+                })
+                .collect::<Vec<_>>();
+            files.sort();
+            files
+        };
+        let before = snapshot();
         let inv = inventory(&Catalog::builtin(), &ctx);
+        assert_eq!(snapshot(), before, "inventory must not modify tool files");
         let present: Vec<&str> = inv
             .tools
             .iter()

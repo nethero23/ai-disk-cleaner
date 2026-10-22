@@ -44,6 +44,9 @@ pub struct Settings {
     pub growth_notify_bytes: u64,
     /// The first-run walkthrough has been shown (or skipped).
     pub onboarded: bool,
+    /// On the AI tools page, ask npm / PyPI for the latest version of each
+    /// MCP server package. Sends package names only, never config contents.
+    pub mcp_version_check: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -70,6 +73,7 @@ impl Default for Settings {
             idle_model_days: 90,
             growth_notify_bytes: 2 * 1024 * 1024 * 1024,
             onboarded: false,
+            mcp_version_check: true,
         }
     }
 }
@@ -117,6 +121,22 @@ mod tests {
         assert!(!back.is_excluded(Path::new("/x/keeper")));
         // An older file without newer fields still loads.
         std::fs::write(&p, r#"{"excluded_paths":["/a"]}"#).unwrap();
-        assert_eq!(Settings::load(&p).rules_update_url, DEFAULT_RULES_URL);
+        let old = Settings::load(&p);
+        assert_eq!(old.rules_update_url, DEFAULT_RULES_URL);
+        assert!(old.mcp_version_check);
+    }
+
+    #[test]
+    fn disabled_version_check_survives_save_and_reload() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        let settings = Settings {
+            mcp_version_check: false,
+            ..Default::default()
+        };
+        settings.save(&p).unwrap();
+        assert!(!Settings::load(&p).mcp_version_check);
+        std::fs::write(&p, r#"{"mcp_version_check":false}"#).unwrap();
+        assert!(!Settings::load(&p).mcp_version_check);
     }
 }
