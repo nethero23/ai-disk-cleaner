@@ -1,32 +1,33 @@
 //! Versioned folders: Playwright's `chromium-1140`, VS Code-family
 //! `publisher.name-1.2.3`, Gemini/Claude Desktop extensions and Claude Code's
-//! plugin cache `cache/<marketplace>/<plugin>/<version>`. After an upgrade
-//! the old version folder usually stays behind; it is Safe to delete, while
-//! the newest version of each thing keeps the rule's own safety and is never
-//! listed by [`stale`].
+//! plugin cache `cache/<marketplace>/<plugin>/<version>`. A lower version or
+//! `.obsolete` marker is only a cleanup hint, not proof that a folder is unused.
+//! Candidates require review and never qualify for automatic cleanup.
 
 use super::read_small;
-use crate::aiconfig::skills::{group_versions, sorted_subdirs};
+use crate::aiconfig::skills::{group_plugin_versions, group_versions, sorted_subdirs};
 use crate::model::{SafetyLevel, ScanItem};
 use crate::rules::Rule;
 use crate::scan::{make_item, tree_stats, ScanOptions};
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-fn old_detail(opts: &ScanOptions, current: Option<&str>) -> String {
-    match (opts.lang.as_str(), current) {
-        ("en", Some(c)) => format!("Old version; current is {c}"),
-        ("en", None) => "Old version".to_string(),
-        (_, Some(c)) => format!("旧版本；当前版本 {c}"),
-        (_, None) => "旧版本".to_string(),
+fn old_detail(opts: &ScanOptions, newest: Option<&str>) -> String {
+    match (opts.lang.as_str(), newest) {
+        ("en", Some(v)) => {
+            format!("Potential old version; highest detected version is {v}; review usage")
+        }
+        ("en", None) => "Marked in .obsolete; review usage before removal".to_string(),
+        (_, Some(v)) => format!("可能的旧版本；检测到的最高版本 {v}；请确认是否仍在使用"),
+        (_, None) => "被 .obsolete 标记；删除前请确认是否仍在使用".to_string(),
     }
 }
 
 fn old_consequence(opts: &ScanOptions) -> String {
     if opts.lang == "en" {
-        "Nothing uses it any more; the current version stays".to_string()
+        "May still be pinned or used by a project or tool; removal can break it. Verify usage first.".to_string()
     } else {
-        "已没有东西在用它，当前版本保留".to_string()
+        "可能仍被项目或工具固定版本或使用；删除可能导致功能失效，请先确认使用情况。".to_string()
     }
 }
 
@@ -56,7 +57,7 @@ fn obsolete_dirs(root: &Path) -> HashSet<String> {
         .unwrap_or_default()
 }
 
-/// One item per child; older versions are Safe, the newest keeps the rule's safety.
+/// One item per child; potential older versions require review, others keep the rule's safety.
 pub fn versioned(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> {
     let mut items = Vec::new();
     for (name, (newest, version), older) in group_versions(sorted_subdirs(root)) {
@@ -81,7 +82,8 @@ pub fn versioned(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> 
     items
 }
 
-/// Only the old versions; the current version of each thing is never listed.
+/// Only potential older versions and `.obsolete` hints, always requiring review.
+/// Numeric ordering does not identify the active version; a marker can include the highest version.
 pub fn stale(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> {
     let mut items = Vec::new();
     let cache = root.join("cache");
@@ -98,10 +100,10 @@ pub fn stale(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> {
                     market.file_name().unwrap_or_default().to_string_lossy(),
                     plugin.file_name().unwrap_or_default().to_string_lossy()
                 );
-                let (newest, older) = split_newest(versions);
-                let cur = newest.file_name().map(|n| n.to_string_lossy().to_string());
-                for p in older {
-                    items.push(old_item(rule, &p, &name, cur.as_deref(), opts));
+                for (_, (_, version), older) in group_plugin_versions(&name, versions) {
+                    for p in older {
+                        items.push(old_item(rule, &p, &name, version.as_deref(), opts));
+                    }
                 }
             }
         }
@@ -123,28 +125,11 @@ pub fn stale(rule: &Rule, root: &Path, opts: &ScanOptions) -> Vec<ScanItem> {
     items
 }
 
-/// Newest by numeric version of the folder name, else by modification time.
-fn split_newest(mut dirs: Vec<PathBuf>) -> (PathBuf, Vec<PathBuf>) {
-    use crate::aiconfig::skills::version_key;
-    dirs.sort_by(|a, b| {
-        let ka = version_key(&a.file_name().unwrap_or_default().to_string_lossy());
-        let kb = version_key(&b.file_name().unwrap_or_default().to_string_lossy());
-        if ka != kb {
-            return kb.cmp(&ka);
-        }
-        let ma = std::fs::metadata(a).and_then(|m| m.modified()).ok();
-        let mb = std::fs::metadata(b).and_then(|m| m.modified()).ok();
-        mb.cmp(&ma)
-    });
-    let newest = dirs.remove(0);
-    (newest, dirs)
-}
-
 fn old_item(
     rule: &Rule,
     p: &Path,
     name: &str,
-    current: Option<&str>,
+    newest: Option<&str>,
     opts: &ScanOptions,
 ) -> ScanItem {
     let mut item = make_item(
@@ -153,9 +138,10 @@ fn old_item(
         label(name, p),
         tree_stats(p),
         opts,
-        Some(old_detail(opts, current)),
+        Some(old_detail(opts, newest)),
     );
-    item.safety = SafetyLevel::Safe;
+    item.safety = SafetyLevel::Review;
+    item.auto_clean = false;
     item.consequence = old_consequence(opts);
     item
 }
@@ -208,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn playwright_old_builds_are_safe_and_current_is_not() {
+    fn playwright_old_builds_require_review_and_highest_keeps_rule_safety() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().join("ms-playwright");
         for d in [
@@ -225,19 +211,24 @@ mod tests {
             .iter()
             .find(|i| i.path.ends_with("chromium-1140"))
             .unwrap();
-        assert_eq!(old.safety, SafetyLevel::Safe);
-        assert_eq!(old.detail.as_deref(), Some("旧版本；当前版本 1148"));
+        assert_eq!(old.safety, SafetyLevel::Review);
+        assert!(!old.auto_clean);
+        assert_eq!(
+            old.detail.as_deref(),
+            Some("可能的旧版本；检测到的最高版本 1148；请确认是否仍在使用")
+        );
         let cur = items
             .iter()
             .find(|i| i.path.ends_with("chromium-1148"))
             .unwrap();
         assert_eq!(cur.safety, SafetyLevel::Redownload);
-        assert!(
+        assert!(cur.auto_clean);
+        assert_eq!(
             items
                 .iter()
-                .filter(|i| i.safety == SafetyLevel::Safe)
-                .count()
-                == 1
+                .filter(|i| i.safety == SafetyLevel::Review)
+                .count(),
+            1
         );
     }
 
@@ -247,7 +238,7 @@ mod tests {
         let root = tmp.path().join("extensions");
         for d in [
             "ms-python.python-2024.1.0",
-            "ms-python.python-2024.3.1-win32-x64",
+            "ms-python.python-2024.3.1",
             "other.ext-1.0.0",
             "dead.ext-0.1.0",
         ] {
@@ -261,7 +252,9 @@ mod tests {
             .collect();
         names.sort();
         assert_eq!(names, vec!["dead.ext-0.1.0", "ms-python.python-2024.1.0"]);
-        assert!(items.iter().all(|i| i.safety == SafetyLevel::Safe));
+        assert!(items
+            .iter()
+            .all(|i| i.safety == SafetyLevel::Review && !i.auto_clean));
     }
 
     #[test]
@@ -275,6 +268,100 @@ mod tests {
         assert_eq!(items.len(), 1);
         assert!(items[0].path.ends_with("design/1.2.0"));
         assert_eq!(items[0].name, "anthropic/design (1.2.0)");
-        assert_eq!(items[0].detail.as_deref(), Some("旧版本；当前版本 1.10.0"));
+        assert_eq!(
+            items[0].detail.as_deref(),
+            Some("可能的旧版本；检测到的最高版本 1.10.0；请确认是否仍在使用")
+        );
+        assert_eq!(items[0].safety, SafetyLevel::Review);
+        assert!(!items[0].auto_clean);
+    }
+
+    #[test]
+    fn pinned_older_plugin_is_only_a_manual_review_candidate() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("plugins");
+        mk(&root, "cache/market/pinned/1.0.0");
+        mk(&root, "cache/market/pinned/2.0.0");
+        // The inspector does not resolve every project's pins. A higher folder
+        // number must never be treated as proof this installation is unused.
+        std::fs::write(root.join("installed_plugins.json"), r#"{"version":2,"plugins":{"pinned@market":[{"scope":"user","version":"1.0.0","installPath":"cache/market/pinned/1.0.0"}]}}"#).unwrap();
+        let mut options = opts(tmp.path());
+        options.lang = "en".into();
+        let mut permissive = rule("plugins_stale");
+        permissive.safety = SafetyLevel::Safe;
+        let items = stale(&permissive, &root, &options);
+        assert_eq!(items.len(), 1);
+        let item = &items[0];
+        assert!(item.path.ends_with("pinned/1.0.0"));
+        assert_eq!(item.safety, SafetyLevel::Review);
+        assert!(!item.auto_clean);
+        assert_eq!(
+            item.detail.as_deref(),
+            Some("Potential old version; highest detected version is 2.0.0; review usage")
+        );
+        assert!(item.consequence.contains("pinned or used"));
+        assert!(!item.consequence.contains("Nothing uses"));
+    }
+
+    #[test]
+    fn platform_variants_are_not_stale_replacements_for_each_other() {
+        let tmp = tempfile::tempdir().unwrap();
+        for d in [
+            "ext-1.0.0-win32-x64",
+            "ext-2.0.0-win32-x64",
+            "ext-2.0.0-linux-x64",
+            "ext-1.0.0-darwin-arm64",
+            "ext-2.0.0",
+        ] {
+            mk(tmp.path(), d);
+        }
+        let items = stale(&rule("extensions_stale"), tmp.path(), &opts(tmp.path()));
+        assert_eq!(items.len(), 1);
+        assert!(items[0].path.ends_with("ext-1.0.0-win32-x64"));
+        assert_eq!(items[0].safety, SafetyLevel::Review);
+        assert!(!items[0].auto_clean);
+        assert_eq!(
+            versioned(&rule("extensions"), tmp.path(), &opts(tmp.path())).len(),
+            5
+        );
+    }
+
+    #[test]
+    fn obsolete_highest_and_unknown_names_require_review_without_current_claim() {
+        let tmp = tempfile::tempdir().unwrap();
+        for d in ["ext-1.0.0", "ext-2.0.0", "unknown-build", "unmarked-build"] {
+            mk(tmp.path(), d);
+        }
+        std::fs::write(
+            tmp.path().join(".obsolete"),
+            r#"{"ext-2.0.0":true,"unknown-build":true,"unmarked-build":false,"../outside":true}"#,
+        )
+        .unwrap();
+        let mut options = opts(tmp.path());
+        options.lang = "en".into();
+        let items = stale(&rule("extensions_stale"), tmp.path(), &options);
+        assert_eq!(items.len(), 3);
+        assert!(items
+            .iter()
+            .all(|i| i.safety == SafetyLevel::Review && !i.auto_clean));
+        for name in ["ext-2.0.0", "unknown-build"] {
+            let item = items.iter().find(|i| i.path.ends_with(name)).unwrap();
+            assert_eq!(
+                item.detail.as_deref(),
+                Some("Marked in .obsolete; review usage before removal")
+            );
+        }
+        assert!(items
+            .iter()
+            .all(|i| !i.detail.as_deref().unwrap().contains("current")));
+    }
+
+    #[test]
+    fn unknown_and_equal_plugin_versions_are_not_inferred_stale() {
+        let tmp = tempfile::tempdir().unwrap();
+        for version in ["1.0", "1.0.0", "v1.0.0", "abcdef12", "latest", "2.0.0-beta"] {
+            mk(tmp.path(), &format!("cache/market/plugin/{version}"));
+        }
+        assert!(stale(&rule("plugins_stale"), tmp.path(), &opts(tmp.path())).is_empty());
     }
 }
