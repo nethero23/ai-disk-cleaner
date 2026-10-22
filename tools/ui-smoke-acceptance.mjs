@@ -34,6 +34,9 @@ function language(value) {
 
 const tab = JSON.parse(browse("newtab", "http://127.0.0.1:1420/tools/ui-smoke.html", "--json"));
 try {
+  browse("wait", "nav");
+  browse("js", 'localStorage.setItem("uiLang","zh"); localStorage.setItem("theme","system"); "reset fixture-only preferences"');
+  browse("reload");
   browse("wait", 'button:text-is("AI 工具")');
   click('button:text-is("AI 工具")');
   browse("wait", ".ai-summary");
