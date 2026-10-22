@@ -35,7 +35,7 @@ Clearwisp explains every gigabyte: **which model, which conda environment, which
 
 ## Features
 
-### 🧠 Knows AI-tool junk (126 rules, 90+ tools)
+### 🧠 Knows AI-tool junk (136 rules, 90+ tools)
 
 | Category | Covered |
 |---|---|
@@ -81,7 +81,7 @@ It reads Ollama manifests, the Hugging Face cache layout, conda environments, LM
 
 ### 🚫 Never
 
-No registry cleaning, no nag pop-ups, no bundled software, no uploading of your file list. Works offline; it only goes online to check for updates.
+No registry cleaning, no nag pop-ups, no bundled software, no uploading of your file list. Scanning and cleaning stay local; app and rule updates contact GitHub. MCP version checks on the AI tools page are enabled by default and can be disabled in Settings; they send only package names to npm / PyPI, never configuration contents.
 
 ## Install
 
@@ -153,7 +153,7 @@ The scan is read-only. Only folders listed in the rule set are cleaned, each wit
 It covers what CCleaner does not: AI models, Python environments, AI editor caches. It also cleans common Windows junk. Using both is fine.
 
 ### Is it free? Any ads or telemetry?
-Free, MIT-licensed, no ads, no bundles. All scanning and cleaning happens locally; the app only contacts GitHub to check for updates and (optionally) to update rules.
+Free, MIT-licensed, no ads, no bundles. All scanning and cleaning happens locally; app and rule updates contact GitHub. MCP version checks on the AI tools page are enabled by default and can be disabled in Settings; they send only package names to npm / PyPI, never configuration contents.
 
 ### macOS / Linux?
 Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other platforms may follow.
@@ -165,7 +165,9 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [x] v0.6 Search / group / sort, multi-drive scan, auto-update, drive overview
 - [x] v0.7 Undo, first-run guide, growth monitoring, idle-model hints, deep system clean (WinSxS etc.), unknown-big-folder reports, portable build
 - [ ] winget / Scoop listing, installer code signing
-- [ ] v0.8 Material Design 3 UI, AI-tool config management (skills / MCP / plugins)
+- [ ] v0.8 candidate acceptance: Material Design 3 UI, read-only AI-tool inventory (skills / MCP / plugins), duplicate/conflict hints, and optional version checks
+
+The current development candidate is `0.8.0-rc.1`, not a public release. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 ## Contributing
 

@@ -30,7 +30,7 @@ Clearwisp explique chaque gigaoctet : **quel modèle, quel environnement conda, 
 <a id="features"></a>
 ## Fonctionnalités
 
-### 🧠 Connaît les déchets des outils d’IA (126 règles, plus de 90 outils)
+### 🧠 Connaît les déchets des outils d’IA (136 règles, plus de 90 outils)
 
 | Catégorie | Couverture |
 |---|---|
@@ -75,7 +75,7 @@ Il lit les manifestes Ollama, la structure du cache Hugging Face, les environnem
 
 ### 🚫 Jamais
 
-Pas de nettoyage du registre, pas de fenêtres intempestives, pas de logiciels groupés, pas d’envoi de votre liste de fichiers. Fonctionne hors ligne ; se connecte seulement pour vérifier les mises à jour.
+Pas de nettoyage du registre, pas de fenêtres intempestives, pas de logiciels groupés, pas d’envoi de votre liste de fichiers. L’analyse et le nettoyage se font en local ; les mises à jour de l’application et des règles utilisent GitHub. La vérification des versions MCP sur la page « Outils d’IA » est activée par défaut et peut être désactivée dans les paramètres. Elle envoie uniquement les noms des paquets à npm / PyPI, jamais le contenu des configurations.
 
 ## Installation
 
@@ -147,7 +147,7 @@ L’analyse est en lecture seule. Seuls les dossiers listés dans les règles so
 Il couvre ce que CCleaner ignore : modèles d’IA, environnements Python, caches des éditeurs IA. Il nettoie aussi les fichiers inutiles courants de Windows. Utiliser les deux ne pose aucun problème.
 
 ### Est-ce gratuit ? Publicité ou télémétrie ?
-Gratuit, sous licence MIT, sans publicité ni logiciel groupé. L’analyse et le nettoyage se font en local ; l’application ne contacte GitHub que pour vérifier les mises à jour et (en option) mettre à jour les règles.
+Gratuit, sous licence MIT, sans publicité ni logiciel groupé. L’analyse et le nettoyage se font en local ; les mises à jour de l’application et des règles utilisent GitHub. La vérification des versions MCP sur la page « Outils d’IA » est activée par défaut et peut être désactivée dans les paramètres. Elle envoie uniquement les noms des paquets à npm / PyPI, jamais le contenu des configurations.
 
 ### macOS / Linux ?
 Uniquement Windows 10 / 11 pour l’instant. Le moteur d’analyse est en Rust multiplateforme, d’autres plateformes pourraient suivre.

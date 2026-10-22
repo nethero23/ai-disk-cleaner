@@ -30,7 +30,7 @@ Clearwisp erklärt jedes Gigabyte: **welches Modell, welche conda-Umgebung, welc
 <a id="features"></a>
 ## Funktionen
 
-### 🧠 Kennt den Müll von KI-Tools (126 Regeln, über 90 Tools)
+### 🧠 Kennt den Müll von KI-Tools (136 Regeln, über 90 Tools)
 
 | Kategorie | Abgedeckt |
 |---|---|
@@ -75,7 +75,7 @@ Es liest Ollama-Manifeste, die Cache-Struktur von Hugging Face, conda-Umgebungen
 
 ### 🚫 Niemals
 
-Keine Registry-Bereinigung, keine nervigen Pop-ups, keine gebündelte Software, kein Hochladen Ihrer Dateiliste. Läuft offline; geht nur online, um nach Updates zu suchen.
+Keine Registry-Bereinigung, keine nervigen Pop-ups, keine gebündelte Software, kein Hochladen Ihrer Dateiliste. Scannen und Bereinigen erfolgen lokal; App- und Regelupdates greifen auf GitHub zu. Die MCP-Versionsprüfung auf der Seite „KI-Tools“ ist standardmäßig aktiviert und lässt sich in den Einstellungen deaktivieren. Sie sendet nur Paketnamen an npm / PyPI, niemals Konfigurationsinhalte.
 
 ## Installation
 
@@ -147,7 +147,7 @@ Der Scan ist nur lesend. Bereinigt werden nur Ordner aus dem Regelwerk, jeweils 
 Es deckt ab, was CCleaner nicht kann: KI-Modelle, Python-Umgebungen, Caches von KI-Editoren. Gängigen Windows-Müll bereinigt es ebenfalls. Beide zusammen zu nutzen ist kein Problem.
 
 ### Ist es kostenlos? Werbung oder Telemetrie?
-Kostenlos, MIT-lizenziert, ohne Werbung und ohne gebündelte Software. Scannen und Bereinigen passieren lokal; die App kontaktiert GitHub nur für Update-Prüfungen und (optional) Regelupdates.
+Kostenlos, MIT-lizenziert, ohne Werbung und ohne gebündelte Software. Scannen und Bereinigen erfolgen lokal; App- und Regelupdates greifen auf GitHub zu. Die MCP-Versionsprüfung auf der Seite „KI-Tools“ ist standardmäßig aktiviert und lässt sich in den Einstellungen deaktivieren. Sie sendet nur Paketnamen an npm / PyPI, niemals Konfigurationsinhalte.
 
 ### macOS / Linux?
 Derzeit nur Windows 10 / 11. Die Scan-Engine ist plattformübergreifendes Rust, weitere Plattformen könnten folgen.

@@ -30,7 +30,7 @@ O Clearwisp explica cada gigabyte: **qual modelo, qual ambiente conda, qual cach
 <a id="features"></a>
 ## Recursos
 
-### 🧠 Conhece o lixo das ferramentas de IA (126 regras, mais de 90 ferramentas)
+### 🧠 Conhece o lixo das ferramentas de IA (136 regras, mais de 90 ferramentas)
 
 | Categoria | Cobertura |
 |---|---|
@@ -75,7 +75,7 @@ Ele lê os manifestos do Ollama, a estrutura do cache do Hugging Face, os ambien
 
 ### 🚫 Nunca
 
-Sem limpeza do registro, sem janelas irritantes, sem programas embutidos, sem envio da sua lista de arquivos. Funciona off-line; só se conecta para procurar atualizações.
+Sem limpeza do registro, sem janelas irritantes, sem programas embutidos, sem envio da sua lista de arquivos. A análise e a limpeza são feitas localmente; as atualizações do aplicativo e das regras acessam o GitHub. A verificação de versões MCP na página Ferramentas de IA vem ativada por padrão e pode ser desativada nas Configurações. Ela envia apenas os nomes dos pacotes ao npm / PyPI, nunca o conteúdo das configurações.
 
 ## Instalação
 
@@ -147,7 +147,7 @@ A análise é somente leitura. Só são limpas as pastas que estão nas regras, 
 Ele cobre o que o CCleaner não cobre: modelos de IA, ambientes Python, caches de editores com IA. Também limpa o lixo comum do Windows. Usar os dois juntos não tem problema.
 
 ### É grátis? Tem anúncios ou telemetria?
-Grátis, licença MIT, sem anúncios e sem programas embutidos. A análise e a limpeza acontecem no seu computador; o aplicativo só se conecta ao GitHub para procurar atualizações e (opcionalmente) atualizar as regras.
+Grátis, licença MIT, sem anúncios e sem programas embutidos. A análise e a limpeza são feitas localmente; as atualizações do aplicativo e das regras acessam o GitHub. A verificação de versões MCP na página Ferramentas de IA vem ativada por padrão e pode ser desativada nas Configurações. Ela envia apenas os nomes dos pacotes ao npm / PyPI, nunca o conteúdo das configurações.
 
 ### macOS / Linux?
 Por enquanto só Windows 10 / 11. O motor de análise é escrito em Rust multiplataforma, então outras plataformas podem vir depois.
