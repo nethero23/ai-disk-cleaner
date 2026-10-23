@@ -8,7 +8,7 @@
 
 use crate::clean::CleanRecord;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 /// Where a cleaned item is now.
@@ -43,6 +43,50 @@ pub struct RestoreSummary {
     pub results: Vec<RestoreResult>,
 }
 
+/// The deleted tail no longer exists, but an existing ancestor can still
+/// resolve Windows short-name / verbatim aliases to the same original path.
+fn match_path(path: &Path) -> PathBuf {
+    // Never turn a redirected ancestor into permission to restore an unrelated
+    // original path. Preserve literal matching when aliases cannot be trusted.
+    if path
+        .ancestors()
+        .any(|p| match std::fs::symlink_metadata(p) {
+            Ok(metadata) => {
+                #[cfg(windows)]
+                {
+                    use std::os::windows::fs::MetadataExt;
+                    metadata.file_attributes() & 0x400 != 0
+                }
+                #[cfg(not(windows))]
+                {
+                    metadata.file_type().is_symlink()
+                }
+            }
+            Err(error) => error.kind() != std::io::ErrorKind::NotFound,
+        })
+    {
+        return path.to_path_buf();
+    }
+    let mut ancestor = path;
+    let mut tail = Vec::new();
+    loop {
+        if let Ok(mut resolved) = std::fs::canonicalize(ancestor) {
+            for name in tail.iter().rev() {
+                resolved.push(name);
+            }
+            return resolved;
+        }
+        let Some(name) = ancestor.file_name() else {
+            return path.to_path_buf();
+        };
+        tail.push(name.to_os_string());
+        let Some(parent) = ancestor.parent() else {
+            return path.to_path_buf();
+        };
+        ancestor = parent;
+    }
+}
+
 /// Picks, among bin entries, the newest one whose original path is `path`.
 /// `not_before` (unix seconds) drops entries older than the clean record, so a
 /// file the user deleted by hand last year is never mistaken for ours.
@@ -51,9 +95,10 @@ fn pick<'a>(
     path: &Path,
     not_before: i64,
 ) -> Option<&'a trash::TrashItem> {
+    let wanted = match_path(path);
     items
         .iter()
-        .filter(|t| t.original_path() == path && t.time_deleted >= not_before)
+        .filter(|t| t.time_deleted >= not_before && match_path(&t.original_path()) == wanted)
         .max_by_key(|t| t.time_deleted)
 }
 
@@ -64,14 +109,17 @@ fn list_bin() -> Vec<trash::TrashItem> {
 /// Whether each path is back in place, still in the bin, or gone for good.
 /// Lists the bin once, so calling it for a whole history page is cheap.
 pub fn status(paths: &[PathBuf]) -> Vec<RestoreStatus> {
-    let in_bin: HashSet<PathBuf> = list_bin().iter().map(|t| t.original_path()).collect();
+    let in_bin: HashSet<PathBuf> = list_bin()
+        .iter()
+        .map(|t| match_path(&t.original_path()))
+        .collect();
     paths
         .iter()
         .map(|p| RestoreStatus {
             path: p.clone(),
             state: if p.exists() {
                 Whereabouts::Present
-            } else if in_bin.contains(p) {
+            } else if in_bin.contains(&match_path(p)) {
                 Whereabouts::InBin
             } else {
                 Whereabouts::Gone
@@ -87,9 +135,9 @@ pub fn restore(records: &[CleanRecord]) -> RestoreSummary {
     let bin = list_bin();
     let mut summary = RestoreSummary::default();
     // Deduplicate by path: the same path cleaned twice restores once.
-    let mut seen: HashMap<PathBuf, ()> = HashMap::new();
+    let mut seen = HashSet::new();
     for rec in records {
-        if seen.insert(rec.path.clone(), ()).is_some() {
+        if !seen.insert(match_path(&rec.path)) {
             continue;
         }
         let result = restore_one(&bin, rec);
@@ -146,6 +194,40 @@ mod tests {
         assert_eq!(got.time_deleted, 300);
         assert!(pick(&items, Path::new("/u/cache/a"), 350).is_none());
         assert!(pick(&items, Path::new("/u/cache/zzz"), 0).is_none());
+    }
+
+    #[test]
+    fn deleted_paths_match_canonical_ancestor_aliases_without_weakening_cutoff() {
+        let tmp = tempfile::tempdir().unwrap();
+        let canonical = std::fs::canonicalize(tmp.path()).unwrap();
+        let parent = canonical.join("missing-parent");
+        let items = vec![item(parent.to_str().unwrap(), "cache", 300)];
+        let original = tmp.path().join("missing-parent/cache");
+        assert!(!original.exists(), "the deleted tail must stay absent");
+        assert!(pick(&items, &original, 200).is_some());
+        assert!(pick(&items, &original, 301).is_none());
+        assert!(pick(&items, &tmp.path().join("other/cache"), 0).is_none());
+        assert!(pick(&items, &tmp.path().join("missing-parent/other"), 0).is_none());
+    }
+
+    #[test]
+    fn redirected_ancestor_never_matches_another_original_bin_path() {
+        let tmp = tempfile::tempdir().unwrap();
+        let target = tmp.path().join("target");
+        let alias = tmp.path().join("alias");
+        std::fs::create_dir(&target).unwrap();
+        #[cfg(windows)]
+        assert!(std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&alias)
+            .arg(&target)
+            .status()
+            .unwrap()
+            .success());
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &alias).unwrap();
+        let items = vec![item(target.to_str().unwrap(), "cache", 300)];
+        assert!(pick(&items, &alias.join("cache"), 0).is_none());
     }
 
     #[test]

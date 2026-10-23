@@ -159,3 +159,18 @@ Installation, upgrade, signed updater, remote push and publication were not perf
   bundles predate this privacy fix and must be rebuilt before release.
 - The final native overview-after-clean recheck, installation/upgrade and signed
   updater gates remain open; source integration does not certify these gates.
+
+### GitHub Windows short-path regression
+
+The first PR run passed Linux core and the Windows app build. Windows core unit
+tests passed, but the real roundtrip failed because its temporary parent used an
+8.3 short name while the Recycle Bin stored canonical paths. Pointing only a local
+test process's TEMP/TMP at a new short-name fixture reproduced the same failure.
+
+Restore selection, status and dedup now use equivalent existing-ancestor spelling
+without requiring the deleted tail to exist. Reparse/symlink ancestors and
+unexpected metadata errors retain literal matching, so a redirected ancestor
+does not match another original path. Cutoff, newest-entry and collision guards
+remain intact. Added canonical/absent-parent and junction/symlink negative tests.
+All 102 core tests plus the actual roundtrip passed under the 8.3 TEMP alias;
+independent re-review approved the narrowed fix. No test was skipped or weakened.

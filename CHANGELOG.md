@@ -16,6 +16,8 @@ Development candidate only; merging this source does not publish an installer.
   version, and describe duplicate/older-version space as potential savings.
 
 ### Fixed
+- Recycle Bin history and restore recognize Windows short-name parent paths;
+  redirected ancestors never broaden matching to an unrelated original path.
 - MCP version checks stop starting requests if the settings file cannot be read
   or parsed, rather than falling back to an enabled network permission.
 - Older plugin, extension, and browser versions require manual review and cannot
