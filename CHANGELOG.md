@@ -16,6 +16,8 @@ Development candidate only; merging this source does not publish an installer.
   version, and describe duplicate/older-version space as potential savings.
 
 ### Fixed
+- MCP version checks stop starting requests if the settings file cannot be read
+  or parsed, rather than falling back to an enabled network permission.
 - Older plugin, extension, and browser versions require manual review and cannot
   be selected for automatic cleanup; unknown/equal versions remain visible.
 - Remaining-space and safety totals refresh together after successful cleanup;

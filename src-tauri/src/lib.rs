@@ -451,7 +451,7 @@ async fn ai_version_check(
     identities: Vec<String>,
 ) -> Result<Vec<cleaner_core::aiconfig::VersionInfo>, String> {
     let path = settings_path(&app);
-    let enabled = Settings::load(&path).mcp_version_check;
+    let enabled = Settings::version_check_allowed(&path);
     if !enabled {
         return Ok(Vec::new());
     }
@@ -467,7 +467,7 @@ async fn ai_version_check(
             std::time::Duration::from_secs(15),
             |url, timeout| {
                 // Stop starting requests if the user disables checks mid-batch.
-                if !Settings::load(&path).mcp_version_check {
+                if !Settings::version_check_allowed(&path) {
                     return Err("Version checking is disabled".into());
                 }
                 let mut response = agent

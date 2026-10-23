@@ -79,6 +79,14 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// Network permission must not fall back to enabled on a failed read.
+    pub fn version_check_allowed(path: &Path) -> bool {
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|text| serde_json::from_str::<Self>(&text).ok())
+            .is_some_and(|settings| settings.mcp_version_check)
+    }
+
     pub fn load(path: &Path) -> Self {
         std::fs::read_to_string(path)
             .ok()
@@ -103,6 +111,55 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn version_check_permission_fails_closed_when_settings_cannot_be_read() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        assert!(!Settings::version_check_allowed(&p), "missing file");
+        assert!(!Settings::version_check_allowed(tmp.path()), "not a file");
+        for invalid in ["", "{", "null", r#"{"mcp_version_check":"false"}"#] {
+            std::fs::write(&p, invalid).unwrap();
+            assert!(!Settings::version_check_allowed(&p), "invalid settings");
+        }
+        for enabled in [false, true, false] {
+            Settings {
+                mcp_version_check: enabled,
+                ..Default::default()
+            }
+            .save(&p)
+            .unwrap();
+            assert_eq!(Settings::version_check_allowed(&p), enabled);
+        }
+        // Existing valid settings keep the documented default for older files.
+        std::fs::write(&p, "{}").unwrap();
+        assert!(Settings::version_check_allowed(&p));
+    }
+
+    #[test]
+    fn partial_settings_write_stops_starting_version_requests_mid_batch() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        Settings::default().save(&p).unwrap();
+        let mut requests = 0;
+        let versions = crate::aiconfig::check_versions(
+            Settings::version_check_allowed(&p),
+            vec!["npm:first".into(), "npm:second".into()],
+            std::time::Duration::from_secs(1),
+            |_, _| {
+                if !Settings::version_check_allowed(&p) {
+                    return Err("Version checking is disabled".into());
+                }
+                requests += 1;
+                std::fs::write(&p, "{").unwrap();
+                Ok(r#"{"version":"1.0.0"}"#.into())
+            },
+        );
+        assert_eq!(requests, 1, "no request may start during a partial write");
+        assert!(versions
+            .iter()
+            .any(|v| v.error.as_deref() == Some("Version checking is disabled")));
+    }
 
     #[test]
     fn round_trips_and_defaults_missing_fields() {
