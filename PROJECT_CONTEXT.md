@@ -24,7 +24,9 @@ mouse-center selection/clear, keyboard Space, explicit Review selection and
 mixed in-use group toggles. Busy protections remain intact; no cleanup ran and
 fixture/configuration/history hashes stayed unchanged. Fresh automated checks
 and the unsigned local NSIS build passed. After explicit action-time approval,
-the existing installation was updated in place without uninstalling. Its binary
+installer finalization and repair verification were completed without uninstalling.
+The first resumed observation already showed installation complete; initial
+write timing was not independently observed. The installed binary
 matches the tested candidate apart from Tauri's three-byte NSIS bundle marker.
 On an actual 79-item scan, mouse-center and Space toggles changed selection from
 16 / 2.5 GB to 17 / 2.9 GB and back. The 13-row project group selected and cleared
