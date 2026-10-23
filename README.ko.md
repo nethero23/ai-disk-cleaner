@@ -17,7 +17,7 @@
 
 </div>
 
-> 이 번역은 [영어판](README.en.md)보다 업데이트가 늦을 수 있습니다. UI 언어 12개를 제공하는 `0.9.0-rc.1`은 출시 전 검증 중이며 아직 공개되지 않은 비안정 후보입니다. 이전 공개 후보는 `0.8.0-rc.2`입니다. 검증 후 [릴리스 목록](https://github.com/nethero23/ai-disk-cleaner/releases)에서 NSIS와 포터블 ZIP만 수동 배포할 예정입니다. Latest는 안정판 `v0.7.1`을 유지하며, 후보판은 자동 업데이트되지 않고 MSI, `latest.json`, winget/Scoop 매니페스트를 제공하지 않습니다.
+> 이 번역은 [영어판](README.en.md)보다 업데이트가 늦을 수 있습니다. UI 언어 12개를 제공하는 [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1)은 공개된 사전 출시 후보이며 안정판이 아닙니다. [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) 또는 [포터블 ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip)을 직접 다운로드하세요. 공개된 두 패키지의 SHA-256을 다운로드 후 확인했지만 실행하지 않았습니다. Latest는 안정판 `v0.7.1`을 유지하며, 후보판은 자동 업데이트되지 않고 MSI, `latest.json`, winget/Scoop 매니페스트를 제공하지 않습니다.
 >
 > 정리·이동 JSONL 기록은 파일이 없거나 빈 줄뿐이면 빈 기록으로 처리합니다. 읽기·인코딩·레코드 손상은 오류와 재시도를 표시하며, 로딩·오류 중에는 복원·원위치 이동을 막습니다. 휴지통 목록 조회 실패를 영구 삭제로 잘못 표시하지 않습니다.
 >

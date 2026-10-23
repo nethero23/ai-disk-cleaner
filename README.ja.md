@@ -17,7 +17,7 @@
 
 </div>
 
-> この翻訳は [英語版](README.en.md) より更新が遅れることがあります。UI 12言語対応の `0.9.0-rc.1` は公開前の確認中で、未公開・非安定版です。前の公開候補は `0.8.0-rc.2`。確認後は [リリース一覧](https://github.com/nethero23/ai-disk-cleaner/releases) で NSIS とポータブル ZIP のみを手動配布する予定です。Latest は安定版 `v0.7.1` のまま。候補版は自動更新せず、MSI、`latest.json`、winget/Scoop マニフェストを含みません。
+> この翻訳は [英語版](README.en.md) より更新が遅れることがあります。UI 12言語対応の [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) は公開済みのプレリリース候補で、安定版ではありません。[NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) または[ポータブル ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip) を手動で取得できます。両公開パッケージはダウンロードして SHA-256 を検証しましたが、実行していません。Latest は安定版 `v0.7.1` のまま。候補版は自動更新せず、MSI、`latest.json`、winget/Scoop マニフェストを含みません。
 >
 > クリーンアップ／移動履歴の JSONL は、存在しないか空行のみの場合は空と扱います。読み取り・文字コード・レコード破損はエラーと再試行を表示し、読み込み中やエラー時は復元／移動を戻す操作を無効にします。ごみ箱の一覧取得失敗を「完全に消失」と誤表示しません。
 >

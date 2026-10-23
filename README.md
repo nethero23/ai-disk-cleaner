@@ -33,9 +33,9 @@ C 盘又红了，D 盘也快满了？在一台跑 AI 的电脑上，真正占地
 
 Clearwisp 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
 
-## v0.9.0-rc.1 恢复可靠性候选（发布前验收中）
+## v0.9.0-rc.1 恢复可靠性预发布候选
 
-`v0.9.0-rc.1` 正在发布前验收，**尚未发布，也不是稳定版**。上一已发布候选为 [v0.8.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2)。验收通过后，仅在 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 提供 NSIS 安装包（`*_x64-setup.exe`）和便携 ZIP；上方 Latest 仍指向稳定版 `v0.7.1`，候选不自动推送，不提供 MSI、`latest.json` 或 winget/Scoop 清单。
+[v0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) 已作为**预发布候选发布，不是稳定版**。请手动下载 [NSIS 安装包](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe)或[便携 ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip)。上方 Latest 仍指向稳定版 `v0.7.1`，候选不自动推送，不提供 MSI、`latest.json` 或 winget/Scoop 清单。
 
 - **真实历史错误可见**：清理与搬迁 JSONL 日志不存在或只有空行时视为空；无法读取、编码错误或记录损坏会报告错误并可重试，不再静默跳过坏记录。回收站枚举失败不再误报「已不存在」。
 - **日志不可用就停止清理**：清理前先校验并打开历史日志；失败时不动文件。批次中写入或同步失败会停止后续项目，保留已经实际成功的统计，并在前台与后台清理结果中提示。
@@ -49,6 +49,8 @@ Clearwisp 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环
 - **窄窗口历史可读**：长路径省略显示并保留悬浮完整路径，错误信息换行，操作列不再被挤出窗口；新增状态文案覆盖 12 种界面语言。
 
 本轮 67 项离线浏览器检查通过（勾选 25、历史 30、恢复 12），本机自动检查与未签名 NSIS 构建通过。本地构建的 `0.9.0-rc.1` 隔离便携版完成真实 IPC／只读桌面验收：日志占用（OS error 32）、清理／搬迁日志损坏均显错并保留原行，解除占用或恢复原字节后重试成功；4 项 137 B 测试扫描、10 项选择／保护检查及重启后的两行历史显示通过，其中两项仅断言禁用状态、未点击。已退出候选并重开原装 `0.8.0-rc.1`，12 项原装配置、历史、程序及测试样本基线哈希不变。**未做原生界面清理／恢复、安装升级或云端发布包运行验收。**
+
+两项公开发布产物已实际下载，SHA-256 与 GitHub 资产摘要一致；便携程序版本为 `0.9.0-rc.1`，安装器和便携程序均未签名。此次仅检查下载包，未执行，也未替换原装程序。产物大小与哈希见验收清单。
 
 此改动**不是崩溃安全的预写日志（WAL）**：文件已进入回收站后写日志仍可能失败，此时可到 Windows 回收站核查；搬迁日志写入的事务性仍待补齐。历史报错时先点「重试」，仍失败则保留原日志并检查权限与磁盘空间，不要清空日志或删除坏行来隐藏错误。MSI、全新 Windows/WebView2、代码签名及签名更新不在已验证范围。证据与待办见 [验收清单](docs/RELEASE_CHECKLIST.md)。
 
@@ -186,9 +188,9 @@ CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境
 - [x] v0.7 一键撤销、首次运行引导、增长监控、闲置模型建议、系统深度清理（WinSxS 等）、未识别大目录上报、便携版
 - [ ] 上架 winget / Scoop、安装包代码签名
 - [ ] v0.8 候选验收：Material Design 3 新界面、AI 工具只读盘点（skills / MCP / 插件）、重复与冲突提示、可关闭的版本检查
-- [ ] v0.9 恢复可靠性候选：真实历史错误、回收站状态失败处理、日志不可用时停止清理；隔离只读桌面已验收，安装与界面清理／恢复未验收
+- [ ] v0.9 恢复可靠性候选已预发布：隔离只读桌面已验收，公开两包哈希已核验；稳定版、安装与界面清理／恢复验收仍未完成
 
-当前开发候选为 `0.9.0-rc.1`，尚未发布；已发布候选 `0.8.0-rc.2` 可从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载，不替代稳定版。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
+当前已发布候选为 [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1)，需手动下载，不替代稳定版。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
 
 ## 参与贡献
 

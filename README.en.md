@@ -33,9 +33,9 @@ And it is not only C:. Model libraries, conda environments, Docker disks and pro
 
 Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
-## v0.9.0-rc.1 recovery reliability candidate (pre-publication acceptance)
+## v0.9.0-rc.1 recovery reliability prerelease candidate
 
-`v0.9.0-rc.1` is undergoing pre-publication acceptance: **not published yet and not stable**. The previous published candidate is [v0.8.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2). After acceptance, only its NSIS installer (`*_x64-setup.exe`) and portable ZIP will be offered in the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases). Latest remains on stable `v0.7.1`; candidates are not offered through automatic updates and provide no MSI, `latest.json`, or winget/Scoop manifests.
+[v0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) is published as a **prerelease candidate, not a stable release**. Manually download its [NSIS installer](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) or [portable ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip). Latest remains on stable `v0.7.1`; candidates are not offered through automatic updates and provide no MSI, `latest.json`, or winget/Scoop manifests.
 
 - **Real history failures are visible**: missing or blank cleanup/relocation JSONL logs are empty; unreadable files, invalid encoding, or damaged records report errors with Retry instead of silently skipping records. Failed Recycle Bin enumeration no longer reports items as permanently gone.
 - **Unavailable history stops cleanup**: validate and open the cleanup log before touching files. A failed preflight leaves files untouched; an append/sync failure stops subsequent items, retains actual successful cleanup totals, and surfaces a warning in foreground and background results.
@@ -49,6 +49,8 @@ Clearwisp explains every gigabyte: **which model, which conda environment, which
 - **Readable history in narrow windows**: long paths truncate with full-path tooltips, errors wrap, and action columns stay inside the window. New status text covers all 12 UI languages.
 
 This round passed 67 offline browser checks (25 selection, 30 history, 12 recovery), local automated checks, and an unsigned NSIS build. A locally built, isolated `0.9.0-rc.1` portable copy passed real IPC/read-only desktop checks: a locked log (OS error 32) and damaged cleanup/relocation logs showed errors while retaining loaded rows; Retry succeeded after unlocking or restoring original bytes. A four-item, 137 B fixture scan, 10 selection/protection checks, and two history rows after restart passed; two checks only asserted disabled states without clicking. The candidate was exited and the original `0.8.0-rc.1` reopened; 12 baseline hashes covering its settings, history, program and test fixtures remained unchanged. **Native-UI cleanup/restore, installation/upgrade and execution of a cloud release package were not tested.**
+
+Both public release assets were downloaded and their SHA-256 hashes matched GitHub asset digests. The portable executable reports `0.9.0-rc.1`; the installer and portable executable are unsigned. Downloaded packages were inspected, not executed, and the installed application was not replaced. Asset sizes and hashes are in the acceptance checklist.
 
 This is **not a crash-safe write-ahead journal (WAL)**: a log write may fail after a file reaches the Recycle Bin; inspect the Windows Recycle Bin in that case. Transactional relocation-log writes remain deferred. If history fails to load, try Retry, then preserve the original log and check permissions and free disk space; do not empty it or delete damaged lines to conceal the error. MSI, pristine Windows/WebView2, code signing, and signed updates are outside verified coverage. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
@@ -185,9 +187,9 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [x] v0.7 Undo, first-run guide, growth monitoring, idle-model hints, deep system clean (WinSxS etc.), unknown-big-folder reports, portable build
 - [ ] winget / Scoop listing, installer code signing
 - [ ] v0.8 candidate acceptance: Material Design 3 UI, read-only AI-tool inventory (skills / MCP / plugins), duplicate/conflict hints, and optional version checks
-- [ ] v0.9 recovery reliability candidate: real history errors, unavailable Recycle Bin status, and cleanup stopping on log failure; isolated read-only desktop accepted, installation and UI cleanup/restore untested
+- [ ] v0.9 recovery reliability candidate published as prerelease: isolated read-only desktop accepted and both public asset hashes verified; stable, installation and UI cleanup/restore acceptance remain incomplete
 
-The development candidate is `0.9.0-rc.1`, not published yet. The published candidate `0.8.0-rc.2` remains available manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases); candidates do not replace stable releases. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+The published candidate is [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1), available by manual download; candidates do not replace stable releases. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 ## Contributing
 

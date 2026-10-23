@@ -17,7 +17,7 @@
 
 </div>
 
-> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.9.0-rc.1`, com 12 idiomas de interface, está em validação: ainda não foi publicada nem é estável. A candidata já publicada é `0.8.0-rc.2`. Após a validação, estão previstos apenas NSIS e ZIP portátil manuais na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; candidatas não oferecem atualização automática, MSI, `latest.json` ou manifestos winget/Scoop.
+> Esta tradução pode estar atrás da [versão em inglês](README.en.md). [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1), com 12 idiomas de interface, foi publicada como candidata de pré-lançamento, não como versão estável. Baixe manualmente o [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) ou o [ZIP portátil](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip). Os dois pacotes públicos foram baixados e verificados por SHA-256, sem execução. Latest continua na estável `v0.7.1`; candidatas não oferecem atualização automática, MSI, `latest.json` ou manifestos winget/Scoop.
 >
 > Logs JSONL de limpeza/movimentação ausentes são vazios; falhas de leitura, codificação ou registros são exibidas com Tentar novamente. Restaurar e mover de volta ficam bloqueados durante o carregamento ou erro. Falha ao listar a Lixeira não é mais tratada como perda definitiva.
 >
