@@ -18,8 +18,15 @@ interaction checks passed, plus a rebuilt native fixture run covering visible
 mouse-center selection/clear, keyboard Space, explicit Review selection and
 mixed in-use group toggles. Busy protections remain intact; no cleanup ran and
 fixture/configuration/history hashes stayed unchanged. Fresh automated checks
-and the unsigned local NSIS build passed. The installed copy still needs the
-separate action-time approval to replace its binary with this repaired build.
+and the unsigned local NSIS build passed. After explicit action-time approval,
+the existing installation was updated in place without uninstalling. Its binary
+matches the tested candidate apart from Tauri's three-byte NSIS bundle marker.
+On an actual 79-item scan, mouse-center and Space toggles changed selection from
+16 / 2.5 GB to 17 / 2.9 GB and back. The 13-row project group selected and cleared
+correctly; busy Chrome rows remained disabled. A full exit/restart through the
+original app entry succeeded, and the existing history still rendered. Settings
+and cleanup history remained byte-identical. No cleanup, GitHub push, tag or
+public package release was performed; original binaries/profiles are backed up.
 
 ## Approved v0.8 scope
 
