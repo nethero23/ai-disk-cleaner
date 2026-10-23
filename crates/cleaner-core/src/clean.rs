@@ -90,7 +90,8 @@ pub fn delete_item(item: &ScanItem) -> Result<()> {
     Ok(())
 }
 
-/// Deletes each item, logging to `log_path`, and never stops on one failure.
+/// Deletes each item, logging to `log_path`. Item failures do not stop the
+/// batch; unavailable or failed audit persistence stops all further deletion.
 pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
     // Foreground and scheduled cleanup must not interleave journal records.
     static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
