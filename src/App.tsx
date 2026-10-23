@@ -745,8 +745,9 @@ export function App() {
   }
 
   function toggleGroup(items: ScanItem[]) {
-    const all = items.every((i) => selected.has(i.id));
+    const selectable = items.filter((i) => !i.in_use_by);
     setSelected((prev) => {
+      const all = selectable.length > 0 && selectable.every((i) => prev.has(i.id));
       const next = new Set(prev);
       for (const i of items) {
         if (all || i.in_use_by) next.delete(i.id);
@@ -1488,12 +1489,13 @@ export function App() {
           <div className="clean-groups">
             {groups.map((g) => {
               const open = !collapsed.has(g.key);
-              const allOn = g.items.every((i) => selected.has(i.id));
-              const someOn = g.items.some((i) => selected.has(i.id));
+              const selectable = g.items.filter((i) => !i.in_use_by);
+              const allOn = selectable.length > 0 && selectable.every((i) => selected.has(i.id));
+              const someOn = selectable.some((i) => selected.has(i.id));
               return (
                 <section key={g.key} className="cg">
                   <header className="cg-head">
-                    <Checkbox label={g.title} checked={allOn} indeterminate={someOn} onChange={() => toggleGroup(g.items)} />
+                    <Checkbox label={g.title} checked={allOn} indeterminate={someOn} disabled={selectable.length === 0} onChange={() => toggleGroup(g.items)} />
                     <button
                       type="button"
                       className="md-interactive cg-title"
