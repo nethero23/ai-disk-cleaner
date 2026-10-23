@@ -17,11 +17,14 @@ NSIS packaging. All 67 mock-IPC browser checks passed (25 selection/inventory,
 30 history, 12 audit-failure/result checks). Independent in-host production
 review found no new P1/P2 issues; external-model tooling is unavailable.
 
-The v0.9 interactive desktop check is currently blocked: capture is black and
-activation failed after fresh window selection. No UI input, candidate launch,
-installation or personal-file cleanup followed that failure. Isolated fixtures
-are prepared; prior rc.2 desktop acceptance is not v0.9 acceptance. Private
-evidence stays in ignored `target/v09-release-20261024/`.
+After the desktop was unlocked, the isolated bundled v0.9 app passed native
+history-error/retry checks for an exclusively locked cleanup log and malformed
+cleanup/relocation logs, retaining both synthetic rows. Fixture-only scanning
+found four items (137 B); ten mouse/keyboard/group/manual-review/disabled-state
+selection checks passed. Both rows survived complete exit/restart. The candidate
+was then exited and the original installed app reopened; all twelve baseline
+file hashes stayed unchanged. No native UI cleanup/restore or installer upgrade
+ran. Private evidence stays in ignored `target/v09-release-20261024/`.
 
 This is not a crash-safe write-ahead journal. Unexpected post-deletion append
 failure is visible and stops the batch, but cannot guarantee a durable success

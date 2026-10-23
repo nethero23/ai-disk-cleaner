@@ -16,10 +16,12 @@
   frontend build, native debug/release and unsigned NSIS packaging passed.
 - [x] Mock-IPC browser lanes: selection/inventory 25, history 30, recovery 12.
   Coverage includes retry, stale-action blocking and audit-failure totals.
-- [ ] v0.9 interactive desktop acceptance: capture is black and activation failed
-  after reselecting the existing app. UI automation stopped; no candidate was
-  launched or installed and no personal files were cleaned. Await an unlocked,
-  connected desktop. Prior rc.2 results do not close this gate.
+- [x] After unlock, isolated bundled native v0.9 history retained both synthetic
+  rows on actual file-lock and malformed cleanup/relocation-log errors; retries
+  succeeded after removing each fault. Four fixture items (137 B), ten selection
+  checks and complete exit/restart passed. Disabled-state checks did not click
+  busy controls. All twelve baseline hashes stayed unchanged; the original
+  installed app was reopened. No native UI cleanup/restore or installer upgrade ran.
 - [ ] Verify tagged CI and both public package downloads before claiming delivery.
 
 The owner authorized v0.9 development through publication without approval
