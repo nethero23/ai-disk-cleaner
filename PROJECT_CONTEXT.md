@@ -7,6 +7,20 @@ v0.8.0-rc.1 source merged to `main` through PR #59; tested source is
 NSIS desktop/install/upgrade acceptance passed. This is not a published release;
 the latest local release tag remains `v0.7.1`.
 
+### Scan-selection follow-up (local only)
+
+`1b35511` fixes manual selection on a local follow-up branch, not yet merged or
+publicly released. Legacy 16px native-input sizing missed the center of the 40px
+drawn checkbox; the input now covers the control. Group selection/clear and its
+checked state now consider only eligible rows, with all-in-use groups disabled.
+Both original failures were reproduced before their fixes. All 25 browser
+interaction checks passed, plus a rebuilt native fixture run covering visible
+mouse-center selection/clear, keyboard Space, explicit Review selection and
+mixed in-use group toggles. Busy protections remain intact; no cleanup ran and
+fixture/configuration/history hashes stayed unchanged. Fresh automated checks
+and the unsigned local NSIS build passed. The installed copy still needs the
+separate action-time approval to replace its binary with this repaired build.
+
 ## Approved v0.8 scope
 
 - Material Design 3 UI, light/dark/system theme, and localized screens.
