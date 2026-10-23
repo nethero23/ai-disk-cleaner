@@ -23,7 +23,7 @@
 >
 > Si falla validar o abrir el registro, no se limpian archivos. Un fallo de escritura/sincronización detiene los elementos posteriores, conserva los éxitos reales y muestra una advertencia en resultados de primer y segundo plano. Los registros antiguos válidos sin ID de lote ni salto de línea final siguen siendo compatibles. No es un WAL seguro ante fallos; queda pendiente la escritura transaccional de traslados. Reintenta y conserva el registro original mientras compruebas permisos y espacio libre.
 >
-> Pasaron 67 comprobaciones de navegador (25 selección + 30 historial + 12 recuperación), las pruebas automáticas locales y una compilación NSIS sin firma. La aceptación de escritorio real de `0.9` sigue incompleta; no se sustituyó la aplicación instalada. Pasos pendientes: [lista de aceptación](docs/RELEASE_CHECKLIST.md).
+> Pasaron 67 comprobaciones de navegador (25 selección + 30 historial + 12 recuperación), las pruebas automáticas locales y una compilación NSIS sin firma. Una copia portable `0.9.0-rc.1` local y aislada mostró mediante IPC real el bloqueo del registro (OS error 32) y daños en ambos historiales, conservó las filas y permitió reintentar tras desbloquear o restaurar los bytes originales. Pasaron el análisis de solo lectura, 10 comprobaciones de selección/protección y dos filas de historial tras reiniciar; dos comprobaciones solo verificaron estados desactivados, sin pulsarlos. Se reabrió la original `0.8.0-rc.1`, con hashes de ajustes, historial, programa y muestras intactos. No se probaron limpieza/restauración real en la interfaz, instalación/actualización ni ejecución de un paquete publicado en la nube. Véase la [lista de aceptación](docs/RELEASE_CHECKLIST.md).
 
 ## Por qué
 

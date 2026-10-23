@@ -37,6 +37,8 @@ Rust tests live beside implementations in `#[cfg(test)]` modules with descriptiv
 
 There is no configured `npm test` or frontend lint script; run `npm run build` and `node --test tools/*.test.mjs`. For translations, also run `node tools/i18n_check.mjs`. Test native startup policy with `cargo test -p ai-disk-cleaner --lib`. Validate desktop behavior manually for native/UI changes.
 
+Separate mock IPC, isolated native read-only, cleanup/restore, installer and published-package evidence; one passing lane does not certify the others. Preserve original profiles and fixture hashes during desktop acceptance.
+
 ## Commit & Pull Request Guidelines
 
 History mixes English/Chinese summaries, version prefixes, and scoped subjects such as `feat(rules): ...`. Keep commits focused. PRs should explain rationale, link relevant issues, list verification results, and include screenshots for UI changes. Update Chinese/English READMEs before synchronizing translations.

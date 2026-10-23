@@ -23,7 +23,7 @@
 >
 > Scheitern Prüfung oder Öffnen des Bereinigungsprotokolls, werden keine Dateien gelöscht. Schreib-/Synchronisierungsfehler stoppen weitere Einträge; tatsächliche Erfolge und Warnungen bleiben in Vorder-/Hintergrundergebnissen erhalten. Gültige Altprotokolle ohne Batch-ID oder abschließenden Zeilenumbruch bleiben lesbar. Dies ist kein absturzsicheres WAL; transaktionale Verschiebungsprotokolle stehen noch aus. Erst Wiederholen nutzen, dann Originalprotokoll behalten und Rechte sowie freien Speicher prüfen.
 >
-> 67 Browserprüfungen (25 Auswahl + 30 Verlauf + 12 Wiederherstellung), lokale automatische Prüfungen und ein unsignierter NSIS-Build bestanden. Die echte Desktop-Abnahme für `0.9` ist nicht abgeschlossen; die installierte App wurde nicht ersetzt. Offene Schritte: [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
+> 67 Browserprüfungen (25 Auswahl + 30 Verlauf + 12 Wiederherstellung), lokale automatische Prüfungen und ein unsignierter NSIS-Build bestanden. Ein lokal gebauter, isolierter portabler `0.9.0-rc.1` zeigte per echtem IPC die Logsperre (OS error 32) und Schäden an beiden Verläufen, behielt Zeilen und erlaubte Wiederholen nach Entsperren bzw. Wiederherstellen der Originalbytes. Nur lesender Scan, 10 Auswahl-/Schutzprüfungen und zwei Verlaufszeilen nach Neustart bestanden; zwei Prüfungen bestätigten nur deaktivierte Zustände ohne Klick. Die ursprüngliche `0.8.0-rc.1` wurde wieder geöffnet, Basis-Hashes von Einstellungen, Verlauf, Programm und Testdaten blieben gleich. Echte UI-Bereinigung/Wiederherstellung, Installation/Upgrade und Ausführung eines Cloud-Release-Pakets wurden nicht getestet. Siehe [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
 
 ## Warum
 

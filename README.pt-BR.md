@@ -23,7 +23,7 @@
 >
 > Se validar ou abrir o log falhar, nenhum arquivo é limpo. Falhas de escrita/sincronização param os próximos itens, mantêm os sucessos reais e exibem aviso nos resultados em primeiro e segundo plano. Logs antigos válidos sem ID de lote ou quebra de linha final continuam compatíveis. Não é um WAL seguro contra falhas; a escrita transacional das movimentações permanece pendente. Tente novamente, preserve o log original e verifique permissões e espaço livre.
 >
-> Passaram 67 verificações no navegador (25 seleção + 30 histórico + 12 recuperação), testes automáticos locais e uma compilação NSIS sem assinatura. A aceitação de desktop real de `0.9` está incompleta; o aplicativo instalado não foi substituído. Etapas restantes: [lista de aceitação](docs/RELEASE_CHECKLIST.md).
+> Passaram 67 verificações no navegador (25 seleção + 30 histórico + 12 recuperação), testes automáticos locais e uma compilação NSIS sem assinatura. Uma cópia portátil `0.9.0-rc.1` local e isolada exibiu por IPC real o bloqueio do log (OS error 32) e danos nos dois históricos, preservou as linhas e permitiu tentar novamente após desbloquear ou restaurar os bytes originais. Passaram a análise somente leitura, 10 verificações de seleção/proteção e duas linhas de histórico após reiniciar; duas verificações apenas confirmaram estados desativados, sem clicar. A original `0.8.0-rc.1` foi reaberta, com hashes de configurações, histórico, programa e amostras inalterados. Limpeza/restauração real pela interface, instalação/atualização e execução de pacote publicado na nuvem não foram testadas. Veja a [lista de aceitação](docs/RELEASE_CHECKLIST.md).
 
 ## Por quê
 
