@@ -42,7 +42,7 @@ The current source is a development candidate, **not a public release**. Downloa
 - **Live post-clean totals**: rebuild remaining items, total size, and safety-level amounts from backend-confirmed successes; retain failed items.
 - **Bounded inventory concurrency**: at most four tool readers run concurrently, without a persistent cache.
 
-The final desktop cleanup recheck awaits confirmation. Installation, upgrade, and signed updater delivery are not yet validated. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
+Local fixture cleanup/restore, an isolated-directory NSIS install, and an in-place upgrade from 0.7.1 passed, preserving existing settings and history. MSI installation and signed updater delivery remain untested; this was not a pristine Windows environment. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
 
 ## Features
 

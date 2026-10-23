@@ -174,3 +174,36 @@ does not match another original path. Cutoff, newest-entry and collision guards
 remain intact. Added canonical/absent-parent and junction/symlink negative tests.
 All 102 core tests plus the actual roundtrip passed under the 8.3 TEMP alias;
 independent re-review approved the narrowed fix. No test was skipped or weakened.
+
+### Latest-main local packaging and acceptance (2026-10-23)
+
+Source: merged `main` at `73829ed01ea4ffa26271ea2cd35a03bd27d6f235` (PR #59).
+Rebuilt unsigned NSIS/MSI and a pristine portable ZIP with both final fixes.
+The local-only MSI override is `0.8.0.1`; application version remains
+`0.8.0-rc.1`. Archive executable and portable marker were verified.
+
+| Gate | Result |
+| --- | --- |
+| Fresh automated checks | 102 core tests, actual Windows roundtrip, two native tests, fmt, core/native Clippy, TypeScript/build, six Node tests and ten additional locales passed |
+| Native fixture scope | All 136 built-in rules disabled; exactly two new synthetic items, 4 KB Safe selected and 8 KB Review unselected |
+| Cleanup and live overview | Explicitly approved Safe directory alone moved to Recycle Bin; without rescanning, overview became one item / 8 KB, Safe 0 B, Review 8 KB |
+| Native History Restore | Returned the exact 4,096-byte Safe file; Safe and Review SHA-256 matched baseline, and read-only rescan found both again |
+| Isolated-directory NSIS install | Installer completed into a previously absent test directory; actual installed-mode startup and fixture-only scan passed, with no portable marker |
+| Original environment preservation | Original binary, uninstall/manufacturer registration, shortcuts, Roaming and Local/WebView profiles backed up; all 361 original profile files and original shortcuts restored byte-for-byte before the actual upgrade |
+| Actual NSIS upgrade | After separate action-time approval, existing 0.7.1 upgraded at its original location without uninstall; registry and executable report 0.8.0-rc.1 and payload matches the tested NSIS binary |
+| Data and restart | Existing history totals match the unchanged log; settings and all 16 Roaming files unchanged through native startup, normal exit and relaunch via the system app entry; shortcut targets remain correct |
+| Remaining gates | MSI actual installation, pristine Windows/missing-WebView2 setup, installer code signing and signed-updater end-to-end delivery were not exercised |
+
+Only the new test directory was cleaned; no personal data or existing history
+entry was cleaned/restored. Existing scheduler and automatic-cleanup settings
+remained disabled and unchanged. The separate-directory install used an existing
+Windows installation with WebView2, not a pristine OS. The NSIS directory page's
+**Next** starts installation immediately; there is no later summary page. The
+test-directory installation crossed that transition without the extra action-time
+confirmation; the actual original-location upgrade stopped there for approval.
+
+Detailed private evidence, artifact hashes and rollback backups are under ignored
+`target/main-acceptance-20261023/`, notably `artifact-manifest.json`,
+`fixture-after-restore.json`, `clean-install-result.json`, `upgrade-result.json`
+and `acceptance-result.json`. These local packages supersede prior candidate
+receipts. No release tag, installer upload or public release was performed.
