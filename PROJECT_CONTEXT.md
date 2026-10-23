@@ -2,8 +2,8 @@
 
 ## Current milestone
 
-`0.9.0-rc.1` is the next recovery-reliability candidate. Publication is authorized;
-it is not a stable promotion and does not replace the installed application.
+`0.9.0-rc.1` is published as a [GitHub prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1).
+It is not a stable promotion and does not replace the installed application.
 Cleanup and relocation log read/UTF-8/parse errors now reject IPC rather than
 masquerading as empty history. Recycle Bin listing errors no longer mark paths
 gone. Cleanup checks the audit log before deletion; a write/sync failure stops
@@ -25,6 +25,17 @@ selection checks passed. Both rows survived complete exit/restart. The candidate
 was then exited and the original installed app reopened; all twelve baseline
 file hashes stayed unchanged. No native UI cleanup/restore or installer upgrade
 ran. Private evidence stays in ignored `target/v09-release-20261024/`.
+
+[PR #65](https://github.com/nethero23/ai-disk-cleaner/pull/65) merged at
+`72872087f6a183ae2d06ef421495a234e465a40c`; the new annotated release tag targets
+that exact reviewed source tree. [Tag CI](https://github.com/nethero23/ai-disk-cleaner/actions?query=branch%3Av0.9.0-rc.1)
+passed on Windows/Linux. Both public downloads match GitHub's SHA-256 digests.
+The portable ZIP contains only its executable, README, empty data directory and
+marker; product version is `0.9.0-rc.1`. Both Windows binaries are `NotSigned`.
+Downloaded cloud binaries were inspected, not executed. Exactly NSIS and portable
+ZIP were published: no MSI, updater or package-manager manifests. Stable Latest
+remains `v0.7.1`, and the installed `0.8.0-rc.1` stays unchanged. Package hashes
+are recorded in the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
 This is not a crash-safe write-ahead journal. Unexpected post-deletion append
 failure is visible and stops the batch, but cannot guarantee a durable success

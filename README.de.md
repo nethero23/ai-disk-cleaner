@@ -17,7 +17,7 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.9.0-rc.1` mit 12 UI-Sprachen ist in der Abnahme, noch nicht veröffentlicht und nicht stabil. Der vorige veröffentlichte Kandidat ist `0.8.0-rc.2`. Nach der Abnahme sind nur NSIS und portable ZIP manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) vorgesehen. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten erhalten keine automatischen Updates, MSI, `latest.json` oder winget/Scoop-Manifeste.
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) mit 12 UI-Sprachen ist als Vorabkandidat veröffentlicht, nicht als stabile Version. [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) oder [portable ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip) manuell herunterladen. Beide öffentlichen Pakete wurden heruntergeladen und per SHA-256 geprüft, aber nicht ausgeführt. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten erhalten keine automatischen Updates, MSI, `latest.json` oder winget/Scoop-Manifeste.
 >
 > Fehlende JSONL-Protokolle für Bereinigung und Verschiebung gelten als leer; Lese-, Kodierungs- und Datensatzfehler werden mit Wiederholen gemeldet. Wiederherstellen und Zurückverschieben sind beim Laden oder bei Fehlern gesperrt. Eine fehlgeschlagene Papierkorb-Abfrage wird nicht als endgültiger Verlust ausgegeben.
 >

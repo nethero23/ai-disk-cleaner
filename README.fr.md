@@ -17,7 +17,7 @@
 
 </div>
 
-> Cette traduction peut être en retard sur la [version anglaise](README.en.md). `0.9.0-rc.1`, avec 12 langues d’interface, est en validation, pas encore publiée ni stable. La candidate déjà publiée est `0.8.0-rc.2`. Après validation, seuls NSIS et le ZIP portable sont prévus en téléchargement manuel dans la [liste des versions](https://github.com/nethero23/ai-disk-cleaner/releases). Latest reste sur la stable `v0.7.1` ; les candidates n’offrent ni mise à jour automatique, ni MSI, ni `latest.json`, ni manifestes winget/Scoop.
+> Cette traduction peut être en retard sur la [version anglaise](README.en.md). [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1), avec 12 langues d’interface, est publiée comme préversion candidate, pas comme version stable. Téléchargez manuellement [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) ou le [ZIP portable](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip). Les deux paquets publics ont été téléchargés et leurs SHA-256 vérifiés, sans exécution. Latest reste sur la stable `v0.7.1` ; les candidates n’offrent ni mise à jour automatique, ni MSI, ni `latest.json`, ni manifestes winget/Scoop.
 >
 > Les journaux JSONL de nettoyage/déplacement absents sont vides ; les erreurs de lecture, d’encodage ou de données sont signalées avec Réessayer. Restaurer et remettre à l’emplacement initial restent bloqués pendant le chargement ou une erreur. Un échec de lecture de la Corbeille n’est plus présenté comme une disparition définitive.
 >

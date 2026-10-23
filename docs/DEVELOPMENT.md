@@ -53,7 +53,7 @@ consequence_en = "…"
 
 获得发布授权后，推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建安装包并发布到 GitHub Releases。tag 必须匹配 `package.json`、Tauri 配置及 Rust workspace 的版本；可先运行 `node tools/release-policy.mjs v0.9.0-rc.1` 只读校验。
 
-带预发布后缀的候选（如 `v0.8.0-rc.1`）仅发布 NSIS 和便携 ZIP，标为 prerelease，不成为 Latest，不生成 MSI、`latest.json` 或 winget/Scoop 清单。候选需从 Releases 列表手动下载；稳定版仍构建 NSIS/MSI，并按签名情况生成更新与清单。当前验收边界见 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)。
+带预发布后缀的候选（如已发布的 [v0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1)）仅发布 NSIS 和便携 ZIP，标为 prerelease，不成为 Latest，不生成 MSI、`latest.json` 或 winget/Scoop 清单。候选需从 Releases 列表手动下载；稳定版仍构建 NSIS/MSI，并按签名情况生成更新与清单。当前验收边界见 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)。
 
 应用内自动更新走 Tauri updater 插件，更新源是 GitHub Releases 里的 `latest.json`（CI 由 `.github/latest_json.py` 生成）。更新包必须签名：仓库 Secrets 里需要 `TAURI_SIGNING_PRIVATE_KEY`（`tauri signer generate` 生成的私钥文件内容）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`（没有密码就留空）；公钥在 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`。没配 Secrets 时发布照常，只是不生成签名和 `latest.json`，应用不会提示这个版本。
 

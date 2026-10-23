@@ -17,7 +17,7 @@
 
 </div>
 
-> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). `0.9.0-rc.1`, con 12 idiomas de interfaz, está en validación: aún no está publicada ni es estable. La candidata ya publicada es `0.8.0-rc.2`. Tras la validación solo se prevén NSIS y ZIP portable manuales en la [lista de versiones](https://github.com/nethero23/ai-disk-cleaner/releases). Latest sigue en la estable `v0.7.1`; las candidatas no incluyen actualización automática, MSI, `latest.json` ni manifiestos winget/Scoop.
+> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1), con 12 idiomas de interfaz, está publicada como candidata preliminar, no como versión estable. Descarga manualmente [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) o el [ZIP portable](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip). Ambos paquetes públicos se descargaron y verificaron por SHA-256, pero no se ejecutaron. Latest sigue en la estable `v0.7.1`; las candidatas no incluyen actualización automática, MSI, `latest.json` ni manifiestos winget/Scoop.
 >
 > Los registros JSONL de limpieza/traslado inexistentes se consideran vacíos; los fallos de lectura, codificación o datos se muestran con Reintentar. Restaurar y devolver al origen siguen bloqueados durante la carga o los errores. Un fallo al enumerar la Papelera ya no se presenta como pérdida definitiva.
 >

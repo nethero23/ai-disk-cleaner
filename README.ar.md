@@ -19,7 +19,7 @@
 
 <div dir="rtl">
 
-> قد تتأخر هذه الترجمة عن [النسخة الإنجليزية](README.en.md). `0.9.0-rc.1` يدعم 12 لغة للواجهة وهو قيد التحقق، ولم يُنشر بعد وليس مستقرًا. المرشح المنشور السابق هو `0.8.0-rc.2`. بعد التحقق يُخطط لتوفير NSIS وZIP المحمول فقط يدويًا في [قائمة الإصدارات](https://github.com/nethero23/ai-disk-cleaner/releases). يبقى Latest عند المستقر `v0.7.1`؛ لا تحديث تلقائي ولا MSI أو `latest.json` أو ملفات winget/Scoop للمرشحين.
+> قد تتأخر هذه الترجمة عن [النسخة الإنجليزية](README.en.md). نُشر [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) بواجهة من 12 لغة كمرشح تجريبي، وليس إصدارًا مستقرًا. نزّل [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) أو [ZIP المحمول](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip) يدويًا. نُزّلت الحزمتان العامتان وتحققنا من SHA-256 دون تشغيلهما. يبقى Latest عند المستقر `v0.7.1`؛ لا تحديث تلقائي ولا MSI أو `latest.json` أو ملفات winget/Scoop للمرشحين.
 >
 > تُعد سجلات JSONL المفقودة للتنظيف والنقل فارغة؛ أما أخطاء القراءة والترميز والسجلات التالفة فتظهر مع إعادة المحاولة. تُمنع الاستعادة والإرجاع أثناء التحميل أو الخطأ. لم يعد فشل تعداد سلة المحذوفات يُعرض كفقدان نهائي.
 >
