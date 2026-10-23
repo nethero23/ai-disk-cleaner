@@ -17,9 +17,11 @@
 
 </div>
 
-> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). `0.8.0-rc.1` es una candidata preliminar con 12 idiomas de interfaz, no una versión estable. Tras su publicación, descarga manualmente el instalador NSIS o el ZIP portable desde la [lista de versiones](https://github.com/nethero23/ai-disk-cleaner/releases). Latest sigue en la estable `v0.7.1`; la candidata no se distribuye mediante actualización automática ni incluye MSI, `latest.json` o manifiestos winget/Scoop.
+> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). `0.8.0-rc.2`, con 12 idiomas de interfaz, está en preparación y aún no se ha publicado; la candidata publicada es `0.8.0-rc.1`, no una versión estable. Tras su publicación, descarga manualmente el instalador NSIS o el ZIP portable desde la [lista de versiones](https://github.com/nethero23/ai-disk-cleaner/releases). Latest sigue en la estable `v0.7.1`; las candidatas no se distribuyen mediante actualización automática ni incluyen MSI, `latest.json` o manifiestos winget/Scoop.
 >
-> Corregido: marcar/desmarcar en el centro de la casilla o con Espacio y seleccionar/vaciar grupos con elementos en uso, sin quitar su protección. Pasaron 25 comprobaciones de navegador, 10 nativas aisladas y 10 de la instalación real, incluida la reinstalación en el mismo lugar y el reinicio. Ajustes e historial sin cambios; estas pruebas de selección no limpiaron archivos. Pasos pendientes: [lista de aceptación](docs/RELEASE_CHECKLIST.md).
+> El instalador publicado en GitHub `rc.1` pasó la reinstalación en el mismo lugar, el reinicio completo y 10 comprobaciones de selección. Ajustes, historial y accesos directos mantuvieron sus hashes; no se limpiaron archivos. Los elementos en uso siguen protegidos.
+>
+> `rc.2` muestra la carga del historial, conserva filas y permite reintentar tras errores IPC, descarta respuestas antiguas y mejora rutas/errores largos. Restaurar y devolver a origen quedan desactivados durante la carga o los errores. Pasaron 53 comprobaciones de navegador (28 de historial + 25 existentes) y una prueba de escritorio aislado sin sustituir la aplicación instalada. No cubre todos los errores de lectura del disco. Pasos pendientes: [lista de aceptación](docs/RELEASE_CHECKLIST.md).
 
 ## Por qué
 

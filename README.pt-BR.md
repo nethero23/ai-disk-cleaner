@@ -17,9 +17,11 @@
 
 </div>
 
-> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.8.0-rc.1` é uma candidata de pré-lançamento com 12 idiomas de interface, não uma versão estável. Após a publicação, baixe manualmente o instalador NSIS ou o ZIP portátil na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; a candidata não é distribuída por atualização automática nem inclui MSI, `latest.json` ou manifestos winget/Scoop.
+> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.8.0-rc.2`, com 12 idiomas de interface, está em preparação e ainda não foi publicada; a candidata publicada é `0.8.0-rc.1`, não uma versão estável. Após a publicação, baixe manualmente o instalador NSIS ou o ZIP portátil na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; candidatas não são distribuídas por atualização automática nem incluem MSI, `latest.json` ou manifestos winget/Scoop.
 >
-> Corrigido: marcar/desmarcar no centro da caixa ou com Espaço e selecionar/limpar grupos com itens em uso, mantendo sua proteção. Passaram 25 verificações no navegador, 10 nativas isoladas e 10 na instalação real, incluindo reinstalação no mesmo local e reinício. Configurações e histórico inalterados; esses testes de seleção não limparam arquivos. Etapas restantes: [lista de aceitação](docs/RELEASE_CHECKLIST.md).
+> O instalador publicado no GitHub `rc.1` passou na reinstalação no mesmo local, reinício completo e 10 verificações de seleção. Configurações, histórico e atalhos mantiveram seus hashes; não houve limpeza. Itens em uso continuam protegidos.
+>
+> `rc.2` mostra o carregamento do histórico, preserva linhas e permite tentar novamente após falhas IPC, ignora respostas antigas e melhora caminhos/erros longos. Restaurar e mover de volta ficam desativados durante carregamento ou erro. Passaram 53 verificações no navegador (28 de histórico + 25 existentes) e um teste de desktop isolado, sem substituir o aplicativo instalado. Nem todos os erros de leitura de disco são cobertos. Etapas restantes: [lista de aceitação](docs/RELEASE_CHECKLIST.md).
 
 ## Por quê
 
