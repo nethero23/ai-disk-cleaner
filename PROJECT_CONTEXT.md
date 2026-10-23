@@ -2,6 +2,33 @@
 
 ## Current milestone
 
+`0.9.0-rc.1` is the next recovery-reliability candidate. Publication is authorized;
+it is not a stable promotion and does not replace the installed application.
+Cleanup and relocation log read/UTF-8/parse errors now reject IPC rather than
+masquerading as empty history. Recycle Bin listing errors no longer mark paths
+gone. Cleanup checks the audit log before deletion; a write/sync failure stops
+subsequent items, exposes `log_error`, and preserves actual successes and skipped
+items in foreground/background results. Legacy valid JSONL needs no migration.
+
+Fresh local checks passed: nine Node tests, 111 core unit tests, one Windows
+temporary-fixture Recycle Bin/restore roundtrip, two native policy tests, locale
+parity, fmt, core/native Clippy, frontend build, native debug/release and unsigned
+NSIS packaging. All 67 mock-IPC browser checks passed (25 selection/inventory,
+30 history, 12 audit-failure/result checks). Independent in-host production
+review found no new P1/P2 issues; external-model tooling is unavailable.
+
+The v0.9 interactive desktop check is currently blocked: capture is black and
+activation failed after fresh window selection. No UI input, candidate launch,
+installation or personal-file cleanup followed that failure. Isolated fixtures
+are prepared; prior rc.2 desktop acceptance is not v0.9 acceptance. Private
+evidence stays in ignored `target/v09-release-20261024/`.
+
+This is not a crash-safe write-ahead journal. Unexpected post-deletion append
+failure is visible and stops the batch, but cannot guarantee a durable success
+record; transactional relocation log writes remain a separate follow-up.
+
+### Published rc.2 baseline
+
 `0.8.0-rc.2` is published as a [GitHub prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2).
 [PR #63](https://github.com/nethero23/ai-disk-cleaner/pull/63) merged at
 `3cbef24861d50757b9b11ca35ab199665effb63a`; its annotated tag targets that source.
@@ -149,5 +176,6 @@ Windows/WebView2 setup and signed-updater delivery remain untested. See
 - Stable promotion, MSI actual installation, pristine Windows/WebView2 setup,
   uninstall-data behavior and signed updates remain separate gates. The approved
   prerelease plan does not close them or authorize another local installation.
-- Backend history/restore file-read errors currently swallowed as empty results
-  need a separately scoped follow-up; the rc.2 rejected-IPC UI does not resolve them.
+- Crash-safe cleanup audit journaling and transactional relocation log writes.
+  v0.9 fixes swallowed history reads and preflight/write-error handling, not those
+  separate persistence guarantees.
