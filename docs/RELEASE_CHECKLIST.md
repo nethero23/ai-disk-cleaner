@@ -98,7 +98,9 @@ the mock-IPC browser page. All 136 built-in rules were disabled.
 | Real AI inventory | Completed: 12 tools, 106 MCP entries, 371 skills; first load took roughly two minutes, requiring performance follow-up |
 | Configuration preservation | Four sampled tool configuration files had identical SHA-256 before/after inventory; this is not an exhaustive file audit |
 | Portable startup | Matching installed-app autostart entries unchanged after launch/relaunch |
-| Native cleanup confirmation | Correctly offers one 4.0 KB item to the Recycle Bin; final action awaits explicit test-fixture permission |
+| Native cleanup / history restore | After explicit approval, only the 4,121-byte Safe fixture was moved to the Recycle Bin; its original path disappeared, then History Restore returned identical SHA-256 bytes; Review control unchanged throughout |
+| Post-restore read-only scan | Both fixture items returned, with Safe alone selected |
+| Post-clean overview | Open issue: item list removed the cleaned fixture, but overview retained 12.1 KB total / 4.0 KB Safe until rescan; do not treat overview as current remaining space |
 | Frontend regression recheck | Build/type-check, two Node tests and 10 additional locales passed again |
 | Rust recheck | Existing compiled tests passed again: 97 core, one Windows roundtrip, two native startup-policy tests; fresh offline Cargo resolution failed because the dependency cache lacks `chrono` |
 | Installation / upgrade / signed updater | Still not executed |
@@ -106,3 +108,10 @@ the mock-IPC browser page. All 136 built-in rules were disabled.
 Do not equate the existing test-binary rerun with fresh Rust compilation. The
 October 22 build/Clippy evidence remains historical; no Rust source changed in
 this desktop follow-up. No personal file was cleaned.
+
+Native cleanup batch: `1792750088015`. Exact synthetic target:
+`target/v08-validation/native-20261023/fixture-safe`. The isolated app was
+normally exited after restore and rescan. Detailed before/after file hashes are
+in `native-20261023/after-native-clean.json` and `after-native-restore.json`
+under the ignored validation evidence directory. No application source changed
+during this cleanup/restore check; the overview issue is recorded, not fixed.

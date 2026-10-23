@@ -26,10 +26,14 @@ fixture-only scanning, safe-only default selection, and language/light-theme
 persistence after restart. Real AI inventory completed; four sampled tool
 configuration hashes and matching autostart entries remained unchanged.
 
-Native UI cleanup/restore awaits explicit confirmation for the isolated test
-fixture. The first real AI inventory took roughly two minutes on this machine;
-profile this before treating responsiveness as release-ready. Installation/upgrade
-and signed-updater checks remain open. See `docs/RELEASE_CHECKLIST.md` for evidence.
+After explicit test-fixture approval, native UI cleanup moved only the 4,121-byte
+Safe fixture to the Recycle Bin. History restore returned identical bytes; the
+Review control stayed unchanged, and a read-only rescan found both fixtures again.
+
+Before release, address the stale post-clean overview (it retained pre-clean
+sizes until rescan) and profile the roughly two-minute initial AI inventory.
+Installation/upgrade and signed-updater checks remain open. See
+`docs/RELEASE_CHECKLIST.md` for evidence.
 
 ## Deferred work
 
