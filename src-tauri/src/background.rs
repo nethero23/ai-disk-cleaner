@@ -335,6 +335,7 @@ fn scheduler(app: AppHandle) {
 struct BackgroundClean {
     cleaned: usize,
     freed_bytes: u64,
+    log_error: Option<String>,
 }
 
 /// One notification for the fastest-growing tool, when it crossed the threshold.
@@ -391,6 +392,9 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         let mut kept = rest;
         if !safe.is_empty() {
             let summary = clean::clean(&safe, &log_path(app));
+            if let Some(error) = &summary.log_error {
+                eprintln!("Automatic cleanup stopped: {error}");
+            }
             let failed: Vec<_> = summary
                 .records
                 .iter()
@@ -416,6 +420,7 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
                 BackgroundClean {
                     cleaned,
                     freed_bytes: summary.freed_bytes,
+                    log_error: summary.log_error,
                 },
             );
             kept.extend(safe.into_iter().filter(|i| failed.contains(&i.path)));

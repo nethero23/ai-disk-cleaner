@@ -73,6 +73,7 @@ export interface RestoreSummary {
 export interface CleanSummary {
   freed_bytes: number;
   records: CleanRecord[];
+  log_error?: string | null;
 }
 
 export interface RelocateRecord {
