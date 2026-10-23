@@ -1,4 +1,36 @@
-# v0.8 Candidate Acceptance
+# Candidate Acceptance
+
+## v0.9.0-rc.1 recovery reliability
+
+- [x] Real cleanup/relocation history read, invalid UTF-8 and malformed-record
+  errors reject IPC; missing history is still a legitimate empty result.
+- [x] Recycle Bin enumeration errors propagate instead of producing false Gone
+  states; injected failures perform no restore. Legacy valid records stay readable.
+- [x] Unavailable/corrupt cleanup logs block deletion. Injected mid-batch append
+  failure stops later items and preserves actual successful bytes/skipped rows.
+- [x] Foreground and scheduled result paths surface the audit error; no log schema
+  migration or dependency change. This is not crash-safe WAL or transactional
+  relocation logging.
+- [x] Nine Node tests, 111 core tests, one Windows temporary-fixture Recycle
+  Bin/restore test, two native policy tests, locales, fmt, core/native Clippy,
+  frontend build, native debug/release and unsigned NSIS packaging passed.
+- [x] Mock-IPC browser lanes: selection/inventory 25, history 30, recovery 12.
+  Coverage includes retry, stale-action blocking and audit-failure totals.
+- [x] After unlock, isolated bundled native v0.9 history retained both synthetic
+  rows on actual file-lock and malformed cleanup/relocation-log errors; retries
+  succeeded after removing each fault. Four fixture items (137 B), ten selection
+  checks and complete exit/restart passed. Disabled-state checks did not click
+  busy controls. All twelve baseline hashes stayed unchanged; the original
+  installed app was reopened. No native UI cleanup/restore or installer upgrade ran.
+- [ ] Verify tagged CI and both public package downloads before claiming delivery.
+
+The owner authorized v0.9 development through publication without approval
+prompts. Keep the existing candidate boundary: NSIS + pristine portable ZIP only,
+`prerelease: true`, `make_latest: false`, no MSI/updater/manifest promotion.
+Stable setup, upgrades, signing and uninstall-data gates below remain open.
+Private evidence and fixtures: ignored `target/v09-release-20261024/`.
+
+## v0.8 historical baseline
 
 ## Scope
 

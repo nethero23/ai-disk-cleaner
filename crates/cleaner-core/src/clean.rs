@@ -10,7 +10,7 @@ use crate::model::{SafetyLevel, ScanItem};
 use crate::{Error, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::io::Write;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,6 +33,10 @@ pub struct CleanRecord {
 pub struct CleanSummary {
     pub freed_bytes: u64,
     pub records: Vec<CleanRecord>,
+    /// Audit persistence failed. Actual successes remain successes, but no
+    /// subsequent item is touched and the UI must show this warning.
+    #[serde(default)]
+    pub log_error: Option<String>,
 }
 
 /// Refuses paths that no rule should ever hand us, as a last line of defence
@@ -86,17 +90,76 @@ pub fn delete_item(item: &ScanItem) -> Result<()> {
     Ok(())
 }
 
-/// Deletes each item, logging to `log_path`, and never stops on one failure.
+/// Deletes each item, logging to `log_path`. Item failures do not stop the
+/// batch; unavailable or failed audit persistence stops all further deletion.
 pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
-    let mut summary = CleanSummary::default();
+    // Foreground and scheduled cleanup must not interleave journal records.
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _lock = LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
+    if items.is_empty() {
+        return CleanSummary::default();
+    }
+    let opened = open_log(log_path);
+    let error = opened.as_ref().err().map(ToString::to_string);
+    let mut log = opened.ok();
+    clean_with(items, error, delete_item, |rec| {
+        let f = log
+            .as_mut()
+            .expect("only append after successful preflight");
+        let line = serde_json::to_vec(rec).map_err(|e| e.to_string())?;
+        f.write_all(&line)
+            .and_then(|_| f.write_all(b"\n"))
+            .and_then(|_| f.sync_data())
+            .map_err(|e| e.to_string())
+    })
+}
+
+fn open_log(path: &Path) -> Result<std::fs::File> {
+    read_log(path)?;
+    let open = || -> std::io::Result<std::fs::File> {
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .read(true)
+            .append(true)
+            .open(path)?;
+        // Legacy JSONL may end without a newline. Separate before appending,
+        // never concatenate two valid records into one invalid line.
+        if file.metadata()?.len() > 0 {
+            file.seek(SeekFrom::End(-1))?;
+            let mut last = [0];
+            file.read_exact(&mut last)?;
+            if last[0] != b'\n' {
+                file.write_all(b"\n")?;
+            }
+        }
+        file.sync_data()?;
+        Ok(file)
+    };
+    open().map_err(|source| Error::Io {
+        path: path.into(),
+        source,
+    })
+}
+
+fn clean_with(
+    items: &[ScanItem],
+    log_error: Option<String>,
+    mut delete: impl FnMut(&ScanItem) -> Result<()>,
+    mut append: impl FnMut(&CleanRecord) -> std::result::Result<(), String>,
+) -> CleanSummary {
+    let mut summary = CleanSummary {
+        log_error,
+        ..Default::default()
+    };
     let batch = Utc::now().timestamp_millis().to_string();
-    let mut log = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_path)
-        .ok();
     for item in items {
-        let result = delete_item(item);
+        let result = match &summary.log_error {
+            Some(error) => Err(Error::Refused(
+                item.path.clone(),
+                format!("cleanup stopped: history unavailable: {error}"),
+            )),
+            None => delete(item),
+        };
         let rec = CleanRecord {
             at: Utc::now(),
             rule_id: item.rule_id.clone(),
@@ -111,9 +174,11 @@ pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
         if rec.ok {
             summary.freed_bytes += rec.size_bytes;
         }
-        if let Some(f) = log.as_mut() {
-            if let Ok(line) = serde_json::to_string(&rec) {
-                let _ = writeln!(f, "{line}");
+        if summary.log_error.is_none() {
+            if let Err(error) = append(&rec) {
+                summary.log_error = Some(format!(
+                    "History could not be saved; further items were left untouched: {error}"
+                ));
             }
         }
         summary.records.push(rec);
@@ -122,19 +187,101 @@ pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
 }
 
 /// Reads the whole log, newest last.
-pub fn read_log(log_path: &Path) -> Vec<CleanRecord> {
-    std::fs::read_to_string(log_path)
-        .map(|t| {
-            t.lines()
-                .filter_map(|l| serde_json::from_str(l).ok())
-                .collect()
-        })
-        .unwrap_or_default()
+pub fn read_log(log_path: &Path) -> Result<Vec<CleanRecord>> {
+    crate::journal::read(log_path)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unreadable_history_is_not_an_empty_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let got = read_log(tmp.path());
+        assert!(got.is_err(), "read errors must reach the UI");
+    }
+
+    #[test]
+    fn corrupt_history_is_not_an_empty_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let log = tmp.path().join("clean.log");
+        std::fs::write(&log, b"{broken record}\n").unwrap();
+        let got = read_log(&log);
+        assert!(got.is_err(), "parse errors must reach the UI");
+    }
+
+    fn fixture(path: &Path) -> ScanItem {
+        ScanItem {
+            id: path.display().to_string(),
+            rule_id: "fixture".into(),
+            tool: "Fixture".into(),
+            category: crate::Category::PackageCache,
+            name: "fixture".into(),
+            path: path.into(),
+            size_bytes: 5,
+            file_count: 1,
+            last_used: None,
+            safety: SafetyLevel::Safe,
+            consequence: String::new(),
+            detail: None,
+            in_use_by: None,
+            auto_clean: true,
+        }
+    }
+
+    #[test]
+    fn unavailable_or_corrupt_journal_prevents_any_deletion() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("sentinel");
+        std::fs::write(&source, b"alive").unwrap();
+        let corrupt = tmp.path().join("corrupt.jsonl");
+        std::fs::write(&corrupt, b"invalid-private-record").unwrap();
+        for log in [tmp.path().to_path_buf(), corrupt.clone()] {
+            let result = clean(&[fixture(&source)], &log);
+            assert!(result.log_error.is_some());
+            assert_eq!(result.freed_bytes, 0);
+            assert!(!result.records[0].ok);
+            assert_eq!(std::fs::read(&source).unwrap(), b"alive");
+        }
+        assert_eq!(std::fs::read(corrupt).unwrap(), b"invalid-private-record");
+    }
+
+    #[test]
+    fn mid_batch_write_failure_preserves_actual_success_and_stops_next_items() {
+        let items = [fixture(Path::new("first")), fixture(Path::new("second"))];
+        let mut deletions = 0;
+        let sum = clean_with(
+            &items,
+            None,
+            |_| {
+                deletions += 1;
+                Ok(())
+            },
+            |_| Err("disk full".into()),
+        );
+        assert_eq!(deletions, 1);
+        assert_eq!(sum.freed_bytes, 5);
+        assert!(sum.records[0].ok);
+        assert!(!sum.records[1].ok);
+        assert!(sum.log_error.unwrap().contains("disk full"));
+    }
+
+    #[test]
+    fn legacy_record_without_final_newline_stays_readable_after_append() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("history.jsonl");
+        let record = r#"{"at":"2026-01-01T00:00:00Z","rule_id":"fixture","name":"x","path":"x","size_bytes":5,"safety":"safe","ok":true,"error":null}"#;
+        std::fs::write(&path, record).unwrap();
+        let file = open_log(&path).unwrap();
+        drop(file);
+        assert_eq!(read_log(&path).unwrap().len(), 1);
+        assert_eq!(read_log(&path).unwrap()[0].batch, "");
+        let item = fixture(&tmp.path().join("missing"));
+        let sum = clean(&[item], &path);
+        assert!(sum.log_error.is_none());
+        assert_eq!(read_log(&path).unwrap().len(), 2);
+    }
 
     #[test]
     fn guard_refuses_roots_and_home() {
@@ -175,7 +322,7 @@ mod tests {
             batch: "1".into(),
         };
         std::fs::write(&log, format!("{}\n", serde_json::to_string(&rec).unwrap())).unwrap();
-        let back = read_log(&log);
+        let back = read_log(&log).unwrap();
         assert_eq!(back.len(), 1);
         assert_eq!(back[0].size_bytes, 5);
     }

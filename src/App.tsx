@@ -525,6 +525,7 @@ export function App() {
     try {
       const summary = await invoke<CleanSummary>("clean_items", { items: bigSelectedItems });
       setResult(summary);
+      setError(summary.log_error ?? null);
       const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
       setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || failed.has(i.path)) : prev));
       setBigSelected(new Set());
@@ -659,7 +660,8 @@ export function App() {
   }, [langPref, lang]);
 
   useEffect(() => {
-    const c = listen<{ cleaned: number; freed_bytes: number }>("background-clean", (e) => {
+    const c = listen<{ cleaned: number; freed_bytes: number; log_error?: string | null }>("background-clean", (e) => {
+      if (e.payload.log_error) setError(e.payload.log_error);
       if (e.payload.cleaned > 0) {
         setNotice(sRef.current.bgCleaned(e.payload.cleaned, humanSize(e.payload.freed_bytes)));
       }
@@ -799,6 +801,7 @@ export function App() {
       }
       const summary = await invoke<CleanSummary>("clean_items", { items: selectedItems });
       setResult(summary);
+      setError(summary.log_error ?? null);
       if (exported) setNotice(s.exported(exported.files, exported.zip_path));
       // Items and overview must reflect only confirmed successful deletions.
       setReport((prev) => (prev ? afterClean(prev, summary) : prev));

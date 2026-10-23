@@ -102,22 +102,40 @@ fn pick<'a>(
         .max_by_key(|t| t.time_deleted)
 }
 
-fn list_bin() -> Vec<trash::TrashItem> {
-    trash::os_limited::list().unwrap_or_default()
+fn list_bin() -> crate::Result<Vec<trash::TrashItem>> {
+    trash::os_limited::list().map_err(crate::Error::from)
 }
 
 /// Whether each path is back in place, still in the bin, or gone for good.
 /// Lists the bin once, so calling it for a whole history page is cheap.
-pub fn status(paths: &[PathBuf]) -> Vec<RestoreStatus> {
-    let in_bin: HashSet<PathBuf> = list_bin()
+pub fn status(paths: &[PathBuf]) -> crate::Result<Vec<RestoreStatus>> {
+    status_with(paths, list_bin)
+}
+
+fn status_with(
+    paths: &[PathBuf],
+    list: impl FnOnce() -> crate::Result<Vec<trash::TrashItem>>,
+) -> crate::Result<Vec<RestoreStatus>> {
+    let present: Vec<bool> = paths
         .iter()
-        .map(|t| match_path(&t.original_path()))
-        .collect();
-    paths
+        .map(|p| p.try_exists())
+        .collect::<std::io::Result<_>>()
+        .map_err(|source| crate::Error::Io {
+            path: PathBuf::from("restore status"),
+            source,
+        })?;
+    let bin = if present.iter().all(|p| *p) {
+        Vec::new()
+    } else {
+        list()?
+    };
+    let in_bin: HashSet<PathBuf> = bin.iter().map(|t| match_path(&t.original_path())).collect();
+    Ok(paths
         .iter()
-        .map(|p| RestoreStatus {
+        .zip(present)
+        .map(|(p, present)| RestoreStatus {
             path: p.clone(),
-            state: if p.exists() {
+            state: if present {
                 Whereabouts::Present
             } else if in_bin.contains(&match_path(p)) {
                 Whereabouts::InBin
@@ -125,14 +143,24 @@ pub fn status(paths: &[PathBuf]) -> Vec<RestoreStatus> {
                 Whereabouts::Gone
             },
         })
-        .collect()
+        .collect())
 }
 
 /// Restores the given clean records, one bin entry each, and never stops on
 /// one failure. A record whose path exists again is reported as a failure
 /// ("already present") rather than overwritten.
-pub fn restore(records: &[CleanRecord]) -> RestoreSummary {
-    let bin = list_bin();
+pub fn restore(records: &[CleanRecord]) -> crate::Result<RestoreSummary> {
+    restore_with(records, list_bin)
+}
+
+fn restore_with(
+    records: &[CleanRecord],
+    list: impl FnOnce() -> crate::Result<Vec<trash::TrashItem>>,
+) -> crate::Result<RestoreSummary> {
+    if records.is_empty() {
+        return Ok(RestoreSummary::default());
+    }
+    let bin = list()?;
     let mut summary = RestoreSummary::default();
     // Deduplicate by path: the same path cleaned twice restores once.
     let mut seen = HashSet::new();
@@ -151,10 +179,13 @@ pub fn restore(records: &[CleanRecord]) -> RestoreSummary {
             error: result.err(),
         });
     }
-    summary
+    Ok(summary)
 }
 
 fn restore_one(bin: &[trash::TrashItem], rec: &CleanRecord) -> std::result::Result<(), String> {
+    if !rec.ok {
+        return Err("not a successful cleanup record".into());
+    }
     if rec.path.exists() {
         return Err("already present at the original path".into());
     }
@@ -236,9 +267,46 @@ mod tests {
         let here = tmp.path().join("here");
         std::fs::create_dir(&here).unwrap();
         let gone = tmp.path().join("gone");
-        let st = status(&[here.clone(), gone.clone()]);
+        let st = status(&[here.clone(), gone.clone()]).unwrap();
         assert_eq!(st[0].state, Whereabouts::Present);
         // Not in this process's bin (nothing was deleted), so gone.
         assert_eq!(st[1].state, Whereabouts::Gone);
+    }
+
+    fn unavailable_bin() -> crate::Result<Vec<trash::TrashItem>> {
+        Err(crate::Error::Io {
+            path: "fixture-bin".into(),
+            source: std::io::Error::new(std::io::ErrorKind::PermissionDenied, "fixture denied"),
+        })
+    }
+
+    #[test]
+    fn unavailable_bin_is_not_reported_as_gone() {
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(status_with(&[tmp.path().join("missing")], unavailable_bin).is_err());
+        let present = status_with(&[tmp.path().into()], unavailable_bin).unwrap();
+        assert_eq!(present[0].state, Whereabouts::Present);
+        assert!(status_with(&[], unavailable_bin).unwrap().is_empty());
+    }
+
+    #[test]
+    fn unavailable_bin_stops_restore_and_failed_records_are_refused() {
+        let tmp = tempfile::tempdir().unwrap();
+        let record = CleanRecord {
+            at: chrono::Utc::now(),
+            rule_id: "fixture".into(),
+            name: "fixture".into(),
+            path: tmp.path().join("missing"),
+            size_bytes: 1,
+            safety: crate::SafetyLevel::Safe,
+            ok: false,
+            error: None,
+            batch: String::new(),
+        };
+        assert!(restore_with(std::slice::from_ref(&record), unavailable_bin).is_err());
+        assert!(restore_one(&[], &record)
+            .unwrap_err()
+            .contains("not a successful"));
+        assert_eq!(restore_with(&[], unavailable_bin).unwrap().restored, 0);
     }
 }

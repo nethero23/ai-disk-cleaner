@@ -16,6 +16,7 @@ pub mod dedup;
 pub mod export;
 pub mod growth;
 pub mod inspect;
+mod journal;
 pub mod model;
 pub mod overview;
 pub mod paths;

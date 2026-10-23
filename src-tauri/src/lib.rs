@@ -168,8 +168,12 @@ fn growth_report(app: AppHandle) -> Vec<cleaner_core::growth::Growth> {
 }
 
 #[tauri::command]
-fn clean_log(app: AppHandle) -> Vec<CleanRecord> {
-    clean::read_log(&log_path(&app))
+async fn clean_log(app: AppHandle) -> Result<Vec<CleanRecord>, String> {
+    let path = log_path(&app);
+    tauri::async_runtime::spawn_blocking(move || clean::read_log(&path))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
 }
 
 /// For the history page: which cleaned paths can still be restored.
@@ -179,6 +183,7 @@ async fn restore_status(
 ) -> Result<Vec<cleaner_core::restore::RestoreStatus>, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::status(&paths))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -189,6 +194,7 @@ async fn restore_items(
 ) -> Result<cleaner_core::restore::RestoreSummary, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::restore(&records))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -372,8 +378,12 @@ async fn relocate_item(
 
 /// Relocations still in effect, newest first.
 #[tauri::command]
-fn relocations(app: AppHandle) -> Vec<RelocateRecord> {
-    relocate::read_relocations(&relocate_log_path(&app))
+async fn relocations(app: AppHandle) -> Result<Vec<RelocateRecord>, String> {
+    let path = relocate_log_path(&app);
+    tauri::async_runtime::spawn_blocking(move || relocate::read_relocations(&path))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

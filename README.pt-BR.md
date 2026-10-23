@@ -17,11 +17,13 @@
 
 </div>
 
-> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.8.0-rc.2` é uma candidata de pré-lançamento publicada com 12 idiomas de interface, não uma versão estável. Baixe manualmente o instalador NSIS ou o ZIP portátil na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; candidatas não são distribuídas por atualização automática nem incluem MSI, `latest.json` ou manifestos winget/Scoop.
+> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.9.0-rc.1`, com 12 idiomas de interface, está em validação: ainda não foi publicada nem é estável. A candidata já publicada é `0.8.0-rc.2`. Após a validação, estão previstos apenas NSIS e ZIP portátil manuais na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; candidatas não oferecem atualização automática, MSI, `latest.json` ou manifestos winget/Scoop.
 >
-> O instalador publicado no GitHub `rc.1` passou na reinstalação no mesmo local, reinício completo e 10 verificações de seleção. Configurações, histórico e atalhos mantiveram seus hashes; não houve limpeza. Itens em uso continuam protegidos.
+> Logs JSONL de limpeza/movimentação ausentes são vazios; falhas de leitura, codificação ou registros são exibidas com Tentar novamente. Restaurar e mover de volta ficam bloqueados durante o carregamento ou erro. Falha ao listar a Lixeira não é mais tratada como perda definitiva.
 >
-> `rc.2` mostra o carregamento do histórico, preserva linhas e permite tentar novamente após falhas IPC, ignora respostas antigas e melhora caminhos/erros longos. Restaurar e mover de volta ficam desativados durante carregamento ou erro. Passaram 53 verificações no navegador (28 de histórico + 25 existentes) e um teste de desktop isolado, sem substituir o aplicativo instalado. Nem todos os erros de leitura de disco são cobertos. Etapas restantes: [lista de aceitação](docs/RELEASE_CHECKLIST.md).
+> Se validar ou abrir o log falhar, nenhum arquivo é limpo. Falhas de escrita/sincronização param os próximos itens, mantêm os sucessos reais e exibem aviso nos resultados em primeiro e segundo plano. Logs antigos válidos sem ID de lote ou quebra de linha final continuam compatíveis. Não é um WAL seguro contra falhas; a escrita transacional das movimentações permanece pendente. Tente novamente, preserve o log original e verifique permissões e espaço livre.
+>
+> Passaram 67 verificações no navegador (25 seleção + 30 histórico + 12 recuperação), testes automáticos locais e uma compilação NSIS sem assinatura. Uma cópia portátil `0.9.0-rc.1` local e isolada exibiu por IPC real o bloqueio do log (OS error 32) e danos nos dois históricos, preservou as linhas e permitiu tentar novamente após desbloquear ou restaurar os bytes originais. Passaram a análise somente leitura, 10 verificações de seleção/proteção e duas linhas de histórico após reiniciar; duas verificações apenas confirmaram estados desativados, sem clicar. A original `0.8.0-rc.1` foi reaberta, com hashes de configurações, histórico, programa e amostras inalterados. Limpeza/restauração real pela interface, instalação/atualização e execução de pacote publicado na nuvem não foram testadas. Veja a [lista de aceitação](docs/RELEASE_CHECKLIST.md).
 
 ## Por quê
 

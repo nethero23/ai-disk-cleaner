@@ -76,6 +76,11 @@ try {
   click('button:text-is("记录")');
   browse("wait", '.history [role=alert]');
   check("status failure retains readable history without offering restore", 'document.querySelector(".history").textContent.includes("History fixture") && !document.querySelector(".history .log button:enabled")');
+  mode("move-error");
+  click('button:text-is("记录")');
+  browse("wait", '.history [role=alert]');
+  check("relocation read failure retains cleanup history", 'document.querySelector(".history").textContent.includes("History fixture")');
+  check("relocation read failure disables recovery actions", '!document.querySelector(".history .log button:enabled")');
   browse("reload");
   browse("wait", "nav");
   mode("error");

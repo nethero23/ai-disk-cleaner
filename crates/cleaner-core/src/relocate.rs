@@ -131,20 +131,15 @@ fn append_record(log_path: &Path, rec: &RelocateRecord) {
 
 /// Relocations still in effect: the log is append-only, and a move back
 /// appends the same record with `active: false`, so the last word wins.
-pub fn read_relocations(log_path: &Path) -> Vec<RelocateRecord> {
+pub fn read_relocations(log_path: &Path) -> Result<Vec<RelocateRecord>> {
     let mut latest: std::collections::HashMap<(PathBuf, PathBuf), RelocateRecord> =
         Default::default();
-    for line in std::fs::read_to_string(log_path)
-        .unwrap_or_default()
-        .lines()
-    {
-        if let Ok(rec) = serde_json::from_str::<RelocateRecord>(line) {
-            latest.insert((rec.from.clone(), rec.to.clone()), rec);
-        }
+    for rec in crate::journal::read::<RelocateRecord>(log_path)? {
+        latest.insert((rec.from.clone(), rec.to.clone()), rec);
     }
     let mut out: Vec<_> = latest.into_values().filter(|r| r.active).collect();
     out.sort_by_key(|r| std::cmp::Reverse(r.at));
-    out
+    Ok(out)
 }
 
 /// Reverses a relocation: copies the data back to `from`, verifies, points
@@ -548,7 +543,7 @@ mod tests {
 
         let r = relocate("cargo.registry", &src, &d, &mut |_, _| {}).unwrap();
         log_relocation(&log, "cargo.registry", &r);
-        let recs = read_relocations(&log);
+        let recs = read_relocations(&log).unwrap();
         assert_eq!(recs.len(), 1);
         assert!(src.is_symlink());
 
@@ -556,7 +551,7 @@ mod tests {
         assert!(!src.is_symlink());
         assert_eq!(fs::read(src.join("a")).unwrap().len(), 100);
         assert!(!d.join("cache").exists());
-        assert!(read_relocations(&log).is_empty());
+        assert!(read_relocations(&log).unwrap().is_empty());
     }
 
     #[test]
@@ -570,7 +565,7 @@ mod tests {
         let log = tmp.path().join("relocate.log");
         let r = relocate("cargo.registry", &src, &d, &mut |_, _| {}).unwrap();
         log_relocation(&log, "cargo.registry", &r);
-        let rec = read_relocations(&log).remove(0);
+        let rec = read_relocations(&log).unwrap().remove(0);
 
         // Make the staging folder un-creatable: a file sits where it would go.
         fs::write(staging_path(&src), b"x").unwrap();
@@ -581,7 +576,7 @@ mod tests {
         // record still active.
         assert!(src.is_symlink());
         assert!(d.join("cache").join("a").exists());
-        assert_eq!(read_relocations(&log).len(), 1);
+        assert_eq!(read_relocations(&log).unwrap().len(), 1);
 
         // And a retry now succeeds.
         move_back(&log, &rec, &mut |_, _| {}).unwrap();

@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.9.0-rc.1] - 2026-10-24
+
+Recovery reliability candidate; stable downloads and automatic updates are not promoted.
+
+### Fixed
+- Cleanup and relocation history now distinguish a missing log from read, UTF-8,
+  schema and JSON errors. Real backend failures reach the existing retry UI,
+  preserving loaded rows and disabling stale recovery actions.
+- Recycle Bin enumeration failures are reported instead of marking absent paths
+  permanently gone. Failed cleanup records cannot be restored as successful ones.
+- Cleanup validates and opens the history log before touching files. An unavailable
+  or corrupt log blocks the batch; append/sync failures stop further items while
+  preserving actual successful deletions and untouched items in the results.
+- Foreground and scheduled cleanup expose audit failures. Legacy valid records
+  without a batch ID or final newline remain readable. No log migration is required.
+
+### Verification and limits
+- Offline tests cover history errors, missing/legacy logs, unavailable bin listing,
+  preflight refusal and injected mid-batch write failure; browser checks cover
+  retry, stale-action guards, visible audit warnings and correct remaining totals.
+- This is not a crash-safe write-ahead journal. Relocation log writes remain a
+  separate transactionality follow-up. No installed app replacement is included.
+
 ## [0.8.0-rc.2] - 2026-10-24
 
 Release candidate; stable downloads and automatic updates remain unchanged.
