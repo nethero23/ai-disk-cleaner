@@ -2,8 +2,8 @@
 
 ## Scope
 
-Preparing version `0.8.0-rc.2` (not yet tagged/published); published candidate:
-`0.8.0-rc.1`. AI tool management is read-only inventory and diagnosis,
+Published candidate: `0.8.0-rc.2` (prerelease, not stable); stable Latest:
+`v0.7.1`. AI tool management is read-only inventory and diagnosis,
 not automatic configuration editing, consolidation, or synchronization.
 Keep package/executable identifiers unchanged for compatibility.
 
@@ -322,3 +322,26 @@ rejected IPC only; no backend disk-read error contract was changed. MSI actual
 installation, pristine Windows/WebView2, uninstall-data behavior, code signing
 and signed-updater delivery remain open. Private evidence is under ignored
 `target/next-release-20261024/`; never publish raw histories, private paths or screenshots.
+
+### Public rc.2 delivery verified (2026-10-24)
+
+- [PR #63](https://github.com/nethero23/ai-disk-cleaner/pull/63) passed all three
+  CI jobs and merged at `3cbef24861d50757b9b11ca35ab199665effb63a`.
+  Annotated tag `v0.8.0-rc.2` targets that exact source.
+- [Tag workflow](https://github.com/nethero23/ai-disk-cleaner/actions/runs/39994807644)
+  succeeded. The [public prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2)
+  contains exactly two assets; stable Latest remains `v0.7.1`. No MSI,
+  `latest.json`, or winget/Scoop manifests were published.
+- Both public downloads match GitHub metadata and independent SHA-256 checks.
+  The portable ZIP contains only the 18,785,280-byte app, 801-byte README,
+  zero-byte portable marker and empty data directory; the app reports `0.8.0-rc.2`.
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `AI.Disk.Cleaner_0.8.0-rc.2_x64-setup.exe` | 4,729,169 | `22ddbb8b24fff08f561898e7fc47f22cde11ae1fbf3d5a8221c6557870c71346` |
+| `AI.Disk.Cleaner_0.8.0-rc.2_x64-portable.zip` | 6,213,418 | `4f844cc0fb7bbb8d6cd269a48e97e4fcdc1bbed4cda6add9a1fee1ac96d7ab33` |
+
+Installer Authenticode: `NotSigned`. Cloud-generated packages
+were downloaded and inspected, not installed or executed. Local rc.2 desktop
+acceptance does not certify those exact cloud binary bytes or close stable gates.
+The installed rc.1 and its data were not replaced; no new cleanup ran.

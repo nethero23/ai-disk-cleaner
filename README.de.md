@@ -17,7 +17,7 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.8.0-rc.2` mit 12 UI-Sprachen wird vorbereitet und ist noch nicht veröffentlicht; veröffentlicht ist der Vorabkandidat `0.8.0-rc.1`, keine stabile Version. Nach Veröffentlichung sind NSIS-Installer und portable ZIP manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) erhältlich. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten werden nicht per automatischem Update verteilt und enthalten keine MSI, `latest.json` oder winget/Scoop-Manifeste.
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.8.0-rc.2` ist ein veröffentlichter Vorabkandidat mit 12 UI-Sprachen, keine stabile Version. NSIS-Installer und portable ZIP sind manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) erhältlich. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten werden nicht per automatischem Update verteilt und enthalten keine MSI, `latest.json` oder winget/Scoop-Manifeste.
 >
 > Der veröffentlichte GitHub-Installer `rc.1` bestand Neuinstallation am selben Ort, vollständigen Neustart und 10 Auswahlprüfungen. Einstellungen, Verlauf und Verknüpfungen behielten identische Hashes; keine Bereinigung. Belegte Einträge bleiben geschützt.
 >

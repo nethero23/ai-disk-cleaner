@@ -33,9 +33,9 @@ And it is not only C:. Model libraries, conda environments, Docker disks and pro
 
 Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
-## v0.8.0-rc.2 candidate preparation
+## v0.8.0-rc.2 prerelease candidate
 
-`v0.8.0-rc.2` is **in preparation, not yet published or stable**; the published candidate is [v0.8.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1). Once the new candidate is published, manually download its NSIS installer (`*_x64-setup.exe`) or portable ZIP from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases). The Latest links remain on stable `v0.7.1`; candidates are not offered through automatic updates and provide no MSI, `latest.json`, or winget/Scoop manifests.
+[v0.8.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2) is published as a **prerelease candidate, not a stable release**. Manually download its NSIS installer (`*_x64-setup.exe`) or portable ZIP from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases). The Latest links remain on stable `v0.7.1`; candidates are not offered through automatic updates and provide no MSI, `latest.json`, or winget/Scoop manifests.
 
 - **Read-only AI inventory**: inspect MCP entries, skills, plugins, and extensions, with duplicate/conflict hints and sensitive-value redaction. AI configurations are not automatically merged, synchronized, or edited.
 - **Older versions need review**: candidates are marked Review, not selected by default, and excluded from automatic Safe cleanup.
@@ -181,7 +181,7 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [ ] winget / Scoop listing, installer code signing
 - [ ] v0.8 candidate acceptance: Material Design 3 UI, read-only AI-tool inventory (skills / MCP / plugins), duplicate/conflict hints, and optional version checks
 
-`0.8.0-rc.2` is in preparation and not yet published; `0.8.0-rc.1` is the published candidate. Candidates do not replace stable releases; download them manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) once published. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+The published prerelease candidate is `0.8.0-rc.2`. Candidates do not replace stable releases; download them manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases). Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 ## Contributing
 

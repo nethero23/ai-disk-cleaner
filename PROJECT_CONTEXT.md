@@ -2,7 +2,14 @@
 
 ## Current milestone
 
-`0.8.0-rc.2` is being prepared, not yet tagged or published. It fixes pending
+`0.8.0-rc.2` is published as a [GitHub prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2).
+[PR #63](https://github.com/nethero23/ai-disk-cleaner/pull/63) merged at
+`3cbef24861d50757b9b11ca35ab199665effb63a`; its annotated tag targets that source.
+[Tag CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/39994807644)
+completed successfully. Exactly two public assets, NSIS and portable ZIP, were
+downloaded and hash-verified. Stable Latest remains `v0.7.1`; no MSI, updater
+or package-manager manifests were published. The installed rc.1 was not replaced.
+It fixes pending
 history appearing empty, rejected-IPC retry/preservation, stale replies and
 narrow history layout. Loading/error states disable restore and move-back;
 all three new status strings cover 12 UI languages. The two original defects

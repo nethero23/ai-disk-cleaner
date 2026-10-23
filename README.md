@@ -33,9 +33,9 @@ C 盘又红了，D 盘也快满了？在一台跑 AI 的电脑上，真正占地
 
 Clearwisp 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
 
-## v0.8.0-rc.2 候选准备
+## v0.8.0-rc.2 预发布候选
 
-`v0.8.0-rc.2` 正在准备，**尚未发布，不是稳定版**；已发布的候选为 [v0.8.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1)。新候选发布后请从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载 NSIS 安装包（`*_x64-setup.exe`）或便携 ZIP。上方 Latest 下载链接仍指向稳定版 `v0.7.1`，不会自动推送候选；候选不提供 MSI、`latest.json` 或 winget/Scoop 清单。
+[v0.8.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.2) 已作为**预发布候选发布，不是稳定版**。请从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载 NSIS 安装包（`*_x64-setup.exe`）或便携 ZIP。上方 Latest 下载链接仍指向稳定版 `v0.7.1`，不会自动推送候选；候选不提供 MSI、`latest.json` 或 winget/Scoop 清单。
 
 - **AI 工具只读盘点**：查看 MCP、skills、插件与扩展，提示重复和配置冲突，敏感值脱敏展示；不自动合并、同步或修改 AI 配置。
 - **旧版本需审核**：旧版本候选标为「需确认」（Review），不默认勾选，也不参与自动安全清理。
@@ -182,7 +182,7 @@ CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境
 - [ ] 上架 winget / Scoop、安装包代码签名
 - [ ] v0.8 候选验收：Material Design 3 新界面、AI 工具只读盘点（skills / MCP / 插件）、重复与冲突提示、可关闭的版本检查
 
-`0.8.0-rc.2` 正在准备，尚未发布；已发布候选为 `0.8.0-rc.1`，候选不替代稳定版。发布后从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
+当前预发布候选为 `0.8.0-rc.2`，不替代稳定版；从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
 
 ## 参与贡献
 
