@@ -17,7 +17,7 @@
 
 </div>
 
-> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). La interfaz de la aplicación está disponible por ahora en chino e inglés.
+> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). La candidata de desarrollo `0.8.0-rc.1` ofrece 12 idiomas de interfaz y no es una versión pública; consulta las pruebas y los pasos pendientes en la [lista de aceptación](docs/RELEASE_CHECKLIST.md).
 
 ## Por qué
 

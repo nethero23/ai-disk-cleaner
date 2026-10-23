@@ -17,7 +17,7 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. Die App-Oberfläche gibt es derzeit auf Chinesisch und Englisch.
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. Der Entwicklungskandidat `0.8.0-rc.1` bietet 12 UI-Sprachen und ist keine öffentliche Veröffentlichung; den Prüfstand und offene Schritte beschreibt die [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
 
 ## Warum
 

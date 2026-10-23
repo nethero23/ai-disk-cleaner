@@ -49,4 +49,5 @@ Installation/upgrade and signed-updater checks remain open. See
 - Writing, merging, or synchronizing AI tool configurations: requires a separate
   design with change preview, backup, and recovery.
 - winget/Scoop submissions and installer code signing.
-- No production publication, remote push, tag creation, or installation is authorized in this validation run.
+- Source integration on GitHub is separate from release acceptance. Public package
+  publication, release tags, installation/upgrade, and signed updates remain separate gates.

@@ -33,6 +33,17 @@ And it is not only C:. Model libraries, conda environments, Docker disks and pro
 
 Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
+## v0.8.0-rc.1 development candidate
+
+The current source is a development candidate, **not a public release**. Download links above still point to the published version.
+
+- **Read-only AI inventory**: inspect MCP entries, skills, plugins, and extensions, with duplicate/conflict hints and sensitive-value redaction. AI configurations are not automatically merged, synchronized, or edited.
+- **Older versions need review**: candidates are marked Review, not selected by default, and excluded from automatic Safe cleanup.
+- **Live post-clean totals**: rebuild remaining items, total size, and safety-level amounts from backend-confirmed successes; retain failed items.
+- **Bounded inventory concurrency**: at most four tool readers run concurrently, without a persistent cache.
+
+The final desktop cleanup recheck awaits confirmation. Installation, upgrade, and signed updater delivery are not yet validated. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
+
 ## Features
 
 ### 🧠 Knows AI-tool junk (136 rules, 90+ tools)
@@ -77,7 +88,7 @@ It reads Ollama manifests, the Hugging Face cache layout, conda environments, LM
 - Tray icon, scheduled background scans, notification when junk passes a threshold, optional auto-clean of Safe items (off by default)
 - First-run guide and a one-line summary after each scan
 - In-app auto-update; online rule updates; write your own rules in TOML
-- Chinese and English UI
+- 12 UI languages in the development candidate, including Simplified and Traditional Chinese
 
 ### 🚫 Never
 
