@@ -18,6 +18,7 @@ const state = window.__clearwispSmoke = {
   mode: "success", // Set to "offline" or "slow" for failure/late-reply checks.
   historyMode: "success",
   historyPending: [],
+  cleanMode: "refuse", // Only the dedicated synthetic cleanup lane enables this.
 };
 const historyRecords = [
   { name: "History fixture", ok: true, error: null },
@@ -76,7 +77,20 @@ mockIPC(async (cmd, args = {}) => {
       if (mode === "error") throw new Error("Synthetic history read failure");
       return mode === "empty" ? [] : structuredClone(historyRecords);
     }
-    case "relocations": return [];
+    case "relocations":
+      if (state.historyMode === "move-error") throw new Error("Synthetic relocation history read failure");
+      return [];
+    case "clean_items": {
+      if (state.cleanMode === "refuse") throw new Error("Cleanup fixture not enabled");
+      if (args.items.some(item => !item.path.startsWith("C:/fixtures/"))) throw new Error("Non-fixture path refused");
+      const records = args.items.map((item, i) => ({ ...item, at: "2026-10-24T00:00:00Z", batch: "fixture",
+        ok: state.cleanMode === "success" || (state.cleanMode === "partial" && i === 0),
+        error: "Synthetic audit failure", safety: item.safety,
+      }));
+      return { records, freed_bytes: records.filter(r => r.ok).reduce((n, r) => n + r.size_bytes, 0),
+        log_error: state.cleanMode === "success" ? null : "Synthetic history persistence failure; further items untouched",
+      };
+    }
     case "restore_status":
       if (state.historyMode === "status-error") throw new Error("Synthetic status failure");
       return args.paths.map((path) => ({ path, state: "in_bin" }));
