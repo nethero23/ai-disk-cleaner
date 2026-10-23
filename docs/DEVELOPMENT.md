@@ -51,7 +51,7 @@ consequence_en = "…"
 
 ## 发布
 
-获得发布授权后，推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建安装包并发布到 GitHub Releases。tag 必须匹配 `package.json`、Tauri 配置及 Rust workspace 的版本；可先运行 `node tools/release-policy.mjs v0.8.0-rc.2` 只读校验。
+获得发布授权后，推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建安装包并发布到 GitHub Releases。tag 必须匹配 `package.json`、Tauri 配置及 Rust workspace 的版本；可先运行 `node tools/release-policy.mjs v0.9.0-rc.1` 只读校验。
 
 带预发布后缀的候选（如 `v0.8.0-rc.1`）仅发布 NSIS 和便携 ZIP，标为 prerelease，不成为 Latest，不生成 MSI、`latest.json` 或 winget/Scoop 清单。候选需从 Releases 列表手动下载；稳定版仍构建 NSIS/MSI，并按签名情况生成更新与清单。当前验收边界见 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)。
 
@@ -64,9 +64,20 @@ consequence_en = "…"
 ```sh
 node tools/ui-smoke-acceptance.mjs <path-to-gstack-browse>
 node tools/ui-history-acceptance.mjs <path-to-gstack-browse>
+node tools/ui-recovery-acceptance.mjs <path-to-gstack-browse>
 ```
 
-两条离线 mock-IPC 流程分别覆盖 25 项通用/勾选检查与 28 项历史检查；历史包含加载、错误/重试、旧响应、12 语言窄窗口，且不调用清理/还原。它们不代替真实桌面与安装验收。私有结果写入忽略的 `target/`；详情见 [验收清单](RELEASE_CHECKLIST.md)。
+三条离线 mock-IPC 流程分别覆盖 25 项通用/勾选、30 项历史与 12 项恢复检查，共 67 项。历史包含加载、错误/重试、旧响应、12 语言窄窗口与加载失败时的操作保护；恢复流程注入 `log_error`，检查前台/后台提示和部分成功后的剩余统计。它们不调用真实清理/还原，也不能证明真实 IPC、回收站或安装流程可用。私有结果写入忽略的 `target/`；详情见 [验收清单](RELEASE_CHECKLIST.md)。
+
+## 恢复日志与失败边界
+
+- `crates/cleaner-core/src/journal.rs` 严格读取清理和搬迁 JSONL：文件不存在或只有空行才为空，读取、UTF-8 或记录解析失败必须返回错误。错误只报告路径/行号，不回显记录内容；有效旧记录无需迁移。
+- `clean_log`、`relocations`、`restore_status` 和 `restore_items` 的失败通过真实 Tauri IPC 拒绝返回；不要改回空数组或成功状态来隐藏错误。历史加载/出错时，前端保留已有行但禁止恢复与搬回。
+- 清理必须先校验并打开日志；追加或同步失败后停止后续项目。`CleanSummary.log_error` 和 `background-clean.log_error` 必须传到界面，已实际成功的项目不能重新算作失败。
+- 回收站枚举失败不等于 `Gone`；恢复只接受成功清理记录，且不可覆盖原路径已有文件。
+- 本轮不是 crash-safe WAL；回收站移动与日志写入仍非原子操作，搬迁日志写入事务性也未完成。不要把离线故障注入或只读桌面验证写成已通过真实清理/恢复。
+
+相关引擎回归可运行 `cargo test -p cleaner-core journal::tests`、`cargo test -p cleaner-core clean::tests`、`cargo test -p cleaner-core restore::tests`；完整引擎与桌面验收仍按验收清单执行。
 
 ## 设置
 

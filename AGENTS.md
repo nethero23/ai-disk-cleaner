@@ -44,3 +44,5 @@ History mixes English/Chinese summaries, version prefixes, and scoped subjects s
 ## Safety & Configuration
 
 Keep scans read-only. Preserve Recycle Bin cleanup, protected-path/symlink checks, and explicit selection. Default/automatic cleanup requires safe, not-in-use, auto-clean-eligible items; preserve separate relocation/deduplication confirmations. Old-version candidates require review. Never commit credentials, signing keys, or personal configuration.
+
+Recovery-history read/parse failures must reject IPC, not masquerade as empty logs or `Gone`. Cleanup must stop on unavailable history or append/sync failure, preserve actual successes, and surface `log_error`. Do not claim crash-safe journaling or transactional relocation-log writes.
