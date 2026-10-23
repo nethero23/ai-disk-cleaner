@@ -83,6 +83,9 @@ export function App() {
   const [library, setLibrary] = useState<RuleLibrary | null>(null);
   const [updatingRules, setUpdatingRules] = useState(false);
   const [history, setHistory] = useState<CleanRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const historyRequest = useRef(0);
   const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
   const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
   const [whereabouts, setWhereabouts] = useState<Map<string, Whereabouts>>(new Map());
@@ -555,17 +558,32 @@ export function App() {
   }
 
   async function openHistory() {
+    const request = ++historyRequest.current;
+    const current = () => request === historyRequest.current;
     setView("history");
+    setHistoryLoading(true);
+    setHistoryError(null);
+    setWhereabouts(new Map());
     try {
       const log = await invoke<CleanRecord[]>("clean_log");
+      if (!current()) return;
       setHistory(log);
-      setRelocations(await invoke<RelocateRecord[]>("relocations"));
-      if (!library) setLibrary(await invoke<RuleLibrary>("rules"));
+      const moves = await invoke<RelocateRecord[]>("relocations");
+      if (!current()) return;
+      setRelocations(moves);
+      if (!library) {
+        const rules = await invoke<RuleLibrary>("rules");
+        if (!current()) return;
+        setLibrary(rules);
+      }
       const paths = [...new Set(log.filter((r) => r.ok).map((r) => r.path))];
       const st = await invoke<RestoreStatus[]>("restore_status", { paths });
+      if (!current()) return;
       setWhereabouts(new Map(st.map((x) => [x.path, x.state])));
     } catch (e) {
-      setError(String(e));
+      if (current()) setHistoryError(String(e));
+    } finally {
+      if (current()) setHistoryLoading(false);
     }
   }
 
@@ -1199,7 +1217,14 @@ export function App() {
       )}
 
       {view === "history" && (
-        <section className="history">
+        <section className="history" aria-busy={historyLoading}>
+          {historyLoading && <p role="status">{s.historyLoading}</p>}
+          {historyError && (
+            <div className="banner error" role="alert">
+              <p>{s.historyLoadFailed} {historyError}</p>
+              <button onClick={openHistory} disabled={historyLoading}>{s.retry}</button>
+            </div>
+          )}
           {relocations.length > 0 && (
             <div className="moved">
               <h3>{s.movedTitle}</h3>
@@ -1219,7 +1244,7 @@ export function App() {
                             {movingBack.progress && movingBack.progress[1] > 0 && ` ${Math.round((movingBack.progress[0] / movingBack.progress[1]) * 100)}%`}
                           </span>
                         ) : (
-                          <button className="ghost" disabled={movingBack !== null} onClick={() => moveBack(r)}>
+                          <button className="ghost" disabled={movingBack !== null || historyLoading || !!historyError} onClick={() => moveBack(r)}>
                             {s.moveBack}
                           </button>
                         )}
@@ -1231,7 +1256,7 @@ export function App() {
             </div>
           )}
           {history.length === 0 ? (
-            <p className="empty">{s.historyEmpty}</p>
+            !historyLoading && !historyError && <p className="empty">{s.historyEmpty}</p>
           ) : (
             <>
               <p className="muted">
@@ -1242,7 +1267,7 @@ export function App() {
                 {lastBatch.length > 0 && (
                   <button
                     className="ghost"
-                    disabled={restoring}
+                    disabled={restoring || historyLoading || !!historyError}
                     title={s.undoLastHint(lastBatch.length, humanSize(lastBatch.reduce((a, r) => a + r.size_bytes, 0)))}
                     onClick={() => restoreRecords(lastBatch)}
                   >
@@ -1282,7 +1307,7 @@ export function App() {
                       <td className="size">{humanSize(r.size_bytes)}</td>
                       <td className="muted">
                         {!r.ok ? r.error : whereabouts.get(r.path) === "in_bin" ? (
-                          <button className="ghost" disabled={restoring} onClick={() => restoreRecords([r])}>{s.restore}</button>
+                          <button className="ghost" disabled={restoring || historyLoading || !!historyError} onClick={() => restoreRecords([r])}>{s.restore}</button>
                         ) : whereabouts.get(r.path) === "present" ? s.statePresent : whereabouts.has(r.path) ? s.stateGone : ""}
                       </td>
                     </tr>
