@@ -22,13 +22,30 @@
   checks and complete exit/restart passed. Disabled-state checks did not click
   busy controls. All twelve baseline hashes stayed unchanged; the original
   installed app was reopened. No native UI cleanup/restore or installer upgrade ran.
-- [ ] Verify tagged CI and both public package downloads before claiming delivery.
+- [x] [Source PR #65](https://github.com/nethero23/ai-disk-cleaner/pull/65) merged;
+  annotated `v0.9.0-rc.1` targets `72872087f6a183ae2d06ef421495a234e465a40c`.
+  [Tag CI](https://github.com/nethero23/ai-disk-cleaner/actions?query=branch%3Av0.9.0-rc.1)
+  passed. Exactly two [public prerelease assets](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1)
+  were downloaded and matched GitHub's SHA-256 digests; stable Latest is `v0.7.1`.
 
 The owner authorized v0.9 development through publication without approval
 prompts. Keep the existing candidate boundary: NSIS + pristine portable ZIP only,
 `prerelease: true`, `make_latest: false`, no MSI/updater/manifest promotion.
 Stable setup, upgrades, signing and uninstall-data gates below remain open.
 Private evidence and fixtures: ignored `target/v09-release-20261024/`.
+
+### Published v0.9 package receipt
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe` | 4,751,382 | `81887c75fd2f7114dac39f186bfabd49426321c6b26e98c1f6c445d519b5a62d` |
+| `AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip` | 6,238,288 | `070054ff1f32bab595df323992e3553a9cb45fe2ced310a68394809d7897415a` |
+
+ZIP entries: executable, README, empty `data/` and portable marker only; product
+version `0.9.0-rc.1`. NSIS and portable executable Authenticode: `NotSigned`.
+Cloud downloads were inspected, not executed; no installed application was
+replaced. Release-note changes do not move the source tag. No MSI, updater or
+package-manager manifests were published, and stable gates remain open.
 
 ## v0.8 historical baseline
 
