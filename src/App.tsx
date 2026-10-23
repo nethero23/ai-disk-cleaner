@@ -17,6 +17,7 @@ import { Button, Card, Checkbox, Fab, FloatingToolbar, Icon, NavigationRail, Sea
 import { Hero } from "./pages/Clean/Hero";
 import { ResultItem } from "./pages/Clean/ResultItem";
 import { ScanProgress } from "./pages/Clean/ScanProgress";
+import { afterClean, withItems } from "./scanReport";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 type Page = "clean" | "space" | "history" | "aitools" | "settings";
@@ -131,7 +132,7 @@ export function App() {
       // A whole store may have moved, taking its other items with it.
       const moved = (i: ScanItem) =>
         i.id === item.id || i.path === result.from || i.path.startsWith(result.from + "\\") || i.path.startsWith(result.from + "/");
-      setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !moved(i)) } : prev));
+      setReport((prev) => (prev ? withItems(prev, prev.items.filter((i) => !moved(i))) : prev));
       setSelected((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
@@ -294,7 +295,7 @@ export function App() {
     if (!current.excluded_paths.includes(it.path)) {
       await saveSettings({ ...current, excluded_paths: [...current.excluded_paths, it.path] });
     }
-    setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !i.path.startsWith(it.path)) } : prev));
+    setReport((prev) => (prev ? withItems(prev, prev.items.filter((i) => !i.path.startsWith(it.path))) : prev));
     setSelected((prev) => {
       const next = new Set(prev);
       next.delete(it.id);
@@ -780,16 +781,8 @@ export function App() {
       const summary = await invoke<CleanSummary>("clean_items", { items: selectedItems });
       setResult(summary);
       if (exported) setNotice(s.exported(exported.files, exported.zip_path));
-      // Drop what was deleted; keep what failed so the user sees it.
-      const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
-      setReport((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter((i) => !selected.has(i.id) || failed.has(i.path)),
-            }
-          : prev,
-      );
+      // Items and overview must reflect only confirmed successful deletions.
+      setReport((prev) => (prev ? afterClean(prev, summary) : prev));
       setSelected(new Set());
     } catch (e) {
       setError(String(e));
@@ -976,7 +969,7 @@ export function App() {
         </div>
       )}
 
-      {view === "aitools" && <AiTools lang={lang} />}
+      {view === "aitools" && <AiTools lang={lang} versionCheck={settings?.mcp_version_check ?? true} />}
 
       {view === "overview" && (
         <section className="bigfiles overview">

@@ -44,6 +44,9 @@ pub struct Settings {
     pub growth_notify_bytes: u64,
     /// The first-run walkthrough has been shown (or skipped).
     pub onboarded: bool,
+    /// On the AI tools page, ask npm / PyPI for the latest version of each
+    /// MCP server package. Sends package names only, never config contents.
+    pub mcp_version_check: bool,
 }
 
 pub const DEFAULT_RULES_URL: &str =
@@ -70,11 +73,20 @@ impl Default for Settings {
             idle_model_days: 90,
             growth_notify_bytes: 2 * 1024 * 1024 * 1024,
             onboarded: false,
+            mcp_version_check: true,
         }
     }
 }
 
 impl Settings {
+    /// Network permission must not fall back to enabled on a failed read.
+    pub fn version_check_allowed(path: &Path) -> bool {
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|text| serde_json::from_str::<Self>(&text).ok())
+            .is_some_and(|settings| settings.mcp_version_check)
+    }
+
     pub fn load(path: &Path) -> Self {
         std::fs::read_to_string(path)
             .ok()
@@ -101,6 +113,55 @@ mod tests {
     use super::*;
 
     #[test]
+    fn version_check_permission_fails_closed_when_settings_cannot_be_read() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        assert!(!Settings::version_check_allowed(&p), "missing file");
+        assert!(!Settings::version_check_allowed(tmp.path()), "not a file");
+        for invalid in ["", "{", "null", r#"{"mcp_version_check":"false"}"#] {
+            std::fs::write(&p, invalid).unwrap();
+            assert!(!Settings::version_check_allowed(&p), "invalid settings");
+        }
+        for enabled in [false, true, false] {
+            Settings {
+                mcp_version_check: enabled,
+                ..Default::default()
+            }
+            .save(&p)
+            .unwrap();
+            assert_eq!(Settings::version_check_allowed(&p), enabled);
+        }
+        // Existing valid settings keep the documented default for older files.
+        std::fs::write(&p, "{}").unwrap();
+        assert!(Settings::version_check_allowed(&p));
+    }
+
+    #[test]
+    fn partial_settings_write_stops_starting_version_requests_mid_batch() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        Settings::default().save(&p).unwrap();
+        let mut requests = 0;
+        let versions = crate::aiconfig::check_versions(
+            Settings::version_check_allowed(&p),
+            vec!["npm:first".into(), "npm:second".into()],
+            std::time::Duration::from_secs(1),
+            |_, _| {
+                if !Settings::version_check_allowed(&p) {
+                    return Err("Version checking is disabled".into());
+                }
+                requests += 1;
+                std::fs::write(&p, "{").unwrap();
+                Ok(r#"{"version":"1.0.0"}"#.into())
+            },
+        );
+        assert_eq!(requests, 1, "no request may start during a partial write");
+        assert!(versions
+            .iter()
+            .any(|v| v.error.as_deref() == Some("Version checking is disabled")));
+    }
+
+    #[test]
     fn round_trips_and_defaults_missing_fields() {
         let tmp = tempfile::tempdir().unwrap();
         let p = tmp.path().join("settings.json");
@@ -117,6 +178,22 @@ mod tests {
         assert!(!back.is_excluded(Path::new("/x/keeper")));
         // An older file without newer fields still loads.
         std::fs::write(&p, r#"{"excluded_paths":["/a"]}"#).unwrap();
-        assert_eq!(Settings::load(&p).rules_update_url, DEFAULT_RULES_URL);
+        let old = Settings::load(&p);
+        assert_eq!(old.rules_update_url, DEFAULT_RULES_URL);
+        assert!(old.mcp_version_check);
+    }
+
+    #[test]
+    fn disabled_version_check_survives_save_and_reload() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = tmp.path().join("settings.json");
+        let settings = Settings {
+            mcp_version_check: false,
+            ..Default::default()
+        };
+        settings.save(&p).unwrap();
+        assert!(!Settings::load(&p).mcp_version_check);
+        std::fs::write(&p, r#"{"mcp_version_check":false}"#).unwrap();
+        assert!(!Settings::load(&p).mcp_version_check);
     }
 }

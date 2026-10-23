@@ -271,13 +271,21 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
         }
     }
 
-    // Keep the autostart registration in line with the setting; the user may
-    // have removed it from Task Manager or the setting may be newer.
-    apply_autostart(app, settings.autostart);
+    // Installed copies synchronize their setting on startup. A portable copy
+    // has separate settings and must not overwrite the installed registration.
+    sync_startup_autostart(crate::portable_dir().is_some(), settings.autostart, |on| {
+        apply_autostart(app, on)
+    });
 
     let handle = app.clone();
     std::thread::spawn(move || scheduler(handle));
     Ok(())
+}
+
+fn sync_startup_autostart(portable: bool, on: bool, apply: impl FnOnce(bool)) {
+    if !portable {
+        apply(on);
+    }
 }
 
 pub fn apply_autostart(app: &AppHandle, on: bool) {
@@ -447,4 +455,27 @@ pub fn run_background_scan(app: &AppHandle, forced: bool) {
         let _ = app.notification().builder().title(title).body(body).show();
     }
     let _ = app.emit("background-scan", &report);
+}
+
+#[cfg(test)]
+mod startup_tests {
+    use super::sync_startup_autostart;
+
+    #[test]
+    fn portable_launch_never_changes_autostart_registration() {
+        for on in [false, true] {
+            sync_startup_autostart(true, on, |_| {
+                panic!("portable launch must not change an installed app's registration")
+            });
+        }
+    }
+
+    #[test]
+    fn installed_launch_keeps_the_existing_sync_policy() {
+        for on in [false, true] {
+            let mut applied = None;
+            sync_startup_autostart(false, on, |value| applied = Some(value));
+            assert_eq!(applied, Some(on));
+        }
+    }
 }

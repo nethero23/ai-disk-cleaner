@@ -17,7 +17,7 @@
 
 </div>
 
-> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). La interfaz de la aplicación está disponible por ahora en chino e inglés.
+> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). La candidata de desarrollo `0.8.0-rc.1` ofrece 12 idiomas de interfaz y no es una versión pública; consulta las pruebas y los pasos pendientes en la [lista de aceptación](docs/RELEASE_CHECKLIST.md).
 
 ## Por qué
 
@@ -30,7 +30,7 @@ Clearwisp explica cada gigabyte: **qué modelo, qué entorno de conda, qué cach
 <a id="features"></a>
 ## Funciones
 
-### 🧠 Conoce la basura de las herramientas de IA (126 reglas, más de 90 herramientas)
+### 🧠 Conoce la basura de las herramientas de IA (136 reglas, más de 90 herramientas)
 
 | Categoría | Cubre |
 |---|---|
@@ -75,7 +75,7 @@ Lee los manifiestos de Ollama, la estructura de la caché de Hugging Face, los e
 
 ### 🚫 Nunca
 
-Sin limpieza del registro, sin ventanas molestas, sin software incluido, sin subir tu lista de archivos. Funciona sin conexión; solo se conecta para buscar actualizaciones.
+Sin limpieza del registro, sin ventanas molestas, sin software incluido, sin subir tu lista de archivos. El análisis y la limpieza se hacen en local; las actualizaciones de la aplicación y de las reglas acceden a GitHub. La comprobación de versiones MCP en la página «Herramientas de IA» está activada de forma predeterminada y se puede desactivar en Ajustes. Solo envía nombres de paquetes a npm / PyPI, nunca el contenido de la configuración.
 
 ## Instalación
 
@@ -147,7 +147,7 @@ El análisis es de solo lectura. Solo se limpian las carpetas incluidas en las r
 Cubre lo que CCleaner no: modelos de IA, entornos de Python, cachés de editores con IA. También limpia la basura habitual de Windows. Usar los dos no es problema.
 
 ### ¿Es gratis? ¿Tiene anuncios o telemetría?
-Gratis, con licencia MIT, sin anuncios ni software incluido. El análisis y la limpieza se hacen en local; la aplicación solo se conecta a GitHub para buscar actualizaciones y (opcionalmente) actualizar las reglas.
+Gratis, con licencia MIT, sin anuncios ni software incluido. El análisis y la limpieza se hacen en local; las actualizaciones de la aplicación y de las reglas acceden a GitHub. La comprobación de versiones MCP en la página «Herramientas de IA» está activada de forma predeterminada y se puede desactivar en Ajustes. Solo envía nombres de paquetes a npm / PyPI, nunca el contenido de la configuración.
 
 ### ¿macOS / Linux?
 Por ahora solo Windows 10 / 11. El motor de análisis está escrito en Rust multiplataforma, así que podrían llegar otras plataformas.
