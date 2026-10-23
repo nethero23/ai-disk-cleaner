@@ -242,7 +242,7 @@ The original installation's rollback backups and private evidence remain local
 under `target/selection-validation-20261023/`. No personal paths, raw history,
 configuration contents, or private screenshots belong in release assets.
 
-### Authorized candidate publication (pending)
+### Authorized candidate publication (pre-tag checkpoint)
 
 The user separately authorized merging/pushing the repair and acceptance docs,
 updating READMEs, and publishing a package or tag. The chosen plan is the first
@@ -252,3 +252,27 @@ publication must not replace stable Latest, distribute `latest.json`, publish
 MSI or package-manager manifests, or trigger another local installation.
 MSI actual installation, pristine Windows/missing-WebView2 setup, uninstall-data
 behavior, installer code signing and signed-updater delivery remain unverified.
+
+### Public candidate delivery verified (2026-10-23)
+
+- [PR #61](https://github.com/nethero23/ai-disk-cleaner/pull/61) merged repair and
+  synchronized docs at `bbb48441bb2ce67366aebf356c21391209976839` after all three
+  CI jobs passed. The annotated `v0.8.0-rc.1` tag targets that exact merge.
+- [Tag workflow](https://github.com/nethero23/ai-disk-cleaner/actions/runs/39972894265)
+  completed successfully. The [public release](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1)
+  is a published prerelease with exactly two uploaded assets. Latest stable
+  remains `v0.7.1`; no MSI, updater manifest, or package-manager manifests were published.
+- Both assets downloaded successfully; lengths and SHA-256 match GitHub metadata.
+  The portable ZIP contains only the application, README, zero-byte portable
+  marker and empty data directory. Its application reports `0.8.0-rc.1`.
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `AI.Disk.Cleaner_0.8.0-rc.1_x64-setup.exe` | 4,725,439 | `00d6fd8e6efac9cdab666329b4363331e58dea593e2c6f1e2538e8451ac41583` |
+| `AI.Disk.Cleaner_0.8.0-rc.1_x64-portable.zip` | 6,211,393 | `b210c6d98e7fd7d068c18bf5acdacd03a76d9395bcbcd9327d8ba32a8bb3d3d9` |
+
+Installer Authenticode status is `NotSigned`. Cloud-generated binaries were
+downloaded and inspected, not executed or installed. This does not extend local
+desktop acceptance to those exact cloud binary bytes or close the remaining
+stable-release gates. No new personal-file cleanup or installation was performed.
+Private delivery receipts remain under ignored `target/selection-publication-20261023/`.

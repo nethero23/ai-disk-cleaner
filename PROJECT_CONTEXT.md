@@ -2,20 +2,22 @@
 
 ## Current milestone
 
-v0.8.0-rc.1 source merged to `main` through PR #59; tested source is
-`73829ed01ea4ffa26271ea2cd35a03bd27d6f235`. Latest-main local packaging and
-NSIS desktop/install/upgrade acceptance passed. The selection-repair branch is
-now pushed for integration; this follow-up synchronizes READMEs and acceptance docs.
-The user authorized merging/pushing the repair and publishing a candidate package
-or tag. The selected plan is `v0.8.0-rc.1` as a GitHub prerelease, not a stable
-promotion: NSIS and portable ZIP only, no MSI, `latest.json`, or winget/Scoop
-manifests. Tag/release creation is still pending at this checkpoint; Latest
-stable remains `v0.7.1`.
+v0.8.0-rc.1 selection repair, all 11 READMEs and acceptance documentation merged
+to `main` through [PR #61](https://github.com/nethero23/ai-disk-cleaner/pull/61)
+at `bbb48441bb2ce67366aebf356c21391209976839`. The annotated `v0.8.0-rc.1`
+tag targets that exact source. The separately authorized
+[GitHub prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1)
+is published after successful tag CI: NSIS and portable ZIP only, no MSI,
+`latest.json`, or winget/Scoop manifests. Both public downloads match GitHub's
+SHA-256 digests; the portable archive has empty data, a portable marker and
+application version `0.8.0-rc.1`. Latest stable remains `v0.7.1`.
+Windows installer Authenticode is `NotSigned`. Downloaded cloud binaries were
+inspected, not executed or installed; local native acceptance is separate.
 
 ### Scan-selection follow-up
 
-`1b35511` fixes manual selection on the pushed follow-up branch, not yet merged or
-publicly released. Legacy 16px native-input sizing missed the center of the 40px
+`1b35511` fixes manual selection and is included in the merged/tagged candidate.
+Legacy 16px native-input sizing missed the center of the 40px
 drawn checkbox; the input now covers the control. Group selection/clear and its
 checked state now consider only eligible rows, with all-in-use groups disabled.
 Both original failures were reproduced before their fixes. All 25 browser
