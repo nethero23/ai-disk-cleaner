@@ -27,8 +27,8 @@ messaging in every UI language. Registry tests use injected responses, not live 
 ## Windows native acceptance
 
 - Use a separate portable directory; never replace the installed app's data.
-- Disable every built-in rule and supply a single custom rule targeting newly
-  created acceptance fixtures. Disable scheduled cleanup and update/version requests.
+- Disable every built-in rule and supply custom rules targeting only newly
+  created safe/review acceptance fixtures. Disable scheduled cleanup and update/version requests.
 - Verify scan results contain only fixtures; scan does not modify fixture content.
 - After explicit confirmation, verify Recycle Bin cleanup and undo restore identical bytes.
 - Verify settings, theme, and language persist after a complete restart.
@@ -82,3 +82,27 @@ their actual observations are recorded; frontend mock-IPC tests are not substitu
 The isolated native fixture was verified unchanged. No real tool configuration
 was modified and no personal file was cleaned. These results are a candidate
 readiness record, not approval to publish.
+
+### 2026-10-23 native desktop follow-up
+
+The actual portable ZIP was hash-verified and extracted into a separate validation
+directory. A byte-identical, uniquely named executable avoids confusing it with
+the installed app. The native window used bundled `http://tauri.localhost/`, not
+the mock-IPC browser page. All 136 built-in rules were disabled.
+
+| Gate | Observation |
+| --- | --- |
+| Native scan | Exactly two synthetic items, 12.1 KB; only the 4.0 KB Safe item selected, 8.0 KB Review item not selected |
+| Scan read-only | Both fixture content hashes unchanged |
+| Settings persistence | English and light theme survived complete exit/relaunch; external checks and scheduled cleanup stayed disabled |
+| Real AI inventory | Completed: 12 tools, 106 MCP entries, 371 skills; first load took roughly two minutes, requiring performance follow-up |
+| Configuration preservation | Four sampled tool configuration files had identical SHA-256 before/after inventory; this is not an exhaustive file audit |
+| Portable startup | Matching installed-app autostart entries unchanged after launch/relaunch |
+| Native cleanup confirmation | Correctly offers one 4.0 KB item to the Recycle Bin; final action awaits explicit test-fixture permission |
+| Frontend regression recheck | Build/type-check, two Node tests and 10 additional locales passed again |
+| Rust recheck | Existing compiled tests passed again: 97 core, one Windows roundtrip, two native startup-policy tests; fresh offline Cargo resolution failed because the dependency cache lacks `chrono` |
+| Installation / upgrade / signed updater | Still not executed |
+
+Do not equate the existing test-binary rerun with fresh Rust compilation. The
+October 22 build/Clippy evidence remains historical; no Rust source changed in
+this desktop follow-up. No personal file was cleaned.

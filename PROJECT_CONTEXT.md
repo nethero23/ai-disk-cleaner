@@ -21,10 +21,15 @@ Automated checks pass, including a real Windows Recycle Bin roundtrip using a
 temporary fixture. The mock-IPC browser flow passes 10 checks. Local unsigned
 NSIS/MSI packaging succeeds with an explicit numeric MSI-version override.
 
-Interactive Windows UI acceptance is incomplete: the desktop helper returned a
-black screenshot and could not activate the isolated validation window. No native
-cleanup click was attempted. Installation/upgrade and signed-updater checks also
-remain open. See `docs/RELEASE_CHECKLIST.md` for evidence and release gates.
+On October 23, the unlocked Windows desktop passed native portable startup,
+fixture-only scanning, safe-only default selection, and language/light-theme
+persistence after restart. Real AI inventory completed; four sampled tool
+configuration hashes and matching autostart entries remained unchanged.
+
+Native UI cleanup/restore awaits explicit confirmation for the isolated test
+fixture. The first real AI inventory took roughly two minutes on this machine;
+profile this before treating responsiveness as release-ready. Installation/upgrade
+and signed-updater checks remain open. See `docs/RELEASE_CHECKLIST.md` for evidence.
 
 ## Deferred work
 
