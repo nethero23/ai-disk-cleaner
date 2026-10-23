@@ -2,8 +2,10 @@
 
 ## Current milestone
 
-v0.8.0-rc.1 local integration candidate on `feat/v0.8-integration`.
-This is not a published release. The latest local release tag remains `v0.7.1`.
+v0.8.0-rc.1 source merged to `main` through PR #59; tested source is
+`73829ed01ea4ffa26271ea2cd35a03bd27d6f235`. Latest-main local packaging and
+NSIS desktop/install/upgrade acceptance passed. This is not a published release;
+the latest local release tag remains `v0.7.1`.
 
 ## Approved v0.8 scope
 
@@ -36,7 +38,8 @@ most four workers, preserving catalog order and fresh results without a cache.
 MCP network permission now fails closed on unreadable or malformed settings,
 both at batch entry and before each request. Six frontend regressions, 102 core
 tests, one Windows roundtrip and two native policy tests pass after fresh
-compilation. Earlier unsigned bundles are local and predate this permission fix.
+compilation. Unsigned NSIS/MSI and a pristine portable ZIP were rebuilt from the
+merged main, including both the permission and short-path restore fixes.
 
 The first GitHub Windows roundtrip exposed short-name parent paths not matching
 the Recycle Bin's canonical spelling. Restore/status/dedup now normalize existing
@@ -46,10 +49,20 @@ was reproduced locally with an 8.3 TEMP alias, then the full suite passed there.
 Full-engine measurement improved from 1.503s to 0.863s in a same-host comparison;
 tools and analysis serialized identically. The earlier two-minute observation
 was not reproduced, so this is not a demonstrated cold-cache fix. Native first
-page entry showed the complete inventory by the 6.2-second observation. Native
-post-clean overview reacceptance awaits specific fixture approval.
-Installation/upgrade and signed-updater checks remain open. See
-`docs/RELEASE_CHECKLIST.md` for evidence.
+page entry showed the complete inventory by the 6.2-second observation.
+
+Latest-main native cleanup, after action-time approval, moved only the new 4 KB
+test directory to the Recycle Bin. Without a rescan, the overview changed from
+12 KB / two items to 8 KB / one item, Safe 0 B and Review 8 KB. History Restore
+returned identical bytes; the Review control never changed.
+
+An isolated-directory NSIS install and installed-mode fixture scan passed. The
+existing 0.7.1 installation then upgraded in place without uninstalling. Its
+settings, history and all 16 Roaming data files stayed byte-identical through
+normal exit and full restart; shortcuts still target the original installation.
+Original profiles and binaries are backed up locally. MSI installation, pristine
+Windows/WebView2 setup and signed-updater delivery remain untested. See
+`docs/RELEASE_CHECKLIST.md` for evidence; nothing was publicly released.
 
 ## Deferred work
 
