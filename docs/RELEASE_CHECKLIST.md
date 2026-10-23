@@ -2,7 +2,8 @@
 
 ## Scope
 
-Version: `0.8.0-rc.1`. AI tool management is read-only inventory and diagnosis,
+Preparing version `0.8.0-rc.2` (not yet tagged/published); published candidate:
+`0.8.0-rc.1`. AI tool management is read-only inventory and diagnosis,
 not automatic configuration editing, consolidation, or synchronization.
 Keep package/executable identifiers unchanged for compatibility.
 
@@ -65,6 +66,7 @@ Run the repeatable mock-IPC browser flow with Vite running:
 
 ```sh
 node tools/ui-smoke-acceptance.mjs <path-to-gstack-browse>
+node tools/ui-history-acceptance.mjs <path-to-gstack-browse>
 ```
 
 Native tests requiring an interactive Windows desktop are not complete until
@@ -276,3 +278,47 @@ downloaded and inspected, not executed or installed. This does not extend local
 desktop acceptance to those exact cloud binary bytes or close the remaining
 stable-release gates. No new personal-file cleanup or installation was performed.
 Private delivery receipts remain under ignored `target/selection-publication-20261023/`.
+
+### GitHub rc.1 actual installation and selection (2026-10-24)
+
+This follow-up supersedes the October 23 "not executed" delivery checkpoint,
+without changing that historical observation. The verified public GitHub NSIS
+package was reinstalled at the original location after a fresh backup and
+explicit launch/install approval. No uninstall, configuration reset or cleanup ran.
+
+| Gate | Result |
+| --- | --- |
+| Published payload identity | Installed executable: 18,785,280 bytes; matches the public cloud payload with Tauri's NSIS bundle marker |
+| Selection and restart | All 10 selection checks passed, including checkbox-center select/clear, keyboard Space, group select/clear and in-use protection; complete exit and relaunch also passed |
+| Data preservation | Settings, all 95 history lines and both existing shortcuts retained identical SHA-256; history displayed normally after restart |
+
+Private receipts and backups remain under ignored
+`target/github-install-acceptance-20261024/`. This confirms the actual rc.1
+cloud build, not future candidate binaries or the remaining stable gates.
+
+### rc.2 history readiness (2026-10-24, before publication)
+
+The history loading and 1100px overflow defects were each reproduced before
+repair. Pending reads now show loading rather than empty history; rejected IPC
+requests retain loaded rows and offer Retry. A newer history request supersedes
+older replies. Restore and move-back controls remain disabled until current
+status is available, including after load errors. Long paths retain full-path
+tooltips, failure text wraps and action columns remain visible. All three new
+status strings are translated in 12 UI languages.
+
+| Gate | Result |
+| --- | --- |
+| Mock-IPC browser acceptance | 28 history checks plus 25 existing checks passed (53 total): pending/error/retry/stale/status failure, 1100px/800px action visibility, all 12 languages at 800px, no mutation calls |
+| Isolated native history | Actual bundled `tauri.localhost` app displayed loading and two synthetic records; long paths/errors stayed readable without horizontal overflow |
+| Isolated native selection | Read-only scan found exactly four new fixtures totaling 201 B; Safe alone selected (49 B), Review center-click changed 1 / 49 B → 2 / 100 B → 1 / 49 B, in-use item disabled |
+| Preservation | Installed executable/settings/history and isolated fixture/settings/history hashes unchanged; no application cleanup or restore performed |
+| Fresh automated/build gates | Nine Node, 102 core, one real Windows temporary-fixture Recycle Bin/restore, two native policy tests; locale parity, fmt, core/native Clippy, TypeScript/build, native debug/release and unsigned NSIS packaging passed |
+| Review | Independent in-host review approved; missing external-model CLI is not a passed review |
+| Publication/install boundary | rc.2 is not yet tagged or published; the installed rc.1 was not replaced. Local package checks do not certify future cloud bytes |
+
+Known limit: existing backend `clean::read_log` file-read errors can become an
+empty list, with similar restore-enumeration behavior. The new error UI covers
+rejected IPC only; no backend disk-read error contract was changed. MSI actual
+installation, pristine Windows/WebView2, uninstall-data behavior, code signing
+and signed-updater delivery remain open. Private evidence is under ignored
+`target/next-release-20261024/`; never publish raw histories, private paths or screenshots.

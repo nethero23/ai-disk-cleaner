@@ -16,7 +16,16 @@ const state = window.__clearwispSmoke = {
   settings: saved ? JSON.parse(saved) : defaults,
   calls: [],
   mode: "success", // Set to "offline" or "slow" for failure/late-reply checks.
+  historyMode: "success",
+  historyPending: [],
 };
+const historyRecords = [
+  { name: "History fixture", ok: true, error: null },
+  { name: "Failed fixture", ok: false, error: "Synthetic failure ".repeat(80) },
+].map((r, i) => ({ ...r, at: "2026-10-24T00:00:00Z", batch: "fixture",
+  rule_id: "fixture.history", path: `C:/fixtures/${"long-folder/".repeat(40)}${i}`,
+  size_bytes: 4096, safety: r.ok ? "safe" : "review",
+}));
 const selectionItems = [
   ["safe", "Selection Safe", 4096, "safe", null],
   ["review", "Selection Review", 8192, "review", null],
@@ -61,6 +70,16 @@ mockIPC(async (cmd, args = {}) => {
       unreadable: [], timings: [], cancelled: false,
     };
     case "growth_report": return [];
+    case "clean_log": {
+      const mode = state.historyMode;
+      if (mode === "pending") await new Promise((resolve) => state.historyPending.push(resolve));
+      if (mode === "error") throw new Error("Synthetic history read failure");
+      return mode === "empty" ? [] : structuredClone(historyRecords);
+    }
+    case "relocations": return [];
+    case "restore_status":
+      if (state.historyMode === "status-error") throw new Error("Synthetic status failure");
+      return args.paths.map((path) => ({ path, state: "in_bin" }));
     case "relocatable": case "compactable": case "exportable": case "drives": return [];
     case "ai_inventory": return structuredClone(inventory);
     case "ai_version_check": {

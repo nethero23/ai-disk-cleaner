@@ -33,17 +33,19 @@ And it is not only C:. Model libraries, conda environments, Docker disks and pro
 
 Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
 
-## v0.8.0-rc.1 development candidate
+## v0.8.0-rc.2 candidate preparation
 
-This is a **prerelease candidate, not a stable release**. Once candidate packages are published, select `v0.8.0-rc.1` in the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) and manually download the NSIS installer (`*_x64-setup.exe`) or portable ZIP. The Latest links above remain on stable `v0.7.1`; this candidate is not offered through automatic updates and provides no MSI, `latest.json`, or winget/Scoop manifests.
+`v0.8.0-rc.2` is **in preparation, not yet published or stable**; the published candidate is [v0.8.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1). Once the new candidate is published, manually download its NSIS installer (`*_x64-setup.exe`) or portable ZIP from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases). The Latest links remain on stable `v0.7.1`; candidates are not offered through automatic updates and provide no MSI, `latest.json`, or winget/Scoop manifests.
 
 - **Read-only AI inventory**: inspect MCP entries, skills, plugins, and extensions, with duplicate/conflict hints and sensitive-value redaction. AI configurations are not automatically merged, synchronized, or edited.
 - **Older versions need review**: candidates are marked Review, not selected by default, and excluded from automatic Safe cleanup.
 - **Live post-clean totals**: rebuild remaining items, total size, and safety-level amounts from backend-confirmed successes; retain failed items.
 - **Bounded inventory concurrency**: at most four tool readers run concurrently, without a persistent cache.
 - **Manual selection repaired**: click the checkbox center or press Space to select/clear a row. Groups select/clear eligible rows, while all-in-use groups stay disabled and running-file protections remain intact.
+- **History no longer appears empty while loading**: pending reads show a loading state; rejected IPC requests retain loaded rows and offer Retry. Older replies cannot replace newer results, and restore/move-back controls stay disabled during loading or errors.
+- **Readable history in narrow windows**: long paths truncate with full-path tooltips, errors wrap, and action columns stay inside the window. New status text covers all 12 UI languages.
 
-Local fixture cleanup/restore, an isolated-directory NSIS install, an in-place upgrade from 0.7.1, and in-place reinstallation/full restart of the selection repair passed. Selection regression checks passed in the browser (25), isolated native app (10), and actual installation (10); settings/history hashes were unchanged and selection acceptance performed no cleanup. MSI installation, pristine Windows/WebView2 setup, installer code signing, and signed updater delivery remain untested. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
+The published GitHub `rc.1` installer passed in-place reinstallation, full restart, and 10 selection checks; existing settings, 95 history lines, and both shortcuts retained identical hashes, with no cleanup. For `rc.2`, history defects were reproduced before repair; 28 history and 25 existing browser checks passed (53 total). An isolated real desktop verified history display and read-only scan/selection without replacing the installed app. MSI installation, pristine Windows/WebView2, code signing, and signed updates remain untested. History errors cover rejected IPC requests, not all backend disk-read failures. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Features
 
@@ -179,11 +181,11 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [ ] winget / Scoop listing, installer code signing
 - [ ] v0.8 candidate acceptance: Material Design 3 UI, read-only AI-tool inventory (skills / MCP / plugins), duplicate/conflict hints, and optional version checks
 
-The current candidate is `0.8.0-rc.1`, not a stable release; download candidate packages manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) once published. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+`0.8.0-rc.2` is in preparation and not yet published; `0.8.0-rc.1` is the published candidate. Candidates do not replace stable releases; download them manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) once published. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 ## Contributing
 
-Missing an AI tool you use? [Open an issue](https://github.com/nethero23/ai-disk-cleaner/issues) or add a rule (a few lines of TOML). Build and rule format: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Missing an AI tool you use? [Open an issue](https://github.com/nethero23/ai-disk-cleaner/issues) or add a rule (a few lines of TOML). Build and rule format: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). See [CHANGELOG.md](CHANGELOG.md) for changes and [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for milestone status.
 
 If it saved you some gigabytes, a ⭐ helps others with a full disk find it.
 

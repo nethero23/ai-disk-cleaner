@@ -2,6 +2,16 @@
 
 ## Current milestone
 
+`0.8.0-rc.2` is being prepared, not yet tagged or published. It fixes pending
+history appearing empty, rejected-IPC retry/preservation, stale replies and
+narrow history layout. Loading/error states disable restore and move-back;
+all three new status strings cover 12 UI languages. The two original defects
+were reproduced before repair. All 53 browser checks (28 history plus 25
+existing) and isolated production-origin desktop checks passed. No installed
+application was replaced for this candidate. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
+
+### Published rc.1 baseline
+
 v0.8.0-rc.1 selection repair, all 11 READMEs and acceptance documentation merged
 to `main` through [PR #61](https://github.com/nethero23/ai-disk-cleaner/pull/61)
 at `bbb48441bb2ce67366aebf356c21391209976839`. The annotated `v0.8.0-rc.1`
@@ -11,8 +21,30 @@ is published after successful tag CI: NSIS and portable ZIP only, no MSI,
 `latest.json`, or winget/Scoop manifests. Both public downloads match GitHub's
 SHA-256 digests; the portable archive has empty data, a portable marker and
 application version `0.8.0-rc.1`. Latest stable remains `v0.7.1`.
-Windows installer Authenticode is `NotSigned`. Downloaded cloud binaries were
-inspected, not executed or installed; local native acceptance is separate.
+Windows installer Authenticode is `NotSigned`. At the October 23 delivery
+checkpoint, downloaded cloud binaries were inspected but not executed.
+On October 24, the actual GitHub NSIS package was reinstalled in place and
+fully restarted. Its installed payload matches the cloud build including
+Tauri's NSIS marker; all 10 selection checks passed. Settings, the 95-line
+history and both shortcut hashes stayed unchanged; no cleanup ran. Private
+receipts and rollback backups stay under ignored `target/github-install-acceptance-20261024/`.
+
+### rc.2 readiness and limits
+
+Fresh checks passed: nine Node tests, 102 core tests, one Windows temporary-fixture
+Recycle Bin/restore roundtrip, two native policy tests, locale parity, Rust fmt,
+core/native Clippy, frontend type/build, native debug/release and unsigned NSIS
+packaging. The isolated bundled `tauri.localhost` app displayed loading and two
+synthetic history rows without horizontal overflow. Read-only scanning found
+only four new fixtures (201 B); Safe alone was selected, Review could be
+selected/cleared manually, and in-use controls stayed disabled. No application
+cleanup or restore ran; installed and fixture configuration/history hashes
+stayed unchanged. Evidence remains private under ignored `target/next-release-20261024/`.
+
+The error UI covers rejected IPC requests only. Existing backend log-read
+errors can still be mapped to empty lists; this candidate does not change that
+behavior or the IPC contract. An independent in-host review approved the fix;
+unavailable external-model tooling is not additional review coverage.
 
 ### Scan-selection follow-up
 
@@ -110,3 +142,5 @@ Windows/WebView2 setup and signed-updater delivery remain untested. See
 - Stable promotion, MSI actual installation, pristine Windows/WebView2 setup,
   uninstall-data behavior and signed updates remain separate gates. The approved
   prerelease plan does not close them or authorize another local installation.
+- Backend history/restore file-read errors currently swallowed as empty results
+  need a separately scoped follow-up; the rc.2 rejected-IPC UI does not resolve them.

@@ -33,17 +33,19 @@ C 盘又红了，D 盘也快满了？在一台跑 AI 的电脑上，真正占地
 
 Clearwisp 把每一 GB 翻译成人话：**这是哪个模型、哪个 conda 环境、哪个工具的缓存、多久没用了、删了会怎样**，标好安全等级，你勾选后再删，删除走回收站，可以一键撤销。
 
-## v0.8.0-rc.1 开发候选
+## v0.8.0-rc.2 候选准备
 
-这是**预发布候选，不是稳定版**。候选包发布后请在 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 中选择 `v0.8.0-rc.1`，手动下载 NSIS 安装包（`*_x64-setup.exe`）或便携 ZIP。上方 Latest 下载链接仍指向稳定版 `v0.7.1`，不会自动推送本候选；本候选不提供 MSI、`latest.json` 或 winget/Scoop 清单。
+`v0.8.0-rc.2` 正在准备，**尚未发布，不是稳定版**；已发布的候选为 [v0.8.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.8.0-rc.1)。新候选发布后请从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载 NSIS 安装包（`*_x64-setup.exe`）或便携 ZIP。上方 Latest 下载链接仍指向稳定版 `v0.7.1`，不会自动推送候选；候选不提供 MSI、`latest.json` 或 winget/Scoop 清单。
 
 - **AI 工具只读盘点**：查看 MCP、skills、插件与扩展，提示重复和配置冲突，敏感值脱敏展示；不自动合并、同步或修改 AI 配置。
 - **旧版本需审核**：旧版本候选标为「需确认」（Review），不默认勾选，也不参与自动安全清理。
 - **清理后即时统计**：按后端确认成功的项目重算剩余条目、总量及各安全等级占用；失败项保留。
 - **有界并发盘点**：最多 4 个工具读取任务并发执行，不使用持久缓存。
 - **自由勾选修复**：点击勾选框中心或按空格均可选中/取消；分组可选中和取消所有未占用项目，全部被占用时禁用，不绕过运行中保护。
+- **历史加载不再假空**：加载时显示加载状态；IPC 请求失败保留已加载记录并可重试，旧请求不覆盖新结果。加载或出错时禁用还原/搬回操作。
+- **窄窗口历史可读**：长路径省略显示并保留悬浮完整路径，错误信息换行，操作列不再被挤出窗口；新增状态文案覆盖 12 种界面语言。
 
-本机测试目录的桌面清理/恢复、NSIS 隔离目录安装、从 0.7.1 原位升级，以及勾选修复版原位重装/完整重启已验收。勾选回归通过 25 项浏览器、10 项隔离原生及 10 项实际安装检查，配置和清理历史哈希不变，勾选验收未执行清理。MSI 实际安装、全新 Windows/WebView2、安装包代码签名及签名更新尚未验收。当前证据与待办见 [验收清单](docs/RELEASE_CHECKLIST.md)。
+已发布的 GitHub `rc.1` 安装包已原位重装并完整重启，10 项勾选检查通过，原有配置、95 行历史及两个快捷方式哈希不变，未执行清理。`rc.2` 的历史问题先复现再修复；28 项历史与原有 25 项浏览器检查共 53 项通过，隔离的真实桌面验证了历史显示及只读扫描/勾选，未覆盖本机安装版。MSI 实际安装、全新 Windows/WebView2、代码签名及签名更新仍未验收；历史错误提示仅覆盖被拒绝的 IPC，不代表修复了后端所有磁盘读取错误。证据与待办见 [验收清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 功能
 
@@ -180,11 +182,11 @@ CCleaner 擅长浏览器和系统垃圾，但不认识 AI 模型、Python 环境
 - [ ] 上架 winget / Scoop、安装包代码签名
 - [ ] v0.8 候选验收：Material Design 3 新界面、AI 工具只读盘点（skills / MCP / 插件）、重复与冲突提示、可关闭的版本检查
 
-当前候选为 `0.8.0-rc.1`，不是稳定版；候选包发布后从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
+`0.8.0-rc.2` 正在准备，尚未发布；已发布候选为 `0.8.0-rc.1`，候选不替代稳定版。发布后从 [Releases 列表](https://github.com/nethero23/ai-disk-cleaner/releases) 手动下载。AI 配置自动合并、同步与修改不在本次范围；验收清单见 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)。
 
 ## 参与贡献
 
-缺了你常用的 AI 工具？欢迎 [提 Issue](https://github.com/nethero23/ai-disk-cleaner/issues) 或直接加一条规则（一段 TOML 就行）。开发、构建、规则格式见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。
+缺了你常用的 AI 工具？欢迎 [提 Issue](https://github.com/nethero23/ai-disk-cleaner/issues) 或直接加一条规则（一段 TOML 就行）。开发、构建、规则格式见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)；版本变化见 [CHANGELOG.md](CHANGELOG.md)，项目进展见 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。
 
 觉得有用的话，点个 ⭐ Star，让更多硬盘告急的人找到它。
 

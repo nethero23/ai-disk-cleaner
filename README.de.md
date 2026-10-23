@@ -17,9 +17,11 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.8.0-rc.1` ist ein Vorabkandidat mit 12 UI-Sprachen, keine stabile Version. Nach Veröffentlichung sind NSIS-Installer und portable ZIP manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) erhältlich. Latest bleibt bei der stabilen `v0.7.1`; der Kandidat wird nicht per automatischem Update verteilt und enthält keine MSI, `latest.json` oder winget/Scoop-Manifeste.
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.8.0-rc.2` mit 12 UI-Sprachen wird vorbereitet und ist noch nicht veröffentlicht; veröffentlicht ist der Vorabkandidat `0.8.0-rc.1`, keine stabile Version. Nach Veröffentlichung sind NSIS-Installer und portable ZIP manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) erhältlich. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten werden nicht per automatischem Update verteilt und enthalten keine MSI, `latest.json` oder winget/Scoop-Manifeste.
 >
-> Behoben: Auswahl/Abwahl per Klick auf die Checkbox-Mitte oder Leertaste sowie Gruppenauswahl mit belegten Einträgen; belegte Einträge bleiben geschützt. 25 Browser-, 10 isolierte native und 10 Prüfungen der tatsächlichen Installation bestanden, einschließlich Neuinstallation am selben Ort und Neustart. Einstellungen und Verlauf blieben unverändert; diese Auswahltests führten keine Bereinigung aus. Offene Schritte: [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
+> Der veröffentlichte GitHub-Installer `rc.1` bestand Neuinstallation am selben Ort, vollständigen Neustart und 10 Auswahlprüfungen. Einstellungen, Verlauf und Verknüpfungen behielten identische Hashes; keine Bereinigung. Belegte Einträge bleiben geschützt.
+>
+> `rc.2` ergänzt Ladeanzeige, Erhalt geladener Zeilen und Wiederholen bei IPC-Fehlern, Schutz vor alten Antworten und lesbare lange Pfade/Fehler. Wiederherstellen und Zurückverschieben bleiben während des Ladens oder bei Fehlern gesperrt. 53 Browserprüfungen (28 Verlauf + 25 bestehende) und ein isolierter Desktop-Test bestanden, ohne die installierte App zu ersetzen. Nicht alle Datenträger-Lesefehler sind abgedeckt. Offene Schritte: [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
 
 ## Warum
 

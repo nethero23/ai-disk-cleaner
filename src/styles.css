@@ -220,6 +220,14 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .history .moved h3 { font: var(--md-title-m); margin: 0; }
 .history > .muted { font: var(--md-body-l); color: var(--md-on-surface); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0; }
 .history .muted > button.ghost { margin: 0; }
+.history { min-width: 0; }
+.history .log { table-layout: fixed; }
+.history .log td { max-width: none; white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+.history .log td:first-child { width: 17%; }
+.history .log td:nth-child(3) { white-space: nowrap; }
+.history .log td:nth-child(4) { width: 12%; }
+.history .log td:last-child { width: 20%; }
+.history [role="alert"] { margin: 0; overflow-wrap: anywhere; }
 
 .stats { margin: 0; gap: 12px; }
 .stat-panel { background: var(--md-surface-container-low); border: 0; border-radius: var(--md-shape-l); padding: 16px; }

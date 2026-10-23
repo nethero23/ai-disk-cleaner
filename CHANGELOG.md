@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.8.0-rc.2] - 2026-10-24
+
+Release candidate; stable downloads and automatic updates remain unchanged.
+
+### Fixed
+- History displays a loading state rather than an empty-history message while
+  requests are pending. Rejected IPC requests preserve loaded rows and offer retry.
+- Overlapping history requests cannot overwrite newer results. Restore and
+  move-back controls wait for current status and remain unavailable on load errors.
+- Long history paths and failure messages no longer push the action column
+  outside the window. Loading/error/retry text is translated in all 12 UI languages.
+
+### Verification
+- Loading and layout failures reproduced before repair; offline browser checks
+  cover pending/error/retry/late replies, narrow layouts, and existing selection flows.
+- OS-level log-read errors that the existing backend maps to an empty list are
+  not covered by the new IPC-error message. No cleanup or IPC contract changed.
+
 ## [0.8.0-rc.1] - 2026-10-23
 
 Release candidate, not a stable release. Tagged candidates publish NSIS and
