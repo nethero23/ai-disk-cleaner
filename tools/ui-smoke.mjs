@@ -17,6 +17,17 @@ const state = window.__clearwispSmoke = {
   calls: [],
   mode: "success", // Set to "offline" or "slow" for failure/late-reply checks.
 };
+const selectionItems = [
+  ["safe", "Selection Safe", 4096, "safe", null],
+  ["review", "Selection Review", 8192, "review", null],
+  ["busy", "Selection In Use", 16384, "safe", "fixture.exe"],
+  ["blocked", "Selection All Busy", 32768, "safe", "fixture.exe"],
+].map(([id, name, size_bytes, safety, in_use_by]) => ({
+  id, rule_id: `fixture.${id}`, name, size_bytes, safety, in_use_by,
+  tool: "Selection Fixture", category: id === "blocked" ? "ai_agent" : "package_cache", path: `C:/fixtures/${id}`,
+  file_count: 1, last_used: null, consequence: "Synthetic fixture only",
+  detail: null, auto_clean: true,
+}));
 const inventory = {
   tools: [{
     id: "cursor", name: "Cursor (fixture)", present: true, verified: true, running: false,
@@ -44,6 +55,12 @@ mockIPC(async (cmd, args = {}) => {
     case "rules": return { rules: [], errors: [] };
     case "is_portable": return true;
     case "set_lang": return;
+    case "scan": return {
+      items: structuredClone(selectionItems), total_bytes: 61440, safe_bytes: 53248,
+      review_bytes: 8192, redownload_bytes: 0, started_at: null, finished_at: null,
+      unreadable: [], timings: [], cancelled: false,
+    };
+    case "growth_report": return [];
     case "relocatable": case "compactable": case "exportable": case "drives": return [];
     case "ai_inventory": return structuredClone(inventory);
     case "ai_version_check": {

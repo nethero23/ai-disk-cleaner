@@ -1,4 +1,4 @@
-# v0.8 Local Candidate Acceptance
+# v0.8 Candidate Acceptance
 
 ## Scope
 
@@ -39,20 +39,28 @@ messaging in every UI language. Registry tests use injected responses, not live 
 
 ## Packaging and release boundaries
 
-Local unsigned packaging overrides `bundle.createUpdaterArtifacts` to `false`
-through a separate config file. For `0.8.0-rc.1`, also set
-`bundle.windows.wix.version` to `0.8.0.1` in that local override: Windows MSI
-versions must be numeric. Do not change the committed signing policy.
+Local unsigned NSIS packaging overrides `bundle.createUpdaterArtifacts` to
+`false` through a separate config file. Historical local MSI experiments also
+set `bundle.windows.wix.version` to `0.8.0.1`: Windows MSI versions must be numeric.
+Do not change the committed signing policy.
 Keep checksums with local artifacts. An unsigned candidate does not validate
 signed updater delivery or Windows installer trust.
 
-Before public release, test clean installation, upgrade from v0.7.1 with settings
+Candidate release CI requires a tag matching all application versions. A tag
+such as `v0.8.0-rc.1` builds NSIS plus portable ZIP, sets `prerelease: true` and
+`make_latest: false`, and omits MSI, `latest.json`, and winget/Scoop manifests.
+Candidates are downloaded manually from Releases; stable Latest remains `v0.7.1`.
+
+Before stable release, test clean installation, upgrade from v0.7.1 with settings
 preserved, portable startup, uninstall data behavior, and signed updater delivery.
-Do not publish or push release tags/branches as part of local acceptance.
+Local acceptance alone never authorizes publishing or pushing release tags/branches;
+candidate publication requires separate explicit authorization.
 
 ## Evidence
 
-Validation evidence is kept under ignored `target/v08-validation/`.
+Historical evidence is under ignored `target/v08-validation/` and
+`target/main-acceptance-20261023/`; selection-repair evidence is under ignored
+`target/selection-validation-20261023/`. Do not upload private receipts or backups.
 Run the repeatable mock-IPC browser flow with Vite running:
 
 ```sh
@@ -207,3 +215,40 @@ Detailed private evidence, artifact hashes and rollback backups are under ignore
 `fixture-after-restore.json`, `clean-install-result.json`, `upgrade-result.json`
 and `acceptance-result.json`. These local packages supersede prior candidate
 receipts. No release tag, installer upload or public release was performed.
+
+### Scan-selection repair and in-place acceptance (2026-10-23)
+
+Repair source: `1b3551101113db0eca125a27ebdbaab8b43ef0e3`. Both failures were
+reproduced before their fixes: a legacy 16px hidden input missed the center of
+the 40px drawn control, and group all-selected logic incorrectly counted disabled
+in-use rows. The input now covers the entire control; group state and toggling
+use eligible rows, with all-in-use groups disabled. Review stays unchecked by
+default but supports explicit selection. Running-file protections remain intact.
+
+| Gate | Result |
+| --- | --- |
+| Red-before-green regression | Center-click failure reproduced first; after the hit-target fix, mixed in-use group clear still failed; both pass after repair |
+| Mock-IPC browser acceptance | 25 checks passed, including center click, Space, Safe/Review select and clear, mixed/all-in-use groups, count/bytes, and existing AI inventory checks; fresh rerun also passed |
+| Isolated production-origin desktop | 10 checks passed against four synthetic fixtures using actual bundled native IPC; fixture hashes unchanged and no cleanup log created |
+| Actual installation repair | After action-time approval, completed installer finalization and verified the same-version NSIS repair without uninstalling or cleaning files; the first resumed observation already showed installation complete, so the initial write transition was not independently observed |
+| Actual installation/restart acceptance | 10 checks passed; a read-only 79-item scan changed selection 16 / 2.5 GB → 17 / 2.9 GB → 16 / 2.5 GB; the 13-row project group selected and cleared correctly while in-use rows remained disabled |
+| Data preservation | Settings and cleanup-log SHA-256 unchanged; existing history rendered with the same summary of 38 successful cleanups after normal exit and full restart through the original system app entry |
+| Binary identity | Installed payload matches the tested native candidate apart from Tauri's three-byte NSIS bundle marker; private receipts record hashes |
+| Fresh automated verification | Frontend type/build, nine Node tests (including three release-policy checks), 102 core tests, one real Windows temporary-fixture roundtrip, two native policy tests, fmt, core/native Clippy, native build and 10 additional locales at 301/301 passed |
+
+Selection acceptance performed no application cleanup and changed no personal
+files. The automated Windows roundtrip used only its own temporary fixture.
+The original installation's rollback backups and private evidence remain local
+under `target/selection-validation-20261023/`. No personal paths, raw history,
+configuration contents, or private screenshots belong in release assets.
+
+### Authorized candidate publication (pending)
+
+The user separately authorized merging/pushing the repair and acceptance docs,
+updating READMEs, and publishing a package or tag. The chosen plan is the first
+`v0.8.0-rc.1` GitHub prerelease with NSIS and portable ZIP only. The repair branch
+has been pushed; tag/release creation is pending at this checkpoint. Candidate
+publication must not replace stable Latest, distribute `latest.json`, publish
+MSI or package-manager manifests, or trigger another local installation.
+MSI actual installation, pristine Windows/missing-WebView2 setup, uninstall-data
+behavior, installer code signing and signed-updater delivery remain unverified.

@@ -7,7 +7,7 @@ import { resolve } from "node:path";
 
 const binary = process.argv[2];
 assert.ok(binary, "Pass the gstack browse binary path");
-const out = resolve("target/v08-validation");
+const out = resolve(process.env.ACCEPTANCE_OUT ?? "target/v08-validation");
 mkdirSync(out, { recursive: true });
 const transcript = [];
 const passed = [];
@@ -32,12 +32,45 @@ function language(value) {
   browse("select", ref, value);
 }
 
-const tab = JSON.parse(browse("newtab", "http://127.0.0.1:1420/tools/ui-smoke.html", "--json"));
+const origin = process.env.ACCEPTANCE_ORIGIN ?? "http://127.0.0.1:1420";
+const tab = JSON.parse(browse("newtab", `${origin}/tools/ui-smoke.html`, "--json"));
 try {
   browse("wait", "nav");
-  browse("js", 'localStorage.setItem("uiLang","zh"); localStorage.setItem("theme","system"); "reset fixture-only preferences"');
+  browse("js", 'localStorage.setItem("uiLang","zh"); localStorage.setItem("theme","system"); localStorage.setItem("groupBy","category"); "reset fixture-only preferences"');
   browse("reload");
   browse("wait", 'button:text-is("AI 工具")');
+  click('button[aria-label="开始扫描"]');
+  browse("wait", '.ri input[aria-label="Selection Safe"]');
+  const safe = '.ri:has(input[aria-label="Selection Safe"]) .md-checkbox';
+  const review = '.ri:has(input[aria-label="Selection Review"]) .md-checkbox';
+  const group = '.cg:has(input[aria-label="Selection Safe"]) .cg-head .md-checkbox';
+  const checked = (label) => `document.querySelector('input[aria-label="${label}"]').checked`;
+  check("only eligible Safe fixture is selected by default", `${checked("Selection Safe")} && !${checked("Selection Review")} && !${checked("Selection In Use")}`);
+  browse("js", 'JSON.stringify([...document.querySelectorAll(".md-checkbox")].map(e=>({control:e.getBoundingClientRect().toJSON(),input:e.querySelector("input").getBoundingClientRect().toJSON()})))');
+  click(safe); // Click the visible 40px control's center, NOT the tiny native input.
+  check("mouse center deselects the Safe item", `!${checked("Selection Safe")}`);
+  check("deselection clears the selection toolbar", '!document.querySelector(\'[role="toolbar"]\')');
+  click(safe);
+  check("mouse center selects the Safe item", checked("Selection Safe"));
+  check("selection toolbar follows selected count and bytes", 'document.querySelector(\'[role="toolbar"]\').textContent.includes("已选 1 项，4.0 KB")');
+  browse("js", 'document.querySelector(\'.ri input[aria-label="Selection Safe"]\').focus(); "focus fixture checkbox"');
+  browse("press", "Space");
+  check("keyboard Space deselects the item", `!${checked("Selection Safe")}`);
+  browse("press", "Space");
+  check("keyboard Space selects the item", checked("Selection Safe"));
+  click(review);
+  check("manual Review selection works", checked("Selection Review"));
+  click(review);
+  check("manual Review deselection works", `!${checked("Selection Review")}`);
+  click(group);
+  check("group selects eligible rows only", `${checked("Selection Safe")} && ${checked("Selection Review")} && !${checked("Selection In Use")}`);
+  click(group);
+  check("mixed in-use group can clear eligible rows", `!${checked("Selection Safe")} && !${checked("Selection Review")} && !${checked("Selection In Use")}`);
+  check("in-use input remains disabled", 'document.querySelector(\'input[aria-label="Selection In Use"]\').disabled');
+  check("fully in-use group is disabled and unchecked", 'document.querySelector(\'.cg:has(input[aria-label="Selection All Busy"]) .cg-head input\').disabled && !document.querySelector(\'.cg:has(input[aria-label="Selection All Busy"]) .cg-head input\').checked');
+  check("row checkboxes do not expand details", '!document.querySelector(".ri.open")');
+  click('button:text-is("只选安全项")');
+  check("safe-only action retains in-use protection", `${checked("Selection Safe")} && !${checked("Selection Review")} && !${checked("Selection In Use")}`);
   click('button:text-is("AI 工具")');
   browse("wait", ".ai-summary");
   click('[role="radio"]:text-is("按 MCP")');

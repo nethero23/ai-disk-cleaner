@@ -17,7 +17,9 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. Der Entwicklungskandidat `0.8.0-rc.1` bietet 12 UI-Sprachen und ist keine öffentliche Veröffentlichung; den Prüfstand und offene Schritte beschreibt die [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. `0.8.0-rc.1` ist ein Vorabkandidat mit 12 UI-Sprachen, keine stabile Version. Nach Veröffentlichung sind NSIS-Installer und portable ZIP manuell in der [Release-Liste](https://github.com/nethero23/ai-disk-cleaner/releases) erhältlich. Latest bleibt bei der stabilen `v0.7.1`; der Kandidat wird nicht per automatischem Update verteilt und enthält keine MSI, `latest.json` oder winget/Scoop-Manifeste.
+>
+> Behoben: Auswahl/Abwahl per Klick auf die Checkbox-Mitte oder Leertaste sowie Gruppenauswahl mit belegten Einträgen; belegte Einträge bleiben geschützt. 25 Browser-, 10 isolierte native und 10 Prüfungen der tatsächlichen Installation bestanden, einschließlich Neuinstallation am selben Ort und Neustart. Einstellungen und Verlauf blieben unverändert; diese Auswahltests führten keine Bereinigung aus. Offene Schritte: [Abnahme-Checkliste](docs/RELEASE_CHECKLIST.md).
 
 ## Warum
 

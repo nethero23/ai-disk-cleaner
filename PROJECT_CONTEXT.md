@@ -4,8 +4,42 @@
 
 v0.8.0-rc.1 source merged to `main` through PR #59; tested source is
 `73829ed01ea4ffa26271ea2cd35a03bd27d6f235`. Latest-main local packaging and
-NSIS desktop/install/upgrade acceptance passed. This is not a published release;
-the latest local release tag remains `v0.7.1`.
+NSIS desktop/install/upgrade acceptance passed. The selection-repair branch is
+now pushed for integration; this follow-up synchronizes READMEs and acceptance docs.
+The user authorized merging/pushing the repair and publishing a candidate package
+or tag. The selected plan is `v0.8.0-rc.1` as a GitHub prerelease, not a stable
+promotion: NSIS and portable ZIP only, no MSI, `latest.json`, or winget/Scoop
+manifests. Tag/release creation is still pending at this checkpoint; Latest
+stable remains `v0.7.1`.
+
+### Scan-selection follow-up
+
+`1b35511` fixes manual selection on the pushed follow-up branch, not yet merged or
+publicly released. Legacy 16px native-input sizing missed the center of the 40px
+drawn checkbox; the input now covers the control. Group selection/clear and its
+checked state now consider only eligible rows, with all-in-use groups disabled.
+Both original failures were reproduced before their fixes. All 25 browser
+interaction checks passed, plus a rebuilt native fixture run covering visible
+mouse-center selection/clear, keyboard Space, explicit Review selection and
+mixed in-use group toggles. Busy protections remain intact; no cleanup ran and
+fixture/configuration/history hashes stayed unchanged. Fresh automated checks
+and the unsigned local NSIS build passed. After explicit action-time approval,
+installer finalization and repair verification were completed without uninstalling.
+The first resumed observation already showed installation complete; initial
+write timing was not independently observed. The installed binary
+matches the tested candidate apart from Tauri's three-byte NSIS bundle marker.
+On an actual 79-item scan, mouse-center and Space toggles changed selection from
+16 / 2.5 GB to 17 / 2.9 GB and back. The 13-row project group selected and cleared
+correctly; in-use rows remained disabled. A full exit/restart through the
+original app entry succeeded, and existing history still rendered with the same
+summary of 38 successful cleanups.
+Settings and cleanup history remained byte-identical. Selection acceptance
+performed no cleanup. Original binaries/profiles are backed up locally; private
+receipts remain under ignored `target/selection-validation-20261023/`.
+Fresh verification passed: 25 browser, 10 isolated native, 10 actual-install/
+restart checks; nine Node tests, 102 core tests, one Windows fixture roundtrip,
+two native policy tests, type/build, locale parity, fmt and Clippy. Source
+integration and candidate publication do not certify the remaining stable gates.
 
 ## Approved v0.8 scope
 
@@ -20,8 +54,10 @@ the latest local release tag remains `v0.7.1`.
 ## Release gate
 
 Automated checks pass, including a real Windows Recycle Bin roundtrip using a
-temporary fixture. The mock-IPC browser flow passes 10 checks. Local unsigned
-NSIS/MSI packaging succeeds with an explicit numeric MSI-version override.
+temporary fixture. The baseline mock-IPC browser flow passed 10 checks before
+the selection regression suite expanded it to 25. Historical local unsigned
+NSIS/MSI packaging succeeded with an explicit numeric MSI-version override;
+public candidate CI intentionally excludes MSI.
 
 On October 23, the unlocked Windows desktop passed native portable startup,
 fixture-only scanning, safe-only default selection, and language/light-theme
@@ -62,12 +98,13 @@ settings, history and all 16 Roaming data files stayed byte-identical through
 normal exit and full restart; shortcuts still target the original installation.
 Original profiles and binaries are backed up locally. MSI installation, pristine
 Windows/WebView2 setup and signed-updater delivery remain untested. See
-`docs/RELEASE_CHECKLIST.md` for evidence; nothing was publicly released.
+`docs/RELEASE_CHECKLIST.md` for evidence; that acceptance did not publish a release.
 
 ## Deferred work
 
 - Writing, merging, or synchronizing AI tool configurations: requires a separate
   design with change preview, backup, and recovery.
 - winget/Scoop submissions and installer code signing.
-- Source integration on GitHub is separate from release acceptance. Public package
-  publication, release tags, installation/upgrade, and signed updates remain separate gates.
+- Stable promotion, MSI actual installation, pristine Windows/WebView2 setup,
+  uninstall-data behavior and signed updates remain separate gates. The approved
+  prerelease plan does not close them or authorize another local installation.
