@@ -115,3 +115,29 @@ normally exited after restore and rescan. Detailed before/after file hashes are
 in `native-20261023/after-native-clean.json` and `after-native-restore.json`
 under the ignored validation evidence directory. No application source changed
 during this cleanup/restore check; the overview issue is recorded, not fixed.
+
+### October 23 overview/performance fixes and rebuild
+
+- `dc02466`: rebuild total and all safety amounts together with remaining items.
+  Remove only backend-confirmed successes; keep failed/unreported items visible.
+  Regression first reproduced three stale-total failures, then all six Node tests passed.
+- `d529643`: up to four independent tool readers, retaining catalog order before
+  analysis. No persistent cache, skipped hashes, new dependency, or IPC change.
+  Overlap regression failed under serial code and passed after optimization.
+- Fresh checks: 98 core tests, one actual Windows roundtrip, two native startup
+  tests, Rust fmt, core/native Clippy, frontend type/build and locale parity pass.
+  Locked dependencies were re-fetched, resolving the earlier empty-cache blocker.
+- Full-engine timing: 1.503s before, 0.863s first optimized run (about 43% less
+  elapsed time in one same-host comparison); subsequent runs 0.988/0.726/0.712s.
+  All four optimized tools/analysis outputs matched baseline bytes exactly.
+  This is not an OS cold-cache benchmark; the earlier two-minute UI latency was
+  not reproduced. Native first-page entry showed 12 tools / 106 MCP entries /
+  371 skills by the 6.2-second observation, which is an upper bound, not exact load time.
+- New production-origin native build scanned only the same two test fixtures,
+  Safe alone selected. Final UI cleanup/overview check awaits action-time approval.
+- Unsigned NSIS/MSI were rebuilt. Updated portable:
+  `target/release/bundle/Clearwisp_0.8.0-rc.1_x64-portable-recheck.zip`.
+  Current checksums: `target/v08-validation/recheck-artifact-manifest.json`;
+  old receipts remain historical and must not be used for the rebuilt installers.
+
+Installation, upgrade, signed updater, remote push and publication were not performed.

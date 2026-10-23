@@ -30,8 +30,17 @@ After explicit test-fixture approval, native UI cleanup moved only the 4,121-byt
 Safe fixture to the Recycle Bin. History restore returned identical bytes; the
 Review control stayed unchanged, and a read-only rescan found both fixtures again.
 
-Before release, address the stale post-clean overview (it retained pre-clean
-sizes until rescan) and profile the roughly two-minute initial AI inventory.
+Follow-up fixes: dc02466 rebuilds remaining overview amounts atomically after
+confirmed cleanup successes; d529643 overlaps independent AI tool reads with at
+most four workers, preserving catalog order and fresh results without a cache.
+Six frontend regressions, 98 core tests, one Windows roundtrip and two native
+policy tests pass after fresh compilation; rebuilt unsigned bundles are local.
+
+Full-engine measurement improved from 1.503s to 0.863s in a same-host comparison;
+tools and analysis serialized identically. The earlier two-minute observation
+was not reproduced, so this is not a demonstrated cold-cache fix. Native first
+page entry showed the complete inventory by the 6.2-second observation. Native
+post-clean overview reacceptance awaits specific fixture approval.
 Installation/upgrade and signed-updater checks remain open. See
 `docs/RELEASE_CHECKLIST.md` for evidence.
 
