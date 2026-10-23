@@ -122,19 +122,29 @@ pub fn clean(items: &[ScanItem], log_path: &Path) -> CleanSummary {
 }
 
 /// Reads the whole log, newest last.
-pub fn read_log(log_path: &Path) -> Vec<CleanRecord> {
-    std::fs::read_to_string(log_path)
-        .map(|t| {
-            t.lines()
-                .filter_map(|l| serde_json::from_str(l).ok())
-                .collect()
-        })
-        .unwrap_or_default()
+pub fn read_log(log_path: &Path) -> Result<Vec<CleanRecord>> {
+    crate::journal::read(log_path)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unreadable_history_is_not_an_empty_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let got = read_log(tmp.path());
+        assert!(got.is_err(), "read errors must reach the UI");
+    }
+
+    #[test]
+    fn corrupt_history_is_not_an_empty_success() {
+        let tmp = tempfile::tempdir().unwrap();
+        let log = tmp.path().join("clean.log");
+        std::fs::write(&log, b"{broken record}\n").unwrap();
+        let got = read_log(&log);
+        assert!(got.is_err(), "parse errors must reach the UI");
+    }
 
     #[test]
     fn guard_refuses_roots_and_home() {
@@ -175,7 +185,7 @@ mod tests {
             batch: "1".into(),
         };
         std::fs::write(&log, format!("{}\n", serde_json::to_string(&rec).unwrap())).unwrap();
-        let back = read_log(&log);
+        let back = read_log(&log).unwrap();
         assert_eq!(back.len(), 1);
         assert_eq!(back[0].size_bytes, 5);
     }

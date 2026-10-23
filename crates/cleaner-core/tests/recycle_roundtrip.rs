@@ -50,5 +50,5 @@ safety = "safe"
     assert_eq!(status[0].state, Whereabouts::InBin);
     assert_eq!(restored.restored_bytes, original.len() as u64);
     assert_eq!(std::fs::read(&file).unwrap(), original);
-    assert_eq!(clean::read_log(&log).len(), 1);
+    assert_eq!(clean::read_log(&log).unwrap().len(), 1);
 }
