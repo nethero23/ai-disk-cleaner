@@ -21,7 +21,7 @@ cargo run -p cleaner-core --bin aidc -- scan
 # 桌面应用（Windows；需要 Rust、Node 22、WebView2）
 npm install
 npm run tauri dev
-npm run tauri build   # 生成 NSIS / MSI 安装包
+npm run tauri build -- --bundles nsis # 当前候选仅构建 NSIS；签名/本地覆盖见验收清单
 ```
 
 ## 添加规则
@@ -47,11 +47,13 @@ consequence_en = "…"
 
 - **安装包**：Releases 里的 `*-setup.exe`（NSIS，推荐，支持应用内自动更新）或 `*.msi`。
 - **便携版**：`*_x64-portable.zip`，解压后双击 `AI Disk Cleaner.exe`，设置和日志放在旁边的 `data` 文件夹；不自动更新。
-- **winget / Scoop**：每次发布会附带 `*_manifests.zip`，里面是 `nethero23.AIDiskCleaner` 的 winget 清单（三份 YAML）和 Scoop 的 `aidc.json`，哈希已填好。提交到 [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) 和自己的 Scoop bucket 后，就能 `winget install nethero23.AIDiskCleaner` / `scoop install aidc`。
+- **winget / Scoop**：稳定版发布会附带 `*_manifests.zip`，里面是 `nethero23.AIDiskCleaner` 的 winget 清单（三份 YAML）和 Scoop 的 `aidc.json`，哈希已填好；候选版不生成。提交到 [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) 和自己的 Scoop bucket 后，就能 `winget install nethero23.AIDiskCleaner` / `scoop install aidc`。
 
 ## 发布
 
-推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建 NSIS/MSI 安装包并发布到 GitHub Releases。
+获得发布授权后，推送 `vX.Y.Z` tag、推送 `release/vX.Y.Z` 分支，或在 Actions 里手动运行 CI 并填 tag，都会在 Windows 上构建安装包并发布到 GitHub Releases。tag 必须匹配 `package.json`、Tauri 配置及 Rust workspace 的版本；可先运行 `node tools/release-policy.mjs v0.8.0-rc.1` 只读校验。
+
+带预发布后缀的候选（如 `v0.8.0-rc.1`）仅发布 NSIS 和便携 ZIP，标为 prerelease，不成为 Latest，不生成 MSI、`latest.json` 或 winget/Scoop 清单。候选需从 Releases 列表手动下载；稳定版仍构建 NSIS/MSI，并按签名情况生成更新与清单。当前验收边界见 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)。
 
 应用内自动更新走 Tauri updater 插件，更新源是 GitHub Releases 里的 `latest.json`（CI 由 `.github/latest_json.py` 生成）。更新包必须签名：仓库 Secrets 里需要 `TAURI_SIGNING_PRIVATE_KEY`（`tauri signer generate` 生成的私钥文件内容）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`（没有密码就留空）；公钥在 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`。没配 Secrets 时发布照常，只是不生成签名和 `latest.json`，应用不会提示这个版本。
 

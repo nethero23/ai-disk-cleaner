@@ -35,14 +35,15 @@ Clearwisp explains every gigabyte: **which model, which conda environment, which
 
 ## v0.8.0-rc.1 development candidate
 
-The current source is a development candidate, **not a public release**. Download links above still point to the published version.
+This is a **prerelease candidate, not a stable release**. Once candidate packages are published, select `v0.8.0-rc.1` in the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) and manually download the NSIS installer (`*_x64-setup.exe`) or portable ZIP. The Latest links above remain on stable `v0.7.1`; this candidate is not offered through automatic updates and provides no MSI, `latest.json`, or winget/Scoop manifests.
 
 - **Read-only AI inventory**: inspect MCP entries, skills, plugins, and extensions, with duplicate/conflict hints and sensitive-value redaction. AI configurations are not automatically merged, synchronized, or edited.
 - **Older versions need review**: candidates are marked Review, not selected by default, and excluded from automatic Safe cleanup.
 - **Live post-clean totals**: rebuild remaining items, total size, and safety-level amounts from backend-confirmed successes; retain failed items.
 - **Bounded inventory concurrency**: at most four tool readers run concurrently, without a persistent cache.
+- **Manual selection repaired**: click the checkbox center or press Space to select/clear a row. Groups select/clear eligible rows, while all-in-use groups stay disabled and running-file protections remain intact.
 
-Local fixture cleanup/restore, an isolated-directory NSIS install, and an in-place upgrade from 0.7.1 passed, preserving existing settings and history. MSI installation and signed updater delivery remain untested; this was not a pristine Windows environment. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
+Local fixture cleanup/restore, an isolated-directory NSIS install, an in-place upgrade from 0.7.1, and in-place reinstallation/full restart of the selection repair passed. Selection regression checks passed in the browser (25), isolated native app (10), and actual installation (10); settings/history hashes were unchanged and selection acceptance performed no cleanup. MSI installation, pristine Windows/WebView2 setup, installer code signing, and signed updater delivery remain untested. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for evidence and remaining gates.
 
 ## Features
 
@@ -106,7 +107,7 @@ Requires Windows 10 / 11 x64 with WebView2 (built into Windows 11; the installer
 
 > The installer is not code-signed yet, so SmartScreen may show "Windows protected your PC". Click "More info → Run anyway". All code is open source; you can review it or build from source.
 
-**Coming soon**: `winget install nethero23.AIDiskCleaner` and `scoop install aidc` (manifests are generated with every release and are being submitted).
+**Coming soon**: `winget install nethero23.AIDiskCleaner` and `scoop install aidc` (manifests are generated for stable releases and are being submitted; candidates generate none).
 
 CLI for developers: `cargo run -p cleaner-core --bin aidc -- scan` (also `scan --json`, `dupes`, `move`, `compact`).
 
@@ -178,7 +179,7 @@ Windows 10 / 11 only for now. The scan engine is cross-platform Rust, so other p
 - [ ] winget / Scoop listing, installer code signing
 - [ ] v0.8 candidate acceptance: Material Design 3 UI, read-only AI-tool inventory (skills / MCP / plugins), duplicate/conflict hints, and optional version checks
 
-The current development candidate is `0.8.0-rc.1`, not a public release. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+The current candidate is `0.8.0-rc.1`, not a stable release; download candidate packages manually from the [Releases list](https://github.com/nethero23/ai-disk-cleaner/releases) once published. Automatic configuration merging, synchronization, and editing are out of scope. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 ## Contributing
 

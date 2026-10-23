@@ -17,7 +17,9 @@
 
 </div>
 
-> Esta tradução pode estar atrás da [versão em inglês](README.en.md). A candidata de desenvolvimento `0.8.0-rc.1` oferece 12 idiomas de interface e não é uma versão pública; veja as verificações e etapas pendentes na [lista de aceitação](docs/RELEASE_CHECKLIST.md).
+> Esta tradução pode estar atrás da [versão em inglês](README.en.md). `0.8.0-rc.1` é uma candidata de pré-lançamento com 12 idiomas de interface, não uma versão estável. Após a publicação, baixe manualmente o instalador NSIS ou o ZIP portátil na [lista de versões](https://github.com/nethero23/ai-disk-cleaner/releases). Latest continua na estável `v0.7.1`; a candidata não é distribuída por atualização automática nem inclui MSI, `latest.json` ou manifestos winget/Scoop.
+>
+> Corrigido: marcar/desmarcar no centro da caixa ou com Espaço e selecionar/limpar grupos com itens em uso, mantendo sua proteção. Passaram 25 verificações no navegador, 10 nativas isoladas e 10 na instalação real, incluindo reinstalação no mesmo local e reinício. Configurações e histórico inalterados; esses testes de seleção não limparam arquivos. Etapas restantes: [lista de aceitação](docs/RELEASE_CHECKLIST.md).
 
 ## Por quê
 
