@@ -141,3 +141,21 @@ during this cleanup/restore check; the overview issue is recorded, not fixed.
   old receipts remain historical and must not be used for the rebuilt installers.
 
 Installation, upgrade, signed updater, remote push and publication were not performed.
+
+### Source-integration privacy review
+
+- Independent review found that ordinary settings loading fell back to enabled
+  MCP checks when a concurrent settings write was temporarily unreadable.
+  Network authorization now uses strict reads and denies new requests on any
+  read/parse error, both at batch entry and per request. Already-sent requests
+  are not canceled; valid older settings retain their documented defaults.
+- The regression failed with the old fallback. Two new offline tests cover
+  missing/unreadable/invalid settings and a partial settings write mid-batch.
+  Fresh verification: 100 core tests, one Windows roundtrip, two native policy
+  tests, six Node tests, locale parity, fmt, core/native Clippy, frontend build,
+  and native compilation passed. Independent re-review approved the fix.
+- README translations and the candidate CHANGELOG are synchronized for source
+  integration. No public installer release or tag is implied. The prior local
+  bundles predate this privacy fix and must be rebuilt before release.
+- The final native overview-after-clean recheck, installation/upgrade and signed
+  updater gates remain open; source integration does not certify these gates.
