@@ -183,6 +183,7 @@ async fn restore_status(
 ) -> Result<Vec<cleaner_core::restore::RestoreStatus>, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::status(&paths))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -193,6 +194,7 @@ async fn restore_items(
 ) -> Result<cleaner_core::restore::RestoreSummary, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::restore(&records))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 

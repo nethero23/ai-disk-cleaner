@@ -44,8 +44,8 @@ safety = "safe"
     assert_eq!(cleaned.records.len(), 1);
     assert!(cleaned.records[0].ok, "{:?}", cleaned.records[0].error);
     assert!(!cache.exists());
-    let status = restore::status(std::slice::from_ref(&cache));
-    let restored = restore::restore(&cleaned.records);
+    let status = restore::status(std::slice::from_ref(&cache)).unwrap();
+    let restored = restore::restore(&cleaned.records).unwrap();
     assert_eq!(restored.restored, 1, "{:?}", restored.results);
     assert_eq!(status[0].state, Whereabouts::InBin);
     assert_eq!(restored.restored_bytes, original.len() as u64);
