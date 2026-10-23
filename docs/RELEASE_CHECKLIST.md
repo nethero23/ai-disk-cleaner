@@ -230,9 +230,9 @@ default but supports explicit selection. Running-file protections remain intact.
 | Red-before-green regression | Center-click failure reproduced first; after the hit-target fix, mixed in-use group clear still failed; both pass after repair |
 | Mock-IPC browser acceptance | 25 checks passed, including center click, Space, Safe/Review select and clear, mixed/all-in-use groups, count/bytes, and existing AI inventory checks; fresh rerun also passed |
 | Isolated production-origin desktop | 10 checks passed against four synthetic fixtures using actual bundled native IPC; fixture hashes unchanged and no cleanup log created |
-| Actual installation repair | Explicit action-time approval preceded in-place NSIS reinstallation of 0.8.0-rc.1 without uninstalling or cleaning files |
+| Actual installation repair | After action-time approval, completed installer finalization and verified the same-version NSIS repair without uninstalling or cleaning files; the first resumed observation already showed installation complete, so the initial write transition was not independently observed |
 | Actual installation/restart acceptance | 10 checks passed; a read-only 79-item scan changed selection 16 / 2.5 GB → 17 / 2.9 GB → 16 / 2.5 GB; the 13-row project group selected and cleared correctly while in-use rows remained disabled |
-| Data preservation | Settings and cleanup-log SHA-256 unchanged; all 38 existing history entries rendered after normal exit and full restart through the original system app entry |
+| Data preservation | Settings and cleanup-log SHA-256 unchanged; existing history rendered with the same summary of 38 successful cleanups after normal exit and full restart through the original system app entry |
 | Binary identity | Installed payload matches the tested native candidate apart from Tauri's three-byte NSIS bundle marker; private receipts record hashes |
 | Fresh automated verification | Frontend type/build, nine Node tests (including three release-policy checks), 102 core tests, one real Windows temporary-fixture roundtrip, two native policy tests, fmt, core/native Clippy, native build and 10 additional locales at 301/301 passed |
 

@@ -29,7 +29,8 @@ matches the tested candidate apart from Tauri's three-byte NSIS bundle marker.
 On an actual 79-item scan, mouse-center and Space toggles changed selection from
 16 / 2.5 GB to 17 / 2.9 GB and back. The 13-row project group selected and cleared
 correctly; in-use rows remained disabled. A full exit/restart through the
-original app entry succeeded, and all 38 existing history entries still rendered.
+original app entry succeeded, and existing history still rendered with the same
+summary of 38 successful cleanups.
 Settings and cleanup history remained byte-identical. Selection acceptance
 performed no cleanup. Original binaries/profiles are backed up locally; private
 receipts remain under ignored `target/selection-validation-20261023/`.
