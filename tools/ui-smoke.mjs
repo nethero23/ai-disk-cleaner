@@ -24,7 +24,7 @@ const historyRecords = [
   { name: "Failed fixture", ok: false, error: "Synthetic failure ".repeat(80) },
 ].map((r, i) => ({ ...r, at: "2026-10-24T00:00:00Z", batch: "fixture",
   rule_id: "fixture.history", path: `C:/fixtures/${"long-folder/".repeat(40)}${i}`,
-  size_bytes: 4096,
+  size_bytes: 4096, safety: r.ok ? "safe" : "review",
 }));
 const selectionItems = [
   ["safe", "Selection Safe", 4096, "safe", null],
