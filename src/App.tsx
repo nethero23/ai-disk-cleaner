@@ -18,6 +18,7 @@ import { Hero } from "./pages/Clean/Hero";
 import { ResultItem } from "./pages/Clean/ResultItem";
 import { ScanProgress } from "./pages/Clean/ScanProgress";
 import { afterClean, withItems } from "./scanReport";
+import { cleanupError, isSystemWindowsOld, needsSystemCleanup, remainingSelection, WINDOWS_OLD_RULE, WINDOWS_OLD_TASK } from "./cleanupFeedback";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 type Page = "clean" | "space" | "history" | "aitools" | "settings";
@@ -55,6 +56,7 @@ export function App() {
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
@@ -351,6 +353,9 @@ export function App() {
   const [deepBusy, setDeepBusy] = useState<"analyze" | "run" | "hiber" | null>(null);
   const [deepConfirm, setDeepConfirm] = useState(false);
   const [deepResult, setDeepResult] = useState<DeepSummary | null>(null);
+  useEffect(() => {
+    if (error || result || deepResult) feedbackRef.current?.scrollIntoView({ block: "start" });
+  }, [error, result, deepResult]);
 
   async function openDeep() {
     setError(null);
@@ -373,17 +378,61 @@ export function App() {
     setDeepBusy(null);
   }
 
+  async function requestClean(items: ScanItem[], big = false) {
+    if (!needsSystemCleanup(items)) {
+      if (big) setBigConfirm(true);
+      else setConfirming(true);
+      return;
+    }
+    if (deepBusy !== null) return;
+    setError(null);
+    setResult(null);
+    setNotice(null);
+    setDeepBusy("analyze");
+    try {
+      const drive = allDrives.find((drive) => drive.system);
+      const old = items.filter((item) => item.rule_id === WINDOWS_OLD_RULE);
+      if (!drive || old.some((item) => !isSystemWindowsOld(item.path, drive.path))) {
+        throw new Error(`Windows.old: ${s.deepNotApplicable}`);
+      }
+      const tasks = await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) });
+      if (!tasks.some((task) => task.id === WINDOWS_OLD_TASK && task.applicable)) {
+        throw new Error(`Windows.old: ${s.deepNotApplicable}`);
+      }
+      setDeepTasks(tasks);
+      setDeepSel(new Set([WINDOWS_OLD_TASK]));
+      setDeepResult(null);
+      setDeepAnalysis(null);
+      setView("deep");
+      // Do not send other selected scan items through this irreversible flow.
+      setDeepConfirm(true);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setDeepBusy(null);
+    }
+  }
+
   async function runDeep() {
     setDeepConfirm(false);
     setDeepBusy("run");
     setError(null);
+    setNotice(null);
+    setDeepResult(null);
     try {
       const sum = await invoke<DeepSummary>("deep_run", { ids: [...deepSel] });
       setDeepResult(sum);
       const failed = sum.results.filter((r) => !r.ok);
-      setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
-      if (failed.length) setError(failed.map((r) => `${r.id}: ${r.message}`).join("\n"));
-      setDeepSel(new Set());
+      if (sum.results.some((r) => r.ok)) setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
+      if (failed.length) setError(failed.map((r) => `${deepTasks.find((task) => task.id === r.id)?.title ?? r.id}: ${r.message}`).join("\n"));
+      if (sum.results.some((r) => r.id === WINDOWS_OLD_TASK && r.ok)) {
+        const drive = allDrives.find((drive) => drive.system);
+        const removed = (item: ScanItem) => item.rule_id === WINDOWS_OLD_RULE && !!drive && isSystemWindowsOld(item.path, drive.path);
+        const oldIds = new Set(report?.items.filter(removed).map((item) => item.id));
+        setReport((prev) => prev ? withItems(prev, prev.items.filter((item) => !removed(item))) : prev);
+        setSelected((prev) => new Set([...prev].filter((id) => !oldIds.has(id))));
+      }
+      setDeepSel(new Set([...deepSel].filter((id) => !sum.results.some((r) => r.id === id && r.ok))));
       setDeepAnalysis(null);
       setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) }));
     } catch (e) {
@@ -521,14 +570,18 @@ export function App() {
 
   async function runBigClean() {
     setBigConfirm(false);
+    if (needsSystemCleanup(bigSelectedItems)) return requestClean(bigSelectedItems, true);
     setPhase("cleaning");
+    setError(null);
+    setResult(null);
+    setNotice(null);
     try {
       const summary = await invoke<CleanSummary>("clean_items", { items: bigSelectedItems });
       setResult(summary);
-      setError(summary.log_error ?? null);
-      const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
-      setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || failed.has(i.path)) : prev));
-      setBigSelected(new Set());
+      setError(cleanupError(summary, s.failed(1)));
+      const remaining = remainingSelection(bigSelectedItems, summary);
+      setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || remaining.has(i.id)) : prev));
+      setBigSelected(remaining);
     } catch (e) {
       setError(String(e));
     }
@@ -784,7 +837,11 @@ export function App() {
 
   async function runClean() {
     setConfirming(false);
+    if (needsSystemCleanup(selectedItems)) return requestClean(selectedItems);
     setPhase("cleaning");
+    setError(null);
+    setResult(null);
+    setNotice(null);
     try {
       let exported: ExportResult | null = null;
       if (exportOn && exportDest && selectedExportable.length > 0) {
@@ -801,11 +858,11 @@ export function App() {
       }
       const summary = await invoke<CleanSummary>("clean_items", { items: selectedItems });
       setResult(summary);
-      setError(summary.log_error ?? null);
+      setError(cleanupError(summary, s.failed(1)));
       if (exported) setNotice(s.exported(exported.files, exported.zip_path));
       // Items and overview must reflect only confirmed successful deletions.
       setReport((prev) => (prev ? afterClean(prev, summary) : prev));
-      setSelected(new Set());
+      setSelected(remainingSelection(selectedItems, summary));
     } catch (e) {
       setError(String(e));
     }
@@ -873,7 +930,8 @@ export function App() {
         </div>
       )}
 
-      {error && <div className="banner error">{error}</div>}
+      <div ref={feedbackRef} className="feedback-anchor" />
+      {error && <div className="banner error" role="alert">{error}</div>}
       {notice && <div className="banner ok">{notice}</div>}
       {update && (
         <div className="banner update">
@@ -898,7 +956,7 @@ export function App() {
       )}
       {updateMsg && <div className="banner ok">{updateMsg}</div>}
       {result && (
-        <div className="banner ok">
+        <div className={`banner ${result.records.some((r) => !r.ok) ? "error" : "ok"}`} role="status">
           {s.done(humanSize(result.freed_bytes))}
           {result.records.some((r) => !r.ok) && (
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
@@ -985,7 +1043,7 @@ export function App() {
             </ul>
             <div className="modal-actions">
               <button className="ghost" onClick={() => setDeepConfirm(false)}>{s.cancel}</button>
-              <button className="primary" onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
+              <button className="primary" disabled={deepBusy !== null || deepSel.size === 0} onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
             </div>
           </div>
         </div>
@@ -1167,7 +1225,7 @@ export function App() {
               {bigSelectedItems.length > 0 && (
                 <footer className="actionbar">
                   <span>{s.selected(bigSelectedItems.length, humanSize(bigSelectedItems.reduce((a, i) => a + i.size_bytes, 0)))}</span>
-                  <button className="primary" disabled={phase === "cleaning"} onClick={() => setBigConfirm(true)}>
+                  <button className="primary" disabled={phase === "cleaning" || deepBusy !== null} onClick={() => requestClean(bigSelectedItems, true)}>
                     {phase === "cleaning" ? s.cleaning : s.clean}
                   </button>
                 </footer>
@@ -1583,7 +1641,7 @@ export function App() {
             <FloatingToolbar label={s.clean}>
               <span>{s.selected(selectedItems.length, humanSize(selectedBytes))}</span>
               <Button variant="text" disabled={phase === "cleaning"} onClick={() => setSelected(new Set())}>{s.selectNone}</Button>
-              <Button icon="delete" disabled={selectedItems.length === 0 || phase === "cleaning"} onClick={() => setConfirming(true)}>
+              <Button icon="delete" disabled={selectedItems.length === 0 || phase === "cleaning" || deepBusy !== null} onClick={() => requestClean(selectedItems)}>
                 {phase === "cleaning" ? (exporting ? s.exporting : s.cleaning) : s.clean}
               </Button>
             </FloatingToolbar>
