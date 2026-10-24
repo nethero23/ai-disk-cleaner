@@ -21,7 +21,12 @@
   succeeded after removing each fault. Four fixture items (137 B), ten selection
   checks and complete exit/restart passed. Disabled-state checks did not click
   busy controls. All twelve baseline hashes stayed unchanged; the original
-  installed app was reopened. No native UI cleanup/restore or installer upgrade ran.
+  installed app was reopened. No native UI cleanup/restore or installer upgrade ran
+  in this isolated lane; the later NSIS follow-up is recorded separately below.
+- [x] Actual published NSIS upgraded `0.8.0-rc.1` in place to `0.9.0-rc.1`
+  after separate approval and verified backup. All ten installed selection checks,
+  old-history display and complete exit/restart passed; settings/history and
+  existing shortcuts stayed unchanged. No cleanup or restore ran.
 - [x] [Source PR #65](https://github.com/nethero23/ai-disk-cleaner/pull/65) merged;
   annotated `v0.9.0-rc.1` targets `72872087f6a183ae2d06ef421495a234e465a40c`.
   [Tag CI](https://github.com/nethero23/ai-disk-cleaner/actions?query=branch%3Av0.9.0-rc.1)
@@ -31,7 +36,8 @@
 The owner authorized v0.9 development through publication without approval
 prompts. Keep the existing candidate boundary: NSIS + pristine portable ZIP only,
 `prerelease: true`, `make_latest: false`, no MSI/updater/manifest promotion.
-Stable setup, upgrades, signing and uninstall-data gates below remain open.
+The broader stable clean-setup/upgrade matrix, signing and uninstall-data gates
+below remain open; one successful NSIS upgrade does not close them all.
 Private evidence and fixtures: ignored `target/v09-release-20261024/`.
 
 ### Published v0.9 package receipt
@@ -43,9 +49,54 @@ Private evidence and fixtures: ignored `target/v09-release-20261024/`.
 
 ZIP entries: executable, README, empty `data/` and portable marker only; product
 version `0.9.0-rc.1`. NSIS and portable executable Authenticode: `NotSigned`.
-Cloud downloads were inspected, not executed; no installed application was
-replaced. Release-note changes do not move the source tag. No MSI, updater or
+At publication, cloud downloads were inspected, not executed; no installed
+application was replaced at that checkpoint. The later authorized NSIS upgrade
+is below; the portable cloud executable remains unexecuted. No MSI, updater or
 package-manager manifests were published, and stable gates remain open.
+
+### GitHub v0.9 in-place upgrade and retest (2026-10-24)
+
+After explicit launch/install approval, the hash-verified public NSIS package
+upgraded the existing `0.8.0-rc.1` to `0.9.0-rc.1`. Before installation, 368 program/
+profile files and two shortcuts were backed up and individually hash-verified.
+The installer was changed from its default uninstall-first option to **Do not
+uninstall**; the original directory was retained and extraction/success observed.
+The installed 18,881,024-byte executable differs from the verified public portable
+payload only in Tauri's three-byte `UNK` to `NSS` bundle marker. No installed bytes
+were manually patched and no desktop shortcut was recreated.
+
+The actual installed native app, not mock IPC or a local development build,
+performed a read-only scan: 49 items, 69.4 GB, 3.6 seconds on this host. This is
+one observation, not a cold-cache performance benchmark. Default: 15 / 2.8 GB.
+
+| Installed selection check | Observation |
+| --- | --- |
+| Mouse-center select a Review project item | 16 selected / 3.2 GB |
+| Mouse-center clear the same item | 15 / 2.8 GB |
+| Space select | 16 / 3.2 GB |
+| Space clear | 15 / 2.8 GB |
+| Select the eight-item project group | 23 / 29.1 GB |
+| Clear the project group | 15 / 2.8 GB |
+| Click a busy browser-group checkbox | Remained disabled; 15 / 2.8 GB |
+| Click a busy browser-item checkbox | Remained disabled; 15 / 2.8 GB |
+| Clear a default Safe item | 14 / 1.8 GB |
+| Reselect the Safe item | Restored default 15 / 2.8 GB |
+
+Before/after upgrade, selection and complete restart, settings and all 95 history
+records (81 successful) kept identical hashes. Fourteen non-scan Roaming config/
+rule files and both original shortcuts were unchanged; the relocation log stayed
+absent. Native history loaded without read/retry errors and retained the same
+81-success / 10.0 GB summary, including existing failed records. Full exit reached
+zero processes; the original app entry relaunched one installed process.
+
+UIA text can lag a render: each result was accepted only after fresh settled
+observation, without repeating an input to compensate. No cleanup, restore,
+uninstall or configuration reset ran. Scan/growth and WebView metadata may change;
+whole-profile byte identity is not claimed. MSI, pristine Windows/WebView2,
+uninstall-data behavior, signing and signed updates remain separate gates.
+Private receipts, raw paths/history and backups stay under ignored
+`target/github-v09-install-acceptance-20261024/`; do not upload them. This follow-up
+documents the existing release only: no replacement asset or new/moved tag.
 
 ## v0.8 historical baseline
 
