@@ -3,7 +3,8 @@
 ## Current milestone
 
 `0.9.0-rc.1` is published as a [GitHub prerelease](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1).
-It is not a stable promotion and does not replace the installed application.
+It is not a stable promotion; publication does not automatically replace an
+installed application.
 Cleanup and relocation log read/UTF-8/parse errors now reject IPC rather than
 masquerading as empty history. Recycle Bin listing errors no longer mark paths
 gone. Cleanup checks the audit log before deletion; a write/sync failure stops
@@ -24,7 +25,7 @@ found four items (137 B); ten mouse/keyboard/group/manual-review/disabled-state
 selection checks passed. Both rows survived complete exit/restart. The candidate
 was then exited and the original installed app reopened; all twelve baseline
 file hashes stayed unchanged. No native UI cleanup/restore or installer upgrade
-ran. Private evidence stays in ignored `target/v09-release-20261024/`.
+ran in that isolated lane. Private evidence stays in ignored `target/v09-release-20261024/`.
 
 [PR #65](https://github.com/nethero23/ai-disk-cleaner/pull/65) merged at
 `72872087f6a183ae2d06ef421495a234e465a40c`; the new annotated release tag targets
@@ -32,14 +33,37 @@ that exact reviewed source tree. [Tag CI](https://github.com/nethero23/ai-disk-c
 passed on Windows/Linux. Both public downloads match GitHub's SHA-256 digests.
 The portable ZIP contains only its executable, README, empty data directory and
 marker; product version is `0.9.0-rc.1`. Both Windows binaries are `NotSigned`.
-Downloaded cloud binaries were inspected, not executed. Exactly NSIS and portable
+At publication, cloud binaries were inspected, not executed. Exactly NSIS and portable
 ZIP were published: no MSI, updater or package-manager manifests. Stable Latest
-remains `v0.7.1`, and the installed `0.8.0-rc.1` stays unchanged. Package hashes
+remains `v0.7.1`; the then-installed `0.8.0-rc.1` was unchanged at that checkpoint. Package hashes
 are recorded in the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
 This is not a crash-safe write-ahead journal. Unexpected post-deletion append
 failure is visible and stops the batch, but cannot guarantee a durable success
 record; transactional relocation log writes remain a separate follow-up.
+
+### Published v0.9 NSIS installation acceptance (2026-10-24)
+
+After separate action-time approval and a hash-verified backup of 368 program/
+profile files plus two shortcuts, the actual GitHub NSIS package upgraded
+`0.8.0-rc.1` to `0.9.0-rc.1` at the existing location without uninstalling or
+resetting data. Extraction and successful completion were observed. The installed
+18,881,024-byte executable matches the public cloud payload except Tauri's
+documented three-byte NSIS bundle marker; the portable cloud executable was not run.
+
+Ten installed-native checks passed: mouse-center/Space item select and clear,
+eight-item project-group select and clear, clicks on disabled busy group/item,
+and default Safe clear/reselect. This read-only scan found 49 items (69.4 GB,
+3.6 s); default selection was restored to 15 items / 2.8 GB. Full exit reached
+zero processes; relaunch through the original app entry loaded history normally.
+Settings, all 95 history records (81 successful), fourteen non-scan Roaming
+configuration/rule files and two shortcuts retained their baseline hashes.
+Scan/growth and WebView runtime metadata may change; whole-profile byte identity
+is not claimed. No cleanup or restore ran. Private receipts/backups stay in
+ignored `target/github-v09-install-acceptance-20261024/`; see the
+[installed acceptance record](docs/RELEASE_CHECKLIST.md#github-v09-in-place-upgrade-and-retest-2026-10-24).
+This one upgrade does not close the remaining stable-release gates or republish
+any package or tag.
 
 ### Published rc.2 baseline
 
