@@ -42,6 +42,19 @@ pub struct CleanSummary {
 /// Refuses paths that no rule should ever hand us, as a last line of defence
 /// against a bad rule file or a corrupted scan result.
 pub fn guard(path: &Path) -> Result<()> {
+    if path
+        .to_string_lossy()
+        .split(std::path::is_separator)
+        .any(|part| matches!(part, "." | ".."))
+    {
+        return Err(Error::Refused(
+            path.into(),
+            "path contains dot segments; rescan without path aliases".into(),
+        ));
+    }
+    if crate::system::is_windows_old(path) {
+        return Err(windows_old_refused(path));
+    }
     if !path.exists() {
         return Err(Error::Refused(path.into(), "no longer exists".into()));
     }
@@ -77,8 +90,15 @@ pub fn guard(path: &Path) -> Result<()> {
     Ok(())
 }
 
+fn windows_old_refused(path: &Path) -> Error {
+    Error::Refused(path.into(), "Windows.old 需要单独的系统深度清理，不能移入回收站 / Windows.old requires separate system cleanup, not the Recycle Bin".into())
+}
+
 /// Moves one item to the Recycle Bin.
 pub fn delete_item(item: &ScanItem) -> Result<()> {
+    if item.rule_id == "windows.old" {
+        return Err(windows_old_refused(&item.path));
+    }
     if let Some(proc_name) = &item.in_use_by {
         return Err(Error::Refused(
             item.path.clone(),
@@ -194,6 +214,33 @@ pub fn read_log(log_path: &Path) -> Result<Vec<CleanRecord>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn windows_old_never_enters_the_generic_recycle_path() {
+        let tmp = tempfile::tempdir().unwrap();
+        // Deliberately absent: the regression must never delete even a fixture.
+        let mut item = fixture(&tmp.path().join("Windows.old"));
+        item.rule_id = "windows.old".into();
+        let error = delete_item(&item).unwrap_err().to_string();
+        assert!(error.contains("system cleanup"), "{error}");
+    }
+
+    #[test]
+    fn guard_refuses_system_old_root_and_dot_segment_aliases_without_deletion() {
+        let root = crate::paths::PathContext::from_env()
+            .expand("${SYSTEMDRIVE}/Windows.old")
+            .unwrap();
+        assert!(guard(&root)
+            .unwrap_err()
+            .to_string()
+            .contains("system cleanup"));
+        // Only call the read-only guard, never the deletion entry point.
+        let tmp = tempfile::tempdir().unwrap();
+        for alias in [root.join("."), tmp.path().join("absent").join("..")] {
+            let error = guard(&alias).unwrap_err().to_string();
+            assert!(error.contains("dot segments"), "{error}");
+        }
+    }
 
     #[test]
     fn unreadable_history_is_not_an_empty_success() {

@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Windows.old uses a separate administrator-only system-cleanup confirmation,
+  explaining permanent removal and loss of Windows rollback. Entering from a
+  mixed scan selection leaves other selected items untouched.
+
+### Fixed
+- Cleanup failures show item names, paths and actual errors, retain failed
+  selections and bring feedback into view instead of showing only a green total.
+- Only confirmed successes leave the report; system cleanup also refreshes the
+  overview and keeps failures available for retry.
+- Windows.old routing accepts repeated separators emitted by real scan rules.
+  Ordinary recycling refuses Windows.old and paths containing dot-segment aliases.
+- Success-only system-cleanup results also bring their feedback into view.
+
+### Verification and limits
+- Recorded local repair installation, confirmation/cancel, complete app restart
+  and preservation of configuration, 95 history records and shortcuts.
+- Subsequent pre-merge hardening has offline tests/build coverage, not installed
+  R2 acceptance. Real Windows.old removal and elevation remain untested.
+- Source/documentation integration only: no version bump, tag, installer
+  publication, updater promotion or stable-release waiver.
+
 ## [0.9.0-rc.1] - 2026-10-24
 
 Recovery reliability candidate; stable downloads and automatic updates are not promoted.

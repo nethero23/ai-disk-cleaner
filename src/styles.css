@@ -188,6 +188,8 @@ ul.plain.rules li { padding: 4px 0; border-bottom: 1px solid var(--line); }
 .banner.ok { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
 .banner.update { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
 .banner.error { background: var(--md-error-container); color: var(--md-on-error-container); }
+.banner.error { white-space: pre-line; overflow-wrap: anywhere; }
+.feedback-anchor { scroll-margin-top: 72px; }
 .banner .linkish { margin-inline-start: auto; text-decoration: none; font-weight: 500; color: inherit; }
 
 .modal-backdrop { background: rgb(0 0 0 / 0.32); z-index: 100; animation: md-fade var(--md-dur-medium) linear; }

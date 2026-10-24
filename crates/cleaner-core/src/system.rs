@@ -58,8 +58,16 @@ pub const RESTORE_POINTS: &str = "restore_points";
 pub const HIBERNATION: &str = "hibernation";
 pub const DELIVERY_OPT: &str = "delivery_opt";
 pub const WU_CACHE: &str = "wu_cache";
+pub const WINDOWS_OLD: &str = "windows_old";
 
-pub const TASK_IDS: &[&str] = &[WINSXS, RESTORE_POINTS, HIBERNATION, DELIVERY_OPT, WU_CACHE];
+pub const TASK_IDS: &[&str] = &[
+    WINSXS,
+    RESTORE_POINTS,
+    HIBERNATION,
+    DELIVERY_OPT,
+    WU_CACHE,
+    WINDOWS_OLD,
+];
 
 fn system_root() -> PathBuf {
     std::env::var_os("SYSTEMROOT")
@@ -71,6 +79,23 @@ fn system_drive() -> PathBuf {
     std::env::var_os("SYSTEMDRIVE")
         .map(|d| PathBuf::from(format!("{}\\", d.to_string_lossy())))
         .unwrap_or_else(|| PathBuf::from(r"C:\"))
+}
+
+pub(crate) fn is_windows_old(path: &Path) -> bool {
+    let normalize = |value: &Path| {
+        let mut normalized = value
+            .to_string_lossy()
+            .replace('/', "\\")
+            .trim_start_matches(r"\\?\")
+            .trim_end_matches('\\')
+            .to_ascii_lowercase();
+        // ${SYSTEMDRIVE} ends in a separator and rule templates add another.
+        while normalized.contains(r"\\") {
+            normalized = normalized.replace(r"\\", r"\");
+        }
+        normalized
+    };
+    normalize(path) == normalize(&system_drive().join("Windows.old"))
 }
 
 fn dir_bytes(p: &Path) -> Option<u64> {
@@ -110,6 +135,22 @@ pub fn tasks(lang: &str) -> Vec<DeepTask> {
         }
     };
     vec![
+        t(
+            WINDOWS_OLD,
+            (
+                "Windows.old（上一个系统版本）",
+                "由 Windows 系统维护工具移除当前系统的升级回退文件；单独从扫描列表进入时，不会处理其他已勾选项目。",
+                "永久删除，不进入回收站，不能在清理历史中还原，也无法回退到升级前的 Windows。请先确认旧系统中没有需要保留的个人文件。",
+            ),
+            (
+                "Windows.old (previous Windows)",
+                "Uses Windows servicing to remove this system's upgrade rollback files. Entering from scan results leaves other selected items untouched.",
+                "Permanent: not sent to the Recycle Bin or restorable from history. You cannot roll back Windows. First check for personal files you need in the old installation.",
+            ),
+            None,
+            false,
+            system_drive().join("Windows.old").is_dir(),
+        ),
         t(
             WINSXS,
             (
@@ -218,6 +259,29 @@ pub fn run_script(ids: &[String], out: &Path) -> String {
             HIBERNATION => "powercfg /hibernate off | Out-Null; $r.hibernation = $LASTEXITCODE",
             DELIVERY_OPT => "Delete-DeliveryOptimizationCache -Force; $r.delivery_opt = 0",
             WU_CACHE => "Stop-Service wuauserv -Force; Remove-Item \"$env:SystemRoot\\SoftwareDistribution\\Download\\*\" -Recurse -Force -ErrorAction SilentlyContinue; Start-Service wuauserv; $r.wu_cache = 0",
+            WINDOWS_OLD => r#"
+if ($env:SystemDrive -notmatch '^[A-Za-z]:$' -or [IO.Path]::GetPathRoot($env:SystemRoot).TrimEnd('\') -ine $env:SystemDrive) {
+    throw 'Cannot verify the current Windows system drive; nothing was cleaned.'
+}
+$old = Join-Path ($env:SystemDrive + '\') 'Windows.old'
+if (Test-Path -LiteralPath $old -ErrorAction Stop) {
+    $entry = Get-Item -LiteralPath $old -Force -ErrorAction Stop
+    if ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+        throw 'Windows.old is a reparse point; nothing was cleaned.'
+    }
+    if (-not ($entry.Attributes -band [IO.FileAttributes]::Directory)) {
+        throw 'Windows.old is not a directory; nothing was cleaned.'
+    }
+    $process = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\dism.exe') -ArgumentList @('/Online', '/Remove-OSUninstall', '/NoRestart', '/English') -WindowStyle Hidden -Wait -PassThru -ErrorAction Stop
+    if ($process.ExitCode -notin @(0, 3010)) {
+        throw "Windows system cleanup failed (DISM exit code $($process.ExitCode)). Use Windows Storage > Temporary files > Previous Windows installation(s)."
+    }
+    if (Test-Path -LiteralPath $old -ErrorAction Stop) {
+        throw 'Windows.old still exists; cleanup is not confirmed. Windows may require a manual restart or Storage > Temporary files > Previous Windows installation(s). No restart was requested.'
+    }
+}
+$r.windows_old = 0
+"#,
             _ => continue,
         };
         s.push_str(&format!(
@@ -330,13 +394,15 @@ pub fn parse_run(ids: &[String], json: &str) -> Vec<DeepResult> {
 #[cfg(windows)]
 pub fn run_elevated(script: &str, out: &Path) -> Result<String> {
     use std::process::Command;
-    let ps1 = std::env::temp_dir().join("aidc-deepclean.ps1");
+    let ps1 = out.with_extension("ps1");
     let io = |source| Error::Io {
         path: ps1.clone(),
         source,
     };
     let _ = std::fs::remove_file(out);
-    std::fs::write(&ps1, script).map_err(io)?;
+    // Windows PowerShell 5.1 needs a BOM for non-ASCII user/temp paths.
+    let bytes = [b"\xef\xbb\xbf".as_slice(), script.as_bytes()].concat();
+    std::fs::write(&ps1, bytes).map_err(io)?;
     let launcher = format!(
         "$p = Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"{}\"' -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
         ps1.display()
@@ -366,7 +432,13 @@ pub fn run_elevated(_script: &str, _out: &Path) -> Result<String> {
 }
 
 fn out_file() -> PathBuf {
-    std::env::temp_dir().join("aidc-deepclean.json")
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let sequence = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    std::env::temp_dir().join(format!(
+        "aidc-deepclean-{}-{}-{sequence}.json",
+        std::process::id(),
+        chrono::Utc::now().timestamp_micros()
+    ))
 }
 
 /// Elevated analysis: WinSxS numbers and shadow-copy usage.
@@ -414,6 +486,59 @@ pub fn hibernate_on() -> Result<DeepResult> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn windows_old_uses_only_the_native_online_os_cleanup() {
+        let script = run_script(&["windows_old".into()], Path::new(r"C:\fixture\out.json"));
+        assert!(script.contains("/Remove-OSUninstall"));
+        assert!(script.contains("dism.exe"));
+        assert!(script.contains("/NoRestart"));
+        assert!(script.contains("Windows.old still exists"));
+        assert!(script.contains("ReparsePoint"));
+        assert!(!script.contains("/sagerun:"));
+        assert!(!script.contains("/Initiate-OSUninstall"));
+        assert!(!script.contains("Remove-Item "));
+        assert!(!script.contains("takeown"));
+        assert!(!script.contains("Win32_ShadowCopy"));
+        assert!(!script.contains("startcomponentcleanup"));
+        assert!(!script.contains("/AUTOCLEAN"));
+    }
+
+    #[test]
+    fn system_cleanup_output_paths_do_not_collide() {
+        assert_ne!(out_file(), out_file());
+    }
+
+    #[test]
+    fn windows_old_path_matches_only_the_system_drive_root() {
+        let old = system_drive().join("Windows.old");
+        assert!(is_windows_old(&old));
+        assert!(!is_windows_old(&old.join("Users")));
+        assert!(!is_windows_old(
+            &system_drive().join("fixture").join("Windows.old")
+        ));
+        let scanned = crate::paths::PathContext::from_env()
+            .expand("${SYSTEMDRIVE}/Windows.old")
+            .unwrap();
+        assert!(is_windows_old(&scanned), "{}", scanned.display());
+        assert!(!is_windows_old(Path::new(r"\\C:\Windows.old")));
+    }
+
+    #[test]
+    fn windows_old_has_a_separate_irreversible_task_in_both_languages() {
+        for lang in ["zh", "en"] {
+            let task = tasks(lang)
+                .into_iter()
+                .find(|task| task.id == "windows_old");
+            let task = task.expect("Windows.old must not use ordinary recycling");
+            assert!(task.title.contains("Windows.old"));
+            assert!(task.consequence.contains(if lang == "zh" {
+                "回收站"
+            } else {
+                "Recycle Bin"
+            }));
+        }
+    }
 
     #[test]
     fn dism_output_is_parsed() {

@@ -42,6 +42,136 @@ This is not a crash-safe write-ahead journal. Unexpected post-deletion append
 failure is visible and stops the batch, but cannot guarantee a durable success
 record; transactional relocation log writes remain a separate follow-up.
 
+### Windows.old merge-only source follow-up (2026-10-24)
+
+The owner chose repair-source/docs merge and push only, with no new package,
+tag, updater or stable/Latest promotion. Main retains version `0.9.0-rc.1`.
+The pre-existing stable-version edits in `Cargo.toml`, `Cargo.lock`, `package.json`,
+`package-lock.json` and `src-tauri/tauri.conf.json` are excluded from this merge
+and remain local, uncommitted `0.9.0` preparation. The accepted installed local
+`0.9.0` R2 executable is unchanged.
+
+After R2 acceptance, pre-merge source hardening rejects `.`/`..` path segments
+before generic recycling and scrolls success-only system-cleanup feedback into
+view. Fresh local offline tests/build checks passed for committed source
+`e67ce35`; counts and remaining behavior-group gaps are in the focused acceptance
+record. This is not hosted CI, a new installation or real system cleanup. The R2
+native receipts and artifact hashes below do not certify these later source
+bytes or future cloud packages.
+
+### Stable v0.9 acceptance in progress (2026-10-24)
+
+`0.9.0` is a local validation build, not a published stable release. Its five
+existing version files are prepared. The originally frozen acceptance packages
+changed no runtime behavior, IPC or log schemas; automated gates and unsigned
+NSIS/MSI packaging passed for those bytes.
+
+The subsequent Windows.old incident adds a separate native cleanup task and
+visible per-item failure feedback. At the local R2 checkpoint, the repair passed
+20 Node tests, 116 core unit tests, two Windows integration tests (fixture recycle/restore and
+mocked PowerShell), two native policy tests and 17 mock-IPC browser assertions.
+Frontend/native compilation, fmt, Clippy and locale parity passed. This approval
+covers no real Windows.old removal or cleanup elevation. A subsequent local
+in-place NSIS update retained all 371 profile files before first launch, including
+the 95 history records; its real scan exposed repeated path separators that the
+original mocks omitted. Frontend/backend matching is now corrected with RED/GREEN
+tests. After separate action-time approval, the final rebuilt package completed
+same-version Add/Reinstall Components at the original location, without uninstall.
+All 374 then-current profile files stayed identical before first launch. Its
+installed 18,895,872-byte executable matches the frozen NSIS-marker reference.
+Actual scan-to-Windows.old-only confirmation and Cancel passed, retaining the
+other ten Safe selections. Complete exit and restart retained all 95 records
+(81 successes), all fourteen critical configuration/history/rule hashes and both
+shortcut hashes. Refusal feedback passed with isolated fixtures and the same
+binary bytes. This closes the local repaired-NSIS acceptance lane only, not actual
+Windows.old removal or the remaining stable-release gates. No publication ran.
+Original configuration and history remain in place. Earlier installer/runtime
+acceptance does not certify these new source changes; stable gates remain open. See
+`docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md`.
+
+The isolated bundled native app scanned only two new fixtures (12 KB). After
+action-time approval, it recycled only the 4,096-byte Safe directory. Without
+rescanning, the overview changed to one item / 8 KB, Safe 0 B and Review 8 KB.
+Per-record history restore returned identical bytes; the 8,192-byte Review
+control never changed. Complete exit reached zero processes and relaunch one;
+all three isolated history rows, including a synthetic legacy success and
+failure, loaded normally and the restored row reported AtOriginal. A later
+read-only rescan found both fixtures and restored the Safe-only default selection.
+Original installed program/profile backups (370 files) and two shortcuts remained
+hash-identical at this checkpoint; no personal history was used for cleanup tests.
+
+The local NSIS installed successfully into a new test directory with Do not
+uninstall selected; actual extraction and success were observed. The original
+installation's two registration keys and two shortcuts were restored and verified.
+The installed payload differs from the local portable payload only by Tauri's
+three-byte NSIS marker. The desktop launcher resolved the standard filename to
+the registered original app, so installed-mode runtime checks used a byte-identical
+uniquely named companion in the test installation, without a portable marker;
+its physical process path/version were verified before testing. Original history
+(95 records / 81 successes / 10.0 GB) loaded before and after full exit/restart.
+The original program, fourteen non-scan configuration/rule files and shortcuts
+stayed unchanged; mutable WebView/scan metadata is not claimed byte-identical.
+No original-profile scan, cleanup or restore ran. This is a new-directory install
+with an existing profile, not a pristine-system install or an in-place upgrade.
+
+The verified public `v0.7.1` NSIS package also installed into a separate test
+directory with Do not uninstall selected; original registration and shortcuts
+were restored. Its byte-identical, uniquely named payload used an independent
+portable profile: 136 built-in rules disabled, only two new fixtures (12 KB),
+and two synthetic legacy history rows. The old runtime displayed both rows
+(one success / 1 KB and one failure), scanned exactly the two unselected items,
+and exited normally without cleanup or restore. Nine critical test files stayed
+unchanged, and all 187 test files were backed up and hash-verified before upgrade.
+The local stable NSIS then upgraded that registered test installation from
+`0.7.1` to `0.9.0`, again without uninstalling. Only the executable and uninstaller
+changed; the other 185 test files stayed identical before first launch. The
+upgraded payload matched the earlier clean-directory NSIS installation. Both
+legacy rows loaded normally; a read-only scan still found exactly two fixtures
+/ 12 KB. Eight mouse/Space/group selection-and-clear checks passed and ended
+with nothing selected. Complete exit/restart retained both history rows and all
+ten recorded critical file hashes. Original registration/shortcuts were restored;
+original configuration, 95 history records and verified backups stayed intact.
+No cleanup or restore ran in this upgrade lane. Runtime checks used the same
+byte-identical unique-filename workaround, with physical process verification.
+This closes the isolated v0.7.1 upgrade case, not the installed-candidate or
+pristine-system cases.
+
+The public `v0.9.0-rc.1` NSIS package, rechecked against GitHub's asset digest,
+has now installed into another separate test directory. Its same-version
+maintenance page used Add/reinstall components, not Uninstall; the destination
+was explicitly redirected away from the original installation. Automatic launch
+and desktop shortcut creation were disabled, and original registration and
+shortcuts were restored. The 18,881,024-byte payload matches the existing verified
+public NSIS installation. Its byte-identical uniquely named runtime used only an
+independent portable profile: two synthetic batched history rows displayed
+normally (one success / 1 KB and one failure), and a read-only scan found exactly
+two unselected fixtures / 12 KB. It exited normally without cleanup or restore.
+All nine critical files stayed unchanged; all 172 test files were backed up and
+hash-verified. The local stable NSIS subsequently upgraded this registered test
+installation to `0.9.0` with Do not uninstall selected. Only executable and
+uninstaller changed; the other 170 files matched before launch. Both batched
+history rows and the same two fixtures / 12 KB loaded normally. Eight
+mouse/Space/group select-and-clear checks passed, ending with nothing selected.
+Full exit/restart preserved both rows and ten critical file hashes; all 172
+candidate rollback files remained verified. Original registration/shortcuts were
+restored and original program/configuration/95 history records stayed intact.
+No cleanup or restore ran; this was a separate candidate installation, not an
+upgrade of the original application.
+
+Uninstall acceptance is still pending. Generated NSIS ordinary-uninstall logic
+also clears Windows jump-list/recent-destination entries for the shared bundle
+ID, even when Delete app data is unchecked. Do not equate that operation with
+test-directory-only deletion on a host carrying the original installation.
+The owner retained the original test-directory-only scope; ordinary uninstall
+has not run and its acceptance gate remains unverified. Do not clear shared
+Windows recent destinations or treat this deliberate hold as a passing test.
+No pristine Windows/WebView2
+test environment is available, and MSI administrative install and signed-updater
+delivery are not certified. Keep these stable gates open:
+do not create a stable tag/release or promote Latest from this local result.
+Private receipts/backups stay in ignored `target/v09-stable-20261024/`; see the
+[stable acceptance gates](docs/RELEASE_CHECKLIST.md#v090-stable-acceptance-in-progress).
+
 ### Published v0.9 NSIS installation acceptance (2026-10-24)
 
 After separate action-time approval and a hash-verified backup of 368 program/

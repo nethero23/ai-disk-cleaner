@@ -239,8 +239,8 @@ name_en = "Windows.old (previous Windows)"
 paths = ["${SYSTEMDRIVE}/Windows.old"]
 safety = "review"
 min_bytes = 1073741824
-consequence_zh = "删除后无法回退到升级前的 Windows；升级 10 天后系统本来也会自动删除。需要管理员权限，若失败请用「磁盘清理」"
-consequence_en = "You can no longer roll back to the previous Windows; Windows deletes it itself 10 days after an upgrade. Needs admin rights; use Disk Cleanup if this fails"
+consequence_zh = "需单独进入系统深度清理并由管理员确认，不进入回收站、不能撤销或回退旧系统。请先确认旧系统中没有需要保留的个人文件。其他已勾选项目不会同时清理。"
+consequence_en = "Requires separate administrator-confirmed system cleanup, not the Recycle Bin. Cannot be undone or used to roll back Windows; check for personal files first. Other selected scan items are left untouched."
 windows_only = true
 
 [[rule]]
