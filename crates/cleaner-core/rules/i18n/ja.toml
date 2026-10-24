@@ -1,0 +1,505 @@
+# Rule names and consequences in ja, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "Claude Code のセッション記録"
+consequence = "そのプロジェクトの会話履歴が失われ、--resume で古いセッションが見つからなくなります"
+
+["claude_code.cache"]
+name = "Claude Code のキャッシュとデバッグログ"
+consequence = "自動で再作成されます"
+
+["codex.sessions"]
+name = "Codex のセッションログ"
+consequence = "Codex の会話履歴が失われます"
+
+["codex.log"]
+name = "Codex のログ"
+consequence = "ログのみ"
+
+["gemini_cli.sessions"]
+name = "Gemini CLI のセッションとチェックポイント"
+consequence = "Gemini CLI のチャット履歴と保留中の編集が失われます"
+
+["continue.index"]
+name = "Continue のコードインデックス"
+consequence = "次にプロジェクトを開いたときに再インデックスされます"
+
+["aider.cache"]
+name = "Aider のキャッシュ"
+consequence = "自動で再作成されます"
+
+["copilot_cli.cache"]
+name = "Copilot CLI のキャッシュ"
+consequence = "自動で再作成されます"
+
+["qwen_code.sessions"]
+name = "Qwen Code の一時ファイルとセッション"
+consequence = "過去のセッションとチェックポイントが失われます"
+
+["opencode.data"]
+name = "OpenCode のログとキャッシュ"
+consequence = "ログとキャッシュ。自動で再作成されます"
+
+["cline.tasks"]
+name = "Cline のタスク履歴"
+consequence = "各タスクの会話とファイルスナップショットが失われます"
+
+["roo_code.tasks"]
+name = "Roo Code のタスク履歴"
+consequence = "各タスクの会話とファイルスナップショットが失われます"
+
+["claude_code.file_history"]
+name = "Claude Code のファイルスナップショット（file-history）"
+consequence = "/rewind の元データです。古いセッションは巻き戻せなくなりますが、現在のセッションには影響しません"
+
+["codex.archived_sessions"]
+name = "Codex のアーカイブ済みセッション"
+consequence = "アーカイブした会話が失われます"
+
+["kilo_code.tasks"]
+name = "Kilo Code のタスク履歴"
+consequence = "各タスクの会話とファイルスナップショットが失われます"
+
+["goose.sessions"]
+name = "Goose のセッションとログ"
+consequence = "過去のセッションが失われます"
+
+["claude_desktop.cache"]
+name = "Claude デスクトップのキャッシュ"
+consequence = "アプリが再作成します"
+
+["chatgpt_desktop.cache"]
+name = "ChatGPT デスクトップのキャッシュ"
+consequence = "アプリが再作成します"
+
+["jan.cache"]
+name = "Jan のキャッシュとログ"
+consequence = "アプリが再作成します"
+
+["jan.models"]
+name = "Jan のモデル"
+consequence = "Jan で {size} を再ダウンロード"
+
+["anythingllm.cache"]
+name = "AnythingLLM のキャッシュ"
+consequence = "アプリが再作成します"
+
+["comfyui.temp"]
+name = "ComfyUI デスクトップの一時出力とログ"
+consequence = "プレビュー画像とログ。自動で再作成されます"
+
+["msty.cache"]
+name = "Msty のキャッシュ"
+consequence = "アプリが再作成します"
+
+["lmstudio.cache"]
+name = "LM Studio のキャッシュとログ"
+consequence = "アプリが再作成します"
+
+["cherry_studio.cache"]
+name = "Cherry Studio のキャッシュ"
+consequence = "アプリが再作成します"
+
+["chatbox.cache"]
+name = "Chatbox のキャッシュ"
+consequence = "アプリが再作成します"
+
+["open_webui.cache"]
+name = "Open WebUI のキャッシュ"
+consequence = "埋め込みと音声のキャッシュ。必要に応じて再作成されます"
+
+["gradio.cache"]
+name = "Gradio のアップロード・出力キャッシュ"
+consequence = "SD WebUI などの Gradio UI のアップロードと出力のコピー"
+
+["sd_webui.temp"]
+name = "Stable Diffusion WebUI の一時ファイル"
+consequence = "一時画像とログ。生成には影響しません"
+
+["cursor.cache"]
+name = "Cursor のキャッシュ"
+consequence = "Cursor が再作成します"
+
+["cursor.logs"]
+name = "Cursor のログ"
+consequence = "ログのみ"
+
+["cursor.workspaces"]
+name = "Cursor のワークスペースストレージ"
+consequence = "Cursor でのそのプロジェクトのエディター状態とチャット履歴が失われます"
+
+["cursor.global_state"]
+name = "Cursor のグローバル状態 DB（state.vscdb、全チャット）"
+consequence = "Cursor のすべてのチャットと設定が失われます。これを削除せず、Cursor 内で古いチャットを書き出すか整理してください"
+
+["windsurf.cache"]
+name = "Windsurf のキャッシュ"
+consequence = "Windsurf が再作成します"
+
+["windsurf.workspaces"]
+name = "Windsurf のワークスペースストレージ"
+consequence = "Windsurf でのそのプロジェクトのエディター状態とチャット履歴が失われます"
+
+["vscode.cache"]
+name = "VS Code のキャッシュ"
+consequence = "VS Code が再作成します"
+
+["vscode.workspaces"]
+name = "VS Code のワークスペースストレージ"
+consequence = "そのプロジェクトのエディター状態（Copilot のチャットを含む）が失われます"
+
+["antigravity.cache"]
+name = "Antigravity のキャッシュ"
+consequence = "Antigravity が再作成します"
+
+["jetbrains.caches"]
+name = "JetBrains IDE のインデックスキャッシュ"
+consequence = "次回起動時に IDE が再インデックスし、数分かかります"
+
+["trae.cache"]
+name = "Trae のキャッシュとログ"
+consequence = "エディターが再作成します"
+
+["trae.workspaces"]
+name = "Trae のワークスペースストレージ"
+consequence = "そのプロジェクトの履歴と AI インデックスが失われます"
+
+["kiro.cache"]
+name = "Kiro のキャッシュとログ"
+consequence = "エディターが再作成します"
+
+["zed.cache"]
+name = "Zed のキャッシュとログ"
+consequence = "エディターが再作成します"
+
+["cursor.extensions_cache"]
+name = "Cursor の拡張機能ダウンロードキャッシュ"
+consequence = "エディターが再作成します"
+
+["vscode.extensions_cache"]
+name = "VS Code の拡張機能ダウンロードキャッシュ"
+consequence = "エディターが再作成します"
+
+["chrome.cache"]
+name = "Chrome のキャッシュ"
+consequence = "ページは再キャッシュされます。ログイン状態には影響しません"
+
+["edge.cache"]
+name = "Edge のキャッシュ"
+consequence = "ページは再キャッシュされます。ログイン状態には影響しません"
+
+["firefox.cache"]
+name = "Firefox のキャッシュ"
+consequence = "ページは再キャッシュされます。ログイン状態には影響しません"
+
+["docker.vhdx"]
+name = "Docker Desktop の仮想ディスク"
+consequence = "すべてのイメージ、コンテナー、ボリュームが失われます。docker system prune の後にディスクを圧縮する方がおすすめです"
+
+["wsl.distros"]
+name = "WSL ディストリビューションの仮想ディスク"
+consequence = "Linux システム丸ごとです。削除すると中身はすべて失われます"
+
+["docker.cli_cache"]
+name = "Docker CLI のキャッシュ"
+consequence = "ログとキャッシュ。自動で再作成されます"
+
+["nvidia.dxcache"]
+name = "NVIDIA シェーダーキャッシュ"
+consequence = "ゲームやアプリの初回起動が少し遅くなります。自動で再作成されます"
+
+["nvidia.compute_cache"]
+name = "CUDA カーネルのコンパイルキャッシュ"
+consequence = "CUDA プログラムは初回実行時にカーネルを再コンパイルします"
+
+["amd.shader_cache"]
+name = "AMD シェーダーキャッシュ"
+consequence = "自動で再作成されます"
+
+["intel.shader_cache"]
+name = "Intel シェーダーキャッシュ"
+consequence = "自動で再作成されます"
+
+["triton.cache"]
+name = "Triton / torch.compile カーネルキャッシュ"
+consequence = "次の torch.compile で再コンパイルされます"
+
+["nvidia.driver_downloads"]
+name = "NVIDIA ドライバーのダウンロード"
+consequence = "インストール済みドライバーのインストーラー。必要なら NVIDIA App が再ダウンロードします"
+
+["nvidia.installer_leftovers"]
+name = "NVIDIA ドライバー展開の残り"
+consequence = "コントロールパネルからの修復・アンインストール時にドライバーの再ダウンロードが必要になる場合があります"
+
+["windows.d3d_shader_cache"]
+name = "DirectX シェーダーキャッシュ"
+consequence = "ゲームや GPU アプリの起動が一度だけ少し遅くなります"
+
+["torch.extensions"]
+name = "PyTorch 拡張のビルドキャッシュ"
+consequence = "カスタム CUDA 演算は次回の import 時に再コンパイルされます"
+
+["npm.cache"]
+name = "npm のキャッシュ"
+consequence = "次回の install で npm が再ダウンロードします"
+
+["npx.cache"]
+name = "npx の一時パッケージ（MCP サーバーを含む）"
+consequence = "npx で起動する MCP サーバーは次回起動時に再ダウンロードされます"
+
+["pnpm.store"]
+name = "pnpm ストア"
+consequence = "pnpm store prune して再ダウンロードするのと同じ。インストール済みのプロジェクトは動作し続けます"
+
+["yarn.cache"]
+name = "Yarn のキャッシュ"
+consequence = "次回の install で Yarn が再ダウンロードします"
+
+["bun.cache"]
+name = "Bun のキャッシュ"
+consequence = "次回の install で Bun が再ダウンロードします"
+
+["playwright.browsers"]
+name = "Playwright のブラウザー"
+consequence = "これを使うプロジェクトや MCP サーバーは playwright install をやり直す必要があります（{size}）"
+
+["puppeteer.browsers"]
+name = "Puppeteer のブラウザー"
+consequence = "次回実行時に Puppeteer が {size} を再ダウンロードします"
+
+["electron.cache"]
+name = "Electron のビルドキャッシュ"
+consequence = "次回ビルド時に再ダウンロードされます"
+
+["ollama.models"]
+name = "Ollama のモデル"
+consequence = "ollama pull で {size} を再ダウンロード"
+
+["ollama.logs"]
+name = "Ollama のログ"
+consequence = "ログのみ。Ollama が再作成します"
+
+["huggingface.hub"]
+name = "Hugging Face Hub キャッシュ"
+consequence = "次回使用時に再ダウンロードされます（{size}）"
+
+["huggingface.xet"]
+name = "Hugging Face Xet チャンクキャッシュ"
+consequence = "ダウンロード高速化用のキャッシュ。自動で再作成されます"
+
+["modelscope.hub"]
+name = "ModelScope Hub キャッシュ"
+consequence = "次回使用時に ModelScope から再ダウンロードされます（{size}）"
+
+["lmstudio.models"]
+name = "LM Studio のモデル"
+consequence = "LM Studio で {size} を再ダウンロード"
+
+["lmstudio.conversations"]
+name = "LM Studio の会話"
+consequence = "モデルとのチャット履歴が失われます"
+
+["torch.hub"]
+name = "PyTorch Hub キャッシュ"
+consequence = "次に torch.hub が必要とするときに再ダウンロードされます（{size}）"
+
+["whisper.models"]
+name = "Whisper のモデル"
+consequence = "次回の文字起こしで再ダウンロードされます（{size}）"
+
+["chrome.ondevice_model"]
+name = "Chrome のオンデバイス AI モデル"
+consequence = "Chrome の内蔵 AI が約 4 GB を再ダウンロードします"
+
+["edge.ondevice_model"]
+name = "Edge のオンデバイス AI モデル"
+consequence = "Edge の内蔵 AI が再ダウンロードします"
+
+["comfyui.models"]
+name = "ComfyUI のモデル"
+consequence = "多くは手動ダウンロードです。{size} を自分で再ダウンロードすることになります"
+
+["sd_webui.models"]
+name = "Stable Diffusion WebUI のモデル"
+consequence = "多くは手動ダウンロードです。{size} を自分で再ダウンロードすることになります"
+
+["stability_matrix.models"]
+name = "Stability Matrix の共有モデル"
+consequence = "Stability Matrix で {size} を再ダウンロード"
+
+["msty.models"]
+name = "Msty のローカルモデル"
+consequence = "Msty で {size} を再ダウンロード"
+
+["xinference.cache"]
+name = "Xinference のモデルキャッシュ"
+consequence = "次にモデルを起動するときに再ダウンロードされます（{size}）"
+
+["vllm.cache"]
+name = "vLLM のコンパイルキャッシュ"
+consequence = "torch.compile / CUDA グラフのキャッシュ。次回起動時に再作成されます（初回読み込みが遅くなります）"
+
+["keras.models"]
+name = "Keras の学習済みモデルキャッシュ"
+consequence = "次回使用時に再ダウンロードされます（{size}）"
+
+["kagglehub.cache"]
+name = "kagglehub のキャッシュ"
+consequence = "次の kagglehub 呼び出しで再ダウンロードされます（{size}）"
+
+["clip.cache"]
+name = "CLIP モデルキャッシュ"
+consequence = "SD WebUI などが次回使用時に {size} を再ダウンロードします"
+
+["paddle.models"]
+name = "PaddleOCR / PaddleX のモデル"
+consequence = "次回実行時に再ダウンロードされます（{size}）"
+
+["pinokio.cache"]
+name = "Pinokio のダウンロードキャッシュ"
+consequence = "インストーラーのダウンロード。必要なときに再取得されます"
+
+["huggingface.datasets"]
+name = "Hugging Face データセットキャッシュ"
+consequence = "次の load_dataset で再ダウンロードされます（{size}）"
+
+["huggingface.transformers_legacy"]
+name = "Hugging Face の旧 transformers キャッシュ"
+consequence = "古い transformers だけが使います。現行版は hub フォルダーを使います"
+
+["llamacpp.cache"]
+name = "llama.cpp のダウンロードキャッシュ"
+consequence = "-hf で取得したモデル。次回実行時に再ダウンロードされます（{size}）"
+
+["gpt4all.models"]
+name = "GPT4All のモデル"
+consequence = "GPT4All で {size} を再ダウンロード"
+
+["projects.artifacts"]
+name = "プロジェクトのビルド生成物（node_modules / .venv / target …）"
+consequence = "次回の install やビルドで再生成されます"
+
+["pip.cache"]
+name = "pip のキャッシュ"
+consequence = "次に必要になったとき pip がパッケージを再ダウンロードします"
+
+["uv.cache"]
+name = "uv のキャッシュ"
+consequence = "uv が再作成します。uvx で起動する MCP サーバーは依存関係を再取得します"
+
+["conda.pkgs"]
+name = "conda のパッケージキャッシュ"
+consequence = "conda clean --all と同じ。インストール済みの環境には影響しません"
+
+["conda.envs"]
+name = "conda 環境"
+consequence = "環境ごと削除されます。それを使うプロジェクトは再作成するまで動きません"
+
+["uv.python"]
+name = "uv 管理の Python インタープリター"
+consequence = "このバージョンを指定したプロジェクトは次回実行時にインタープリターを再ダウンロードします"
+
+["python.pycache_user"]
+name = "Python のバイトコードキャッシュ（__pycache__）"
+consequence = "次回の import で Python が再生成します"
+
+["jupyter.runtime"]
+name = "Jupyter ランタイムの残り"
+consequence = "カーネル接続ファイル。Jupyter が再作成します"
+
+["windows.user_temp"]
+name = "ユーザーの一時ファイル"
+consequence = "使用中のファイルはスキップします"
+
+["windows.system_temp"]
+name = "システムの一時ファイル"
+consequence = "使用中のファイルはスキップします"
+
+["windows.update_download"]
+name = "Windows Update のダウンロードキャッシュ"
+consequence = "保留中の更新は再ダウンロードされます"
+
+["windows.delivery_optimization"]
+name = "配信の最適化キャッシュ"
+consequence = "LAN 内の他の PC と更新を共有するためのキャッシュ"
+
+["windows.thumbnails"]
+name = "サムネイルキャッシュ"
+consequence = "フォルダー内の画像サムネイルは再生成されます"
+
+["windows.crash_dumps"]
+name = "クラッシュダンプ"
+consequence = "クラッシュのデバッグにしか使いません"
+
+["windows.error_reporting"]
+name = "Windows エラー報告"
+consequence = "Microsoft へのエラー報告の待ち行列"
+
+["windows.prefetch_logs"]
+name = "Windows のログ"
+consequence = "システムログ。これに依存するものはありません"
+
+["windows.installer_cache"]
+name = "Package Cache（インストーラーの残り）"
+consequence = "Visual Studio / .NET のアンインストールや修復時にインストーラーの再ダウンロードが必要になる場合があります"
+
+["nuget.cache"]
+name = "NuGet パッケージキャッシュ"
+consequence = "次回の restore で再ダウンロードされます"
+
+["cargo.registry"]
+name = "Cargo レジストリキャッシュ"
+consequence = "次回の cargo build で再ダウンロードされます"
+
+["gradle.caches"]
+name = "Gradle のキャッシュ"
+consequence = "次回ビルド時に依存関係が再ダウンロードされます"
+
+["go.modcache"]
+name = "Go モジュールキャッシュ"
+consequence = "次回の go build で再ダウンロードされます"
+
+["windows.inetcache"]
+name = "システムの Web キャッシュ（INetCache）"
+consequence = "システムコンポーネントや旧 IE が使う Web キャッシュ"
+
+["windows.defender_scans"]
+name = "Windows Defender のスキャン履歴"
+consequence = "スキャン記録のみ。保護には影響しません"
+
+["windows.store_cache"]
+name = "Microsoft Store のダウンロードキャッシュ"
+consequence = "Store が再作成します"
+
+["poetry.cache"]
+name = "Poetry のパッケージキャッシュ"
+consequence = "次回の poetry install で再ダウンロードされます"
+
+["maven.repository"]
+name = "Maven ローカルリポジトリ"
+consequence = "次回ビルド時に依存関係が再ダウンロードされます"
+
+["composer.cache"]
+name = "Composer のキャッシュ"
+consequence = "次回の composer install で再ダウンロードされます"
+
+["windows.old"]
+name = "Windows.old（以前の Windows）"
+consequence = "以前の Windows に戻せなくなります。アップグレードから 10 日後に Windows が自動で削除します。管理者権限が必要で、失敗した場合はディスク クリーンアップを使ってください"
+
+["office.file_cache"]
+name = "Office ドキュメントキャッシュ"
+consequence = "OneDrive / SharePoint ドキュメントのローカルキャッシュ。未同期の編集は失われるので、先に Office を閉じてください"
+
+["teams.cache"]
+name = "Teams のキャッシュ"
+consequence = "Teams が再作成します"
+
+["onedrive.logs"]
+name = "OneDrive のログ"
+consequence = "同期ログのみ"
+
+["precommit.cache"]
+name = "pre-commit フックの環境"
+consequence = "次回のコミットでフック環境が再インストールされます"

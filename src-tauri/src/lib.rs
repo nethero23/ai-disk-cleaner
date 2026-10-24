@@ -96,13 +96,14 @@ struct ScanStep {
 
 /// Full rule scan; emits `scan-progress` after every rule.
 #[tauri::command]
-async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
+async fn scan(app: AppHandle, lang: String, ui_lang: Option<String>) -> Result<ScanReport, String> {
     let (rules, _, settings) = effective_rules(&app);
     SCAN_CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
     let growth = growth_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let opts = ScanOptions {
             lang,
+            ui_lang: ui_lang.unwrap_or_default(),
             global_min_bytes: settings.min_item_bytes,
             excluded: settings.excluded_paths,
             extra_roots: settings.scan_drives.clone(),
@@ -204,6 +205,8 @@ struct RuleInfo {
     tool: String,
     name_zh: String,
     name_en: String,
+    /// Name in the UI language when it is neither zh nor en and has a translation.
+    name_local: Option<String>,
     safety: cleaner_core::SafetyLevel,
     enabled: bool,
 }
@@ -234,6 +237,8 @@ fn rules(app: AppHandle) -> RuleLibrary {
             .into_iter()
             .map(|r| RuleInfo {
                 enabled: !settings.disabled_rules.contains(&r.id),
+                name_local: cleaner_core::rule_i18n::lookup(&settings.lang, &r.id)
+                    .and_then(|t| t.name.clone()),
                 id: r.id,
                 tool: r.tool,
                 name_zh: r.name_zh,

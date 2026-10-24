@@ -656,7 +656,11 @@ export function App() {
     saveLangPref(langPref);
     document.documentElement.lang = htmlLang(lang);
     document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr";
-    invoke("set_lang", { lang }).catch(() => {});
+    // The rule list's local names come from the stored language, so refetch it.
+    invoke("set_lang", { lang })
+      .then(() => invoke<RuleLibrary>("rules"))
+      .then((l) => setLibrary((cur) => (cur ? l : cur)))
+      .catch(() => {});
   }, [langPref, lang]);
 
   useEffect(() => {
@@ -688,7 +692,7 @@ export function App() {
       setScanStep(e.payload);
     });
     try {
-      const r = await invoke<ScanReport>("scan", { lang: coreLang(lang) });
+      const r = await invoke<ScanReport>("scan", { lang: coreLang(lang), uiLang: lang });
       setReport(r);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.

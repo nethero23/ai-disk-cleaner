@@ -15,6 +15,9 @@ pub struct ScanOptions {
     pub ctx: PathContext,
     /// `zh` or `en`; picks which rule strings go into the items.
     pub lang: String,
+    /// The UI language (e.g. `ja`); rule names and consequences come from
+    /// [`crate::rule_i18n`] when it has them, else from `lang`.
+    pub ui_lang: String,
     /// Skip rules below this size even if the rule itself has no floor.
     pub global_min_bytes: u64,
     /// Lower-cased names of running processes, sampled once per scan.
@@ -30,6 +33,7 @@ impl Default for ScanOptions {
         Self {
             ctx: PathContext::from_env(),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 1024 * 1024,
             running: crate::process::running_names(),
             excluded: Vec::new(),
@@ -255,6 +259,11 @@ pub fn plain_item(rule: &Rule, path: &Path, opts: &ScanOptions) -> ScanItem {
 }
 
 pub fn rule_name(rule: &Rule, opts: &ScanOptions) -> String {
+    if let Some(name) =
+        crate::rule_i18n::lookup(&opts.ui_lang, &rule.id).and_then(|t| t.name.as_ref())
+    {
+        return name.clone();
+    }
     if opts.lang == "en" {
         rule.name_en.clone()
     } else {
@@ -271,7 +280,11 @@ pub fn make_item(
     opts: &ScanOptions,
     detail: Option<String>,
 ) -> ScanItem {
-    let consequence = if opts.lang == "en" {
+    let translated =
+        crate::rule_i18n::lookup(&opts.ui_lang, &rule.id).and_then(|t| t.consequence.clone());
+    let consequence = if let Some(c) = translated {
+        c
+    } else if opts.lang == "en" {
         rule.consequence_en.clone()
     } else {
         rule.consequence_zh.clone()
@@ -329,6 +342,7 @@ mod tests {
         ScanOptions {
             ctx: PathContext::with_vars(vars),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),

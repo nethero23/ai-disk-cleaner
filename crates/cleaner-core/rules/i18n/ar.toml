@@ -1,0 +1,505 @@
+# Rule names and consequences in ar, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "سجلات جلسات Claude Code"
+consequence = "يُفقد سجل محادثات ذلك المشروع، ولن يجد ‎--resume الجلسات القديمة"
+
+["claude_code.cache"]
+name = "ذاكرة Claude Code المؤقتة وسجلات التصحيح"
+consequence = "تُعاد إنشاؤها تلقائيًا"
+
+["codex.sessions"]
+name = "سجلات جلسات Codex"
+consequence = "يُفقد سجل محادثات Codex"
+
+["codex.log"]
+name = "سجلات Codex"
+consequence = "سجلات فقط"
+
+["gemini_cli.sessions"]
+name = "جلسات Gemini CLI ونقاط الحفظ"
+consequence = "يُفقد سجل محادثات Gemini CLI والتعديلات المجهّزة"
+
+["continue.index"]
+name = "فهرس الشيفرة في Continue"
+consequence = "يُعاد الفهرسة عند فتح المشروع في المرة القادمة"
+
+["aider.cache"]
+name = "ذاكرة Aider المؤقتة"
+consequence = "تُعاد إنشاؤها تلقائيًا"
+
+["copilot_cli.cache"]
+name = "ذاكرة Copilot CLI المؤقتة"
+consequence = "تُعاد إنشاؤها تلقائيًا"
+
+["qwen_code.sessions"]
+name = "ملفات Qwen Code المؤقتة والجلسات"
+consequence = "تُفقد الجلسات ونقاط الحفظ السابقة"
+
+["opencode.data"]
+name = "سجلات OpenCode وذاكرته المؤقتة"
+consequence = "سجلات وذاكرة مؤقتة؛ تُعاد إنشاؤها تلقائيًا"
+
+["cline.tasks"]
+name = "سجل مهام Cline"
+consequence = "تُفقد محادثة كل مهمة ولقطات ملفاتها"
+
+["roo_code.tasks"]
+name = "سجل مهام Roo Code"
+consequence = "تُفقد محادثة كل مهمة ولقطات ملفاتها"
+
+["claude_code.file_history"]
+name = "لقطات ملفات Claude Code ‏(file-history)"
+consequence = "يعتمد عليها ‎/rewind؛ لن يمكن إرجاع الجلسات القديمة، والجلسة الحالية لا تتأثر"
+
+["codex.archived_sessions"]
+name = "جلسات Codex المؤرشفة"
+consequence = "تُفقد المحادثات المؤرشفة"
+
+["kilo_code.tasks"]
+name = "سجل مهام Kilo Code"
+consequence = "تُفقد محادثة كل مهمة ولقطات ملفاتها"
+
+["goose.sessions"]
+name = "جلسات Goose وسجلاته"
+consequence = "تُفقد الجلسات السابقة"
+
+["claude_desktop.cache"]
+name = "ذاكرة Claude لسطح المكتب المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["chatgpt_desktop.cache"]
+name = "ذاكرة ChatGPT لسطح المكتب المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["jan.cache"]
+name = "ذاكرة Jan المؤقتة وسجلاته"
+consequence = "يعيد التطبيق إنشاءها"
+
+["jan.models"]
+name = "نماذج Jan"
+consequence = "أعد تنزيل {size} داخل Jan"
+
+["anythingllm.cache"]
+name = "ذاكرة AnythingLLM المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["comfyui.temp"]
+name = "مخرجات ComfyUI Desktop المؤقتة وسجلاته"
+consequence = "صور معاينة وسجلات؛ تُعاد إنشاؤها تلقائيًا"
+
+["msty.cache"]
+name = "ذاكرة Msty المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["lmstudio.cache"]
+name = "ذاكرة LM Studio المؤقتة وسجلاته"
+consequence = "يعيد التطبيق إنشاءها"
+
+["cherry_studio.cache"]
+name = "ذاكرة Cherry Studio المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["chatbox.cache"]
+name = "ذاكرة Chatbox المؤقتة"
+consequence = "يعيد التطبيق إنشاءها"
+
+["open_webui.cache"]
+name = "ذاكرة Open WebUI المؤقتة"
+consequence = "ذاكرات التضمين والصوت؛ تُعاد إنشاؤها عند الحاجة"
+
+["gradio.cache"]
+name = "ذاكرة الرفع والمخرجات في Gradio"
+consequence = "نسخ من الملفات المرفوعة والمخرجات من واجهات Gradio مثل SD WebUI"
+
+["sd_webui.temp"]
+name = "ملفات Stable Diffusion WebUI المؤقتة"
+consequence = "صور مؤقتة وسجلات؛ لا يتأثر التوليد"
+
+["cursor.cache"]
+name = "ذاكرة Cursor المؤقتة"
+consequence = "يعيد Cursor إنشاءها"
+
+["cursor.logs"]
+name = "سجلات Cursor"
+consequence = "سجلات فقط"
+
+["cursor.workspaces"]
+name = "تخزين مساحات عمل Cursor"
+consequence = "تُفقد حالة المحرر وسجل المحادثات لذلك المشروع في Cursor"
+
+["cursor.global_state"]
+name = "قاعدة الحالة العامة لـ Cursor ‏(state.vscdb، كل المحادثات)"
+consequence = "تُفقد كل محادثات Cursor وإعداداته. صدّر المحادثات القديمة أو احذفها من داخل Cursor بدلًا من حذف هذا"
+
+["windsurf.cache"]
+name = "ذاكرة Windsurf المؤقتة"
+consequence = "يعيد Windsurf إنشاءها"
+
+["windsurf.workspaces"]
+name = "تخزين مساحات عمل Windsurf"
+consequence = "تُفقد حالة المحرر وسجل المحادثات لذلك المشروع في Windsurf"
+
+["vscode.cache"]
+name = "ذاكرة VS Code المؤقتة"
+consequence = "يعيد VS Code إنشاءها"
+
+["vscode.workspaces"]
+name = "تخزين مساحات عمل VS Code"
+consequence = "تُفقد حالة المحرر لذلك المشروع (بما فيها محادثات Copilot)"
+
+["antigravity.cache"]
+name = "ذاكرة Antigravity المؤقتة"
+consequence = "يعيد Antigravity إنشاءها"
+
+["jetbrains.caches"]
+name = "ذاكرات فهرسة بيئات JetBrains"
+consequence = "تعيد البيئة الفهرسة عند الفتح التالي، ويستغرق ذلك بضع دقائق"
+
+["trae.cache"]
+name = "ذاكرة Trae المؤقتة وسجلاته"
+consequence = "يعيد المحرر إنشاءها"
+
+["trae.workspaces"]
+name = "تخزين مساحات عمل Trae"
+consequence = "يُفقد سجل ذلك المشروع وفهرس الذكاء الاصطناعي الخاص به"
+
+["kiro.cache"]
+name = "ذاكرة Kiro المؤقتة وسجلاته"
+consequence = "يعيد المحرر إنشاءها"
+
+["zed.cache"]
+name = "ذاكرة Zed المؤقتة وسجلاته"
+consequence = "يعيد المحرر إنشاءها"
+
+["cursor.extensions_cache"]
+name = "ذاكرة تنزيل إضافات Cursor"
+consequence = "يعيد المحرر إنشاءها"
+
+["vscode.extensions_cache"]
+name = "ذاكرة تنزيل إضافات VS Code"
+consequence = "يعيد المحرر إنشاءها"
+
+["chrome.cache"]
+name = "ذاكرة Chrome المؤقتة"
+consequence = "تُخزَّن الصفحات مؤقتًا من جديد؛ لا تتأثر عمليات تسجيل الدخول"
+
+["edge.cache"]
+name = "ذاكرة Edge المؤقتة"
+consequence = "تُخزَّن الصفحات مؤقتًا من جديد؛ لا تتأثر عمليات تسجيل الدخول"
+
+["firefox.cache"]
+name = "ذاكرة Firefox المؤقتة"
+consequence = "تُخزَّن الصفحات مؤقتًا من جديد؛ لا تتأثر عمليات تسجيل الدخول"
+
+["docker.vhdx"]
+name = "القرص الافتراضي لـ Docker Desktop"
+consequence = "تُفقد كل الصور والحاويات ووحدات التخزين. الأفضل: docker system prune ثم ضغط القرص"
+
+["wsl.distros"]
+name = "الأقراص الافتراضية لتوزيعات WSL"
+consequence = "هذا نظام Linux كامل؛ حذفه يمحو كل ما بداخله"
+
+["docker.cli_cache"]
+name = "ذاكرة Docker CLI المؤقتة"
+consequence = "سجلات وذاكرة مؤقتة؛ تُعاد إنشاؤها تلقائيًا"
+
+["nvidia.dxcache"]
+name = "ذاكرة ظلال NVIDIA"
+consequence = "يصبح التشغيل الأول للألعاب والتطبيقات أبطأ قليلًا؛ تُعاد إنشاؤها تلقائيًا"
+
+["nvidia.compute_cache"]
+name = "ذاكرة ترجمة نوى CUDA"
+consequence = "تعيد برامج CUDA ترجمة النوى عند أول تشغيل"
+
+["amd.shader_cache"]
+name = "ذاكرة ظلال AMD"
+consequence = "تُعاد إنشاؤها تلقائيًا"
+
+["intel.shader_cache"]
+name = "ذاكرة ظلال Intel"
+consequence = "تُعاد إنشاؤها تلقائيًا"
+
+["triton.cache"]
+name = "ذاكرة نوى Triton / torch.compile"
+consequence = "تُعاد ترجمتها عند torch.compile التالي"
+
+["nvidia.driver_downloads"]
+name = "تنزيلات تعريفات NVIDIA"
+consequence = "برامج تثبيت لتعريفات مثبّتة بالفعل؛ يعيد NVIDIA App تنزيلها عند الحاجة"
+
+["nvidia.installer_leftovers"]
+name = "بقايا فك تعريفات NVIDIA"
+consequence = "قد يتطلب الإصلاح أو الإزالة من لوحة التحكم إعادة تنزيل التعريف"
+
+["windows.d3d_shader_cache"]
+name = "ذاكرة ظلال DirectX"
+consequence = "تبدأ الألعاب وتطبيقات GPU أبطأ قليلًا مرة واحدة"
+
+["torch.extensions"]
+name = "ذاكرة بناء إضافات PyTorch"
+consequence = "تُعاد ترجمة عمليات CUDA المخصصة عند import التالي"
+
+["npm.cache"]
+name = "ذاكرة npm المؤقتة"
+consequence = "يعيد npm التنزيل عند install التالي"
+
+["npx.cache"]
+name = "حزم npx المؤقتة (تشمل خوادم MCP)"
+consequence = "خوادم MCP التي تعمل عبر npx يُعاد تنزيلها عند التشغيل التالي"
+
+["pnpm.store"]
+name = "مخزن pnpm"
+consequence = "مثل pnpm store prune ثم إعادة التنزيل؛ المشاريع المثبتة تستمر في العمل"
+
+["yarn.cache"]
+name = "ذاكرة Yarn المؤقتة"
+consequence = "يعيد Yarn التنزيل عند install التالي"
+
+["bun.cache"]
+name = "ذاكرة Bun المؤقتة"
+consequence = "يعيد Bun التنزيل عند install التالي"
+
+["playwright.browsers"]
+name = "متصفحات Playwright"
+consequence = "المشاريع أو خوادم MCP التي تستخدمها تحتاج إلى playwright install من جديد ({size})"
+
+["puppeteer.browsers"]
+name = "متصفحات Puppeteer"
+consequence = "يعيد Puppeteer تنزيل {size} عند التشغيل التالي"
+
+["electron.cache"]
+name = "ذاكرة بناء Electron"
+consequence = "يُعاد تنزيلها عند البناء التالي"
+
+["ollama.models"]
+name = "نماذج Ollama"
+consequence = "أعد تنزيل {size} باستخدام ollama pull"
+
+["ollama.logs"]
+name = "سجلات Ollama"
+consequence = "سجلات فقط؛ يعيد Ollama إنشاءها"
+
+["huggingface.hub"]
+name = "ذاكرة Hugging Face Hub المؤقتة"
+consequence = "سيُعاد تنزيلها ({size}) عند الاستخدام التالي"
+
+["huggingface.xet"]
+name = "ذاكرة مقاطع Xet في Hugging Face"
+consequence = "ذاكرة لتسريع التنزيل؛ تُعاد إنشاؤها تلقائيًا"
+
+["modelscope.hub"]
+name = "ذاكرة ModelScope Hub المؤقتة"
+consequence = "يُعاد تنزيلها من ModelScope ‏({size}) عند الاستخدام التالي"
+
+["lmstudio.models"]
+name = "نماذج LM Studio"
+consequence = "أعد تنزيل {size} داخل LM Studio"
+
+["lmstudio.conversations"]
+name = "محادثات LM Studio"
+consequence = "يُفقد سجل محادثاتك مع النماذج"
+
+["torch.hub"]
+name = "ذاكرة PyTorch Hub المؤقتة"
+consequence = "يُعاد تنزيلها ({size}) عندما يحتاجها torch.hub"
+
+["whisper.models"]
+name = "نماذج Whisper"
+consequence = "يُعاد تنزيلها ({size}) عند التفريغ النصي التالي"
+
+["chrome.ondevice_model"]
+name = "نموذج الذكاء الاصطناعي المحلي في Chrome"
+consequence = "يعيد الذكاء الاصطناعي المدمج في Chrome تنزيل نحو 4 غيغابايت"
+
+["edge.ondevice_model"]
+name = "نموذج الذكاء الاصطناعي المحلي في Edge"
+consequence = "يعيد الذكاء الاصطناعي المدمج في Edge تنزيله"
+
+["comfyui.models"]
+name = "نماذج ComfyUI"
+consequence = "معظمها نُزّل يدويًا؛ ستعيد تنزيل {size} بنفسك"
+
+["sd_webui.models"]
+name = "نماذج Stable Diffusion WebUI"
+consequence = "معظمها نُزّل يدويًا؛ ستعيد تنزيل {size} بنفسك"
+
+["stability_matrix.models"]
+name = "النماذج المشتركة في Stability Matrix"
+consequence = "أعد تنزيل {size} داخل Stability Matrix"
+
+["msty.models"]
+name = "نماذج Msty المحلية"
+consequence = "أعد تنزيل {size} داخل Msty"
+
+["xinference.cache"]
+name = "ذاكرة نماذج Xinference"
+consequence = "يُعاد تنزيلها ({size}) عند تشغيل النموذج التالي"
+
+["vllm.cache"]
+name = "ذاكرة ترجمة vLLM"
+consequence = "ذاكرات torch.compile ومخططات CUDA؛ تُعاد إنشاؤها عند التشغيل التالي (التحميل الأول أبطأ)"
+
+["keras.models"]
+name = "ذاكرة نماذج Keras المدرّبة مسبقًا"
+consequence = "يُعاد تنزيلها ({size}) عند الاستخدام التالي"
+
+["kagglehub.cache"]
+name = "ذاكرة kagglehub المؤقتة"
+consequence = "يُعاد تنزيلها ({size}) عند استدعاء kagglehub التالي"
+
+["clip.cache"]
+name = "ذاكرة نماذج CLIP"
+consequence = "يعيد SD WebUI وأمثاله تنزيل {size} عند الاستخدام التالي"
+
+["paddle.models"]
+name = "نماذج PaddleOCR / PaddleX"
+consequence = "يُعاد تنزيلها ({size}) عند التشغيل التالي"
+
+["pinokio.cache"]
+name = "ذاكرة تنزيلات Pinokio"
+consequence = "تنزيلات برامج التثبيت؛ تُجلب من جديد عند الحاجة"
+
+["huggingface.datasets"]
+name = "ذاكرة مجموعات بيانات Hugging Face"
+consequence = "يُعاد تنزيلها ({size}) عند load_dataset التالي"
+
+["huggingface.transformers_legacy"]
+name = "ذاكرة transformers القديمة في Hugging Face"
+consequence = "تستخدمها إصدارات transformers القديمة فقط؛ الإصدارات الحالية تستخدم مجلد hub"
+
+["llamacpp.cache"]
+name = "ذاكرة تنزيلات llama.cpp"
+consequence = "نماذج جُلبت باستخدام ‎-hf؛ يُعاد تنزيلها ({size}) عند التشغيل التالي"
+
+["gpt4all.models"]
+name = "نماذج GPT4All"
+consequence = "أعد تنزيل {size} داخل GPT4All"
+
+["projects.artifacts"]
+name = "مخرجات بناء المشاريع (node_modules / .venv / target …)"
+consequence = "يُعاد إنشاؤها عند install أو البناء التالي"
+
+["pip.cache"]
+name = "ذاكرة pip المؤقتة"
+consequence = "يعيد pip تنزيل الحزم عند الحاجة"
+
+["uv.cache"]
+name = "ذاكرة uv المؤقتة"
+consequence = "يعيد uv إنشاءها؛ خوادم MCP التي تعمل عبر uvx تعيد جلب اعتمادياتها"
+
+["conda.pkgs"]
+name = "ذاكرة حزم conda"
+consequence = "مثل conda clean --all؛ البيئات المثبتة لا تُمس"
+
+["conda.envs"]
+name = "بيئات conda"
+consequence = "تُحذف البيئة بالكامل؛ المشاريع التي تستخدمها تتوقف حتى يُعاد إنشاؤها"
+
+["uv.python"]
+name = "مفسرات Python التي يديرها uv"
+consequence = "المشاريع المثبّتة على هذا الإصدار تعيد تنزيل المفسر عند التشغيل التالي"
+
+["python.pycache_user"]
+name = "ذاكرة شيفرة Python الثنائية (__pycache__)"
+consequence = "يعيد Python إنشاءها عند import التالي"
+
+["jupyter.runtime"]
+name = "بقايا تشغيل Jupyter"
+consequence = "ملفات اتصال النوى؛ يعيد Jupyter إنشاءها"
+
+["windows.user_temp"]
+name = "ملفات المستخدم المؤقتة"
+consequence = "تُتخطى الملفات قيد الاستخدام"
+
+["windows.system_temp"]
+name = "ملفات النظام المؤقتة"
+consequence = "تُتخطى الملفات قيد الاستخدام"
+
+["windows.update_download"]
+name = "ذاكرة تنزيلات Windows Update"
+consequence = "يُعاد تنزيل التحديثات المعلّقة"
+
+["windows.delivery_optimization"]
+name = "ذاكرة تحسين التسليم"
+consequence = "ذاكرة لمشاركة التحديثات مع أجهزة الكمبيوتر الأخرى في الشبكة المحلية"
+
+["windows.thumbnails"]
+name = "ذاكرة الصور المصغرة"
+consequence = "يُعاد إنشاء الصور المصغرة في المجلدات"
+
+["windows.crash_dumps"]
+name = "ملفات تفريغ الأعطال"
+consequence = "مفيدة فقط لتصحيح الأعطال"
+
+["windows.error_reporting"]
+name = "تقارير أخطاء Windows"
+consequence = "قائمة انتظار تقارير الأخطاء المرسلة إلى Microsoft"
+
+["windows.prefetch_logs"]
+name = "سجلات Windows"
+consequence = "سجلات النظام؛ لا شيء يعتمد عليها"
+
+["windows.installer_cache"]
+name = "Package Cache (بقايا برامج التثبيت)"
+consequence = "قد تتطلب إزالة Visual Studio / .NET أو إصلاحهما إعادة تنزيل برامج التثبيت"
+
+["nuget.cache"]
+name = "ذاكرة حزم NuGet"
+consequence = "يُعاد تنزيلها عند restore التالي"
+
+["cargo.registry"]
+name = "ذاكرة سجل Cargo"
+consequence = "يُعاد تنزيلها عند cargo build التالي"
+
+["gradle.caches"]
+name = "ذاكرات Gradle"
+consequence = "يُعاد تنزيل الاعتماديات عند البناء التالي"
+
+["go.modcache"]
+name = "ذاكرة وحدات Go"
+consequence = "يُعاد تنزيلها عند go build التالي"
+
+["windows.inetcache"]
+name = "ذاكرة الويب للنظام (INetCache)"
+consequence = "ذاكرة ويب تستخدمها مكونات النظام وIE القديم"
+
+["windows.defender_scans"]
+name = "سجل فحوص Windows Defender"
+consequence = "سجلات فحص فقط؛ لا تتأثر الحماية"
+
+["windows.store_cache"]
+name = "ذاكرة تنزيلات Microsoft Store"
+consequence = "يعيد المتجر إنشاءها"
+
+["poetry.cache"]
+name = "ذاكرة حزم Poetry"
+consequence = "يُعاد تنزيلها عند poetry install التالي"
+
+["maven.repository"]
+name = "مستودع Maven المحلي"
+consequence = "يُعاد تنزيل الاعتماديات عند البناء التالي"
+
+["composer.cache"]
+name = "ذاكرة Composer المؤقتة"
+consequence = "يُعاد تنزيلها عند composer install التالي"
+
+["windows.old"]
+name = "Windows.old (نسخة Windows السابقة)"
+consequence = "لن تتمكن من الرجوع إلى Windows السابق؛ يحذفه Windows بنفسه بعد 10 أيام من الترقية. يحتاج صلاحيات المسؤول؛ استخدم «تنظيف القرص» إن فشل"
+
+["office.file_cache"]
+name = "ذاكرة مستندات Office"
+consequence = "ذاكرة محلية لمستندات OneDrive / SharePoint؛ تُفقد التعديلات غير المتزامنة، أغلق Office أولًا"
+
+["teams.cache"]
+name = "ذاكرة Teams المؤقتة"
+consequence = "يعيد Teams إنشاءها"
+
+["onedrive.logs"]
+name = "سجلات OneDrive"
+consequence = "سجلات المزامنة فقط"
+
+["precommit.cache"]
+name = "بيئات خطافات pre-commit"
+consequence = "يُعاد تثبيت بيئات الخطافات عند الالتزام التالي"

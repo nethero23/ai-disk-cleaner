@@ -153,6 +153,8 @@ export interface RuleInfo {
   tool: string;
   name_zh: string;
   name_en: string;
+  /** Name in the UI language when it is neither zh nor en. */
+  name_local: string | null;
   safety: SafetyLevel;
   enabled: boolean;
 }

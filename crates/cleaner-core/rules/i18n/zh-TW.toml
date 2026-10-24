@@ -1,0 +1,505 @@
+# Rule names and consequences in zh-TW, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "Claude Code 會話記錄"
+consequence = "該專案的對話歷史會丟失，--resume 將找不到舊會話"
+
+["claude_code.cache"]
+name = "Claude Code 快取與除錯日誌"
+consequence = "會自動重建"
+
+["codex.sessions"]
+name = "Codex 會話記錄"
+consequence = "Codex 的對話歷史會丟失"
+
+["codex.log"]
+name = "Codex 日誌"
+consequence = "只是日誌"
+
+["gemini_cli.sessions"]
+name = "Gemini CLI 會話與檢查點"
+consequence = "Gemini CLI 的對話歷史和未應用的修改會丟失"
+
+["continue.index"]
+name = "Continue 程式碼索引"
+consequence = "下次開啟專案時重新建索引"
+
+["aider.cache"]
+name = "Aider 快取"
+consequence = "會自動重建"
+
+["copilot_cli.cache"]
+name = "Copilot CLI 快取"
+consequence = "會自動重建"
+
+["qwen_code.sessions"]
+name = "Qwen Code 臨時檔案與會話"
+consequence = "歷史會話和檢查點會丟失"
+
+["opencode.data"]
+name = "OpenCode 日誌與快取"
+consequence = "日誌和快取，會自動重建"
+
+["cline.tasks"]
+name = "Cline 任務歷史"
+consequence = "每個任務的對話記錄和檔案快照會丟失"
+
+["roo_code.tasks"]
+name = "Roo Code 任務歷史"
+consequence = "每個任務的對話記錄和檔案快照會丟失"
+
+["claude_code.file_history"]
+name = "Claude Code 檔案快照 (file-history)"
+consequence = "用於 /rewind 回退改動；刪除後舊會話無法回退，當前會話不受影響"
+
+["codex.archived_sessions"]
+name = "Codex 歸檔會話"
+consequence = "已歸檔的對話記錄會丟失"
+
+["kilo_code.tasks"]
+name = "Kilo Code 任務歷史"
+consequence = "每個任務的對話記錄和檔案快照會丟失"
+
+["goose.sessions"]
+name = "Goose 會話與日誌"
+consequence = "歷史會話會丟失"
+
+["claude_desktop.cache"]
+name = "Claude 桌面版快取"
+consequence = "應用會自動重建"
+
+["chatgpt_desktop.cache"]
+name = "ChatGPT 桌面版快取"
+consequence = "應用會自動重建"
+
+["jan.cache"]
+name = "Jan 快取與日誌"
+consequence = "應用會自動重建"
+
+["jan.models"]
+name = "Jan 模型"
+consequence = "需要在 Jan 裡重新下載 {size}"
+
+["anythingllm.cache"]
+name = "AnythingLLM 快取"
+consequence = "應用會自動重建"
+
+["comfyui.temp"]
+name = "ComfyUI 桌面版臨時輸出與日誌"
+consequence = "預覽圖和日誌，會自動重建"
+
+["msty.cache"]
+name = "Msty 快取"
+consequence = "應用會自動重建"
+
+["lmstudio.cache"]
+name = "LM Studio 快取與日誌"
+consequence = "應用會自動重建"
+
+["cherry_studio.cache"]
+name = "Cherry Studio 快取"
+consequence = "應用會自動重建"
+
+["chatbox.cache"]
+name = "Chatbox 快取"
+consequence = "應用會自動重建"
+
+["open_webui.cache"]
+name = "Open WebUI 快取"
+consequence = "嵌入模型與音訊快取，會按需重建"
+
+["gradio.cache"]
+name = "Gradio 上傳/輸出快取"
+consequence = "SD WebUI 等 Gradio 介面的上傳圖片和生成結果副本"
+
+["sd_webui.temp"]
+name = "Stable Diffusion WebUI 臨時檔案"
+consequence = "臨時圖片和日誌，不影響生成"
+
+["cursor.cache"]
+name = "Cursor 快取"
+consequence = "Cursor 會自動重建"
+
+["cursor.logs"]
+name = "Cursor 日誌"
+consequence = "只是日誌"
+
+["cursor.workspaces"]
+name = "Cursor 工作區儲存"
+consequence = "該專案在 Cursor 裡的狀態和對話記錄會丟失"
+
+["cursor.global_state"]
+name = "Cursor 全域性狀態庫 (state.vscdb，含全部對話)"
+consequence = "所有 Cursor 對話和設定會丟失。建議先在 Cursor 裡匯出或清理舊對話，而不是整個刪除"
+
+["windsurf.cache"]
+name = "Windsurf 快取"
+consequence = "Windsurf 會自動重建"
+
+["windsurf.workspaces"]
+name = "Windsurf 工作區儲存"
+consequence = "該專案在 Windsurf 裡的狀態和對話記錄會丟失"
+
+["vscode.cache"]
+name = "VS Code 快取"
+consequence = "VS Code 會自動重建"
+
+["vscode.workspaces"]
+name = "VS Code 工作區儲存"
+consequence = "該專案的編輯器狀態（含 Copilot 對話）會丟失"
+
+["antigravity.cache"]
+name = "Antigravity 快取"
+consequence = "Antigravity 會自動重建"
+
+["jetbrains.caches"]
+name = "JetBrains IDE 索引快取"
+consequence = "IDE 下次開啟專案時重新建索引，會慢幾分鐘"
+
+["trae.cache"]
+name = "Trae 快取與日誌"
+consequence = "編輯器會自動重建"
+
+["trae.workspaces"]
+name = "Trae 工作區狀態"
+consequence = "對應專案的歷史記錄和 AI 索引會丟失"
+
+["kiro.cache"]
+name = "Kiro 快取與日誌"
+consequence = "編輯器會自動重建"
+
+["zed.cache"]
+name = "Zed 快取與日誌"
+consequence = "編輯器會自動重建"
+
+["cursor.extensions_cache"]
+name = "Cursor 擴充套件下載快取"
+consequence = "編輯器會自動重建"
+
+["vscode.extensions_cache"]
+name = "VS Code 擴充套件下載快取"
+consequence = "編輯器會自動重建"
+
+["chrome.cache"]
+name = "Chrome 快取"
+consequence = "網頁會重新快取；登入狀態不受影響"
+
+["edge.cache"]
+name = "Edge 快取"
+consequence = "網頁會重新快取；登入狀態不受影響"
+
+["firefox.cache"]
+name = "Firefox 快取"
+consequence = "網頁會重新快取；登入狀態不受影響"
+
+["docker.vhdx"]
+name = "Docker Desktop 虛擬磁碟"
+consequence = "所有映象、容器和卷都會丟失。更好的做法是 docker system prune 後壓縮虛擬磁碟"
+
+["wsl.distros"]
+name = "WSL 發行版虛擬磁碟"
+consequence = "這是整個 Linux 子系統。刪除即丟失其中全部檔案"
+
+["docker.cli_cache"]
+name = "Docker CLI 快取"
+consequence = "日誌與快取，會自動重建"
+
+["nvidia.dxcache"]
+name = "NVIDIA 著色器快取"
+consequence = "遊戲和應用首次啟動會慢一點，之後自動重建"
+
+["nvidia.compute_cache"]
+name = "CUDA 核心編譯快取"
+consequence = "首次執行 CUDA 程式會重新編譯核心"
+
+["amd.shader_cache"]
+name = "AMD 著色器快取"
+consequence = "會自動重建"
+
+["intel.shader_cache"]
+name = "Intel 著色器快取"
+consequence = "會自動重建"
+
+["triton.cache"]
+name = "Triton / torch.compile 核心快取"
+consequence = "下次 torch.compile 時重新編譯"
+
+["nvidia.driver_downloads"]
+name = "NVIDIA 驅動安裝包下載"
+consequence = "已安裝驅動的安裝包，GeForce Experience / NVIDIA App 會在需要時重新下載"
+
+["nvidia.installer_leftovers"]
+name = "NVIDIA 驅動解壓殘留"
+consequence = "控制面板的修復/解除安裝功能可能需要重新下載驅動"
+
+["windows.d3d_shader_cache"]
+name = "DirectX 著色器快取"
+consequence = "遊戲和 GPU 程式首次啟動會稍慢"
+
+["torch.extensions"]
+name = "PyTorch 擴充套件編譯快取"
+consequence = "自定義 CUDA 運算元下次匯入時重新編譯"
+
+["npm.cache"]
+name = "npm 快取"
+consequence = "npm 會在下次安裝時重新下載"
+
+["npx.cache"]
+name = "npx 臨時包 (含 MCP 服務)"
+consequence = "用 npx 啟動的 MCP 服務下次啟動時重新下載"
+
+["pnpm.store"]
+name = "pnpm 全域性儲存"
+consequence = "相當於 pnpm store prune 後重新下載；已安裝專案的硬連結仍有效"
+
+["yarn.cache"]
+name = "Yarn 快取"
+consequence = "Yarn 會在下次安裝時重新下載"
+
+["bun.cache"]
+name = "Bun 快取"
+consequence = "Bun 會在下次安裝時重新下載"
+
+["playwright.browsers"]
+name = "Playwright 瀏覽器"
+consequence = "用到它的專案或 MCP 服務需要重新 playwright install（{size}）"
+
+["puppeteer.browsers"]
+name = "Puppeteer 瀏覽器"
+consequence = "Puppeteer 下次執行時重新下載 {size}"
+
+["electron.cache"]
+name = "Electron 構建快取"
+consequence = "下次構建時重新下載"
+
+["ollama.models"]
+name = "Ollama 模型"
+consequence = "需要用 ollama pull 重新下載 {size}"
+
+["ollama.logs"]
+name = "Ollama 日誌"
+consequence = "只是日誌，Ollama 會重新生成"
+
+["huggingface.hub"]
+name = "Hugging Face 模型快取"
+consequence = "下次使用時會重新下載 {size}"
+
+["huggingface.xet"]
+name = "Hugging Face Xet 分塊快取"
+consequence = "下載加速快取，會自動重建"
+
+["modelscope.hub"]
+name = "ModelScope (魔搭) 模型快取"
+consequence = "下次使用時會從魔搭重新下載 {size}"
+
+["lmstudio.models"]
+name = "LM Studio 模型"
+consequence = "需要在 LM Studio 裡重新下載 {size}"
+
+["lmstudio.conversations"]
+name = "LM Studio 對話記錄"
+consequence = "你和模型的聊天記錄會丟失"
+
+["torch.hub"]
+name = "PyTorch Hub 快取"
+consequence = "下次呼叫 torch.hub 時重新下載 {size}"
+
+["whisper.models"]
+name = "Whisper 模型"
+consequence = "下次轉寫時重新下載 {size}"
+
+["chrome.ondevice_model"]
+name = "Chrome 端側 AI 模型"
+consequence = "Chrome 內建 AI 功能會重新下載約 4 GB"
+
+["edge.ondevice_model"]
+name = "Edge 端側 AI 模型"
+consequence = "Edge 內建 AI 功能會重新下載"
+
+["comfyui.models"]
+name = "ComfyUI 模型 (checkpoints / loras / vae)"
+consequence = "多為手動下載的模型，刪除後需要自己重新下載 {size}"
+
+["sd_webui.models"]
+name = "Stable Diffusion WebUI 模型"
+consequence = "多為手動下載的模型，刪除後需要自己重新下載 {size}"
+
+["stability_matrix.models"]
+name = "Stability Matrix 共享模型"
+consequence = "刪除後需要在 Stability Matrix 裡重新下載 {size}"
+
+["msty.models"]
+name = "Msty 本地模型"
+consequence = "需要在 Msty 裡重新下載 {size}"
+
+["xinference.cache"]
+name = "Xinference 模型快取"
+consequence = "下次啟動模型時重新下載 {size}"
+
+["vllm.cache"]
+name = "vLLM 編譯快取"
+consequence = "torch.compile 和 CUDA graph 快取，下次啟動會重建（首次載入變慢）"
+
+["keras.models"]
+name = "Keras 預訓練模型快取"
+consequence = "下次呼叫時重新下載 {size}"
+
+["kagglehub.cache"]
+name = "Kaggle 資料集與模型快取"
+consequence = "下次 kagglehub 呼叫時重新下載 {size}"
+
+["clip.cache"]
+name = "CLIP 模型快取"
+consequence = "SD WebUI 等工具下次使用時重新下載 {size}"
+
+["paddle.models"]
+name = "PaddleOCR / PaddleX 模型"
+consequence = "下次執行時重新下載 {size}"
+
+["pinokio.cache"]
+name = "Pinokio 下載快取"
+consequence = "安裝指令碼的下載快取，需要時重新下載"
+
+["huggingface.datasets"]
+name = "Hugging Face 資料集快取"
+consequence = "下次 load_dataset 時重新下載 {size}"
+
+["huggingface.transformers_legacy"]
+name = "Hugging Face 舊版 transformers 快取"
+consequence = "舊版 transformers 的快取目錄，新版本已改用 hub 目錄，基本不會再被讀到"
+
+["llamacpp.cache"]
+name = "llama.cpp 下載快取"
+consequence = "用 -hf 引數下載的模型，下次執行時重新下載 {size}"
+
+["gpt4all.models"]
+name = "GPT4All 模型"
+consequence = "需要在 GPT4All 裡重新下載 {size}"
+
+["projects.artifacts"]
+name = "專案構建產物 (node_modules / .venv / target …)"
+consequence = "下次安裝或構建時會重建"
+
+["pip.cache"]
+name = "pip 下載快取"
+consequence = "pip 會在下次安裝時重新下載需要的包"
+
+["uv.cache"]
+name = "uv 快取"
+consequence = "uv 會自動重建；用 uvx 啟動的 MCP 服務會重新下載依賴"
+
+["conda.pkgs"]
+name = "conda 包快取"
+consequence = "相當於 conda clean --all；已安裝的環境不受影響"
+
+["conda.envs"]
+name = "conda 環境"
+consequence = "整個環境被刪除，依賴它的專案將無法執行，需重新建立"
+
+["uv.python"]
+name = "uv 管理的 Python 直譯器"
+consequence = "依賴這個版本的專案會在下次執行時重新下載直譯器"
+
+["python.pycache_user"]
+name = "Python 位元組碼快取 (__pycache__)"
+consequence = "Python 會在下次 import 時重新生成"
+
+["jupyter.runtime"]
+name = "Jupyter 執行時殘留"
+consequence = "核心連線檔案，Jupyter 會重新建立"
+
+["windows.user_temp"]
+name = "使用者臨時檔案"
+consequence = "正在使用的檔案會被跳過"
+
+["windows.system_temp"]
+name = "系統臨時檔案"
+consequence = "正在使用的檔案會被跳過"
+
+["windows.update_download"]
+name = "Windows 更新下載快取"
+consequence = "未安裝的更新會重新下載"
+
+["windows.delivery_optimization"]
+name = "傳遞最佳化快取"
+consequence = "用於給區域網其他電腦分發更新的快取"
+
+["windows.thumbnails"]
+name = "縮圖快取"
+consequence = "資料夾裡的圖片縮圖會重新生成"
+
+["windows.crash_dumps"]
+name = "程式崩潰轉儲"
+consequence = "只對排查崩潰有用"
+
+["windows.error_reporting"]
+name = "Windows 錯誤報告"
+consequence = "傳送給微軟的錯誤報告佇列"
+
+["windows.prefetch_logs"]
+name = "Windows 日誌 (Logs)"
+consequence = "系統日誌，不影響執行"
+
+["windows.installer_cache"]
+name = "Package Cache (安裝包快取)"
+consequence = "解除安裝或修復 Visual Studio / .NET 等軟體時可能需要重新下載安裝包"
+
+["nuget.cache"]
+name = "NuGet 包快取"
+consequence = "下次 restore 時重新下載"
+
+["cargo.registry"]
+name = "Cargo 登錄檔快取"
+consequence = "下次 cargo build 時重新下載"
+
+["gradle.caches"]
+name = "Gradle 快取"
+consequence = "下次構建時重新下載依賴"
+
+["go.modcache"]
+name = "Go 模組快取"
+consequence = "下次 go build 時重新下載"
+
+["windows.inetcache"]
+name = "系統網路快取 (INetCache)"
+consequence = "系統元件和舊版 IE 的網路快取"
+
+["windows.defender_scans"]
+name = "Windows Defender 掃描歷史"
+consequence = "只是掃描記錄，不影響防護"
+
+["windows.store_cache"]
+name = "Microsoft Store 下載快取"
+consequence = "商店會自動重建"
+
+["poetry.cache"]
+name = "Poetry 包快取"
+consequence = "下次 poetry install 時重新下載"
+
+["maven.repository"]
+name = "Maven 本地倉庫"
+consequence = "下次構建時重新下載依賴"
+
+["composer.cache"]
+name = "Composer 快取"
+consequence = "下次 composer install 時重新下載"
+
+["windows.old"]
+name = "Windows.old（上一個系統版本）"
+consequence = "刪除後無法回退到升級前的 Windows；升級 10 天后系統本來也會自動刪除。需要管理員許可權，若失敗請用「磁碟清理」"
+
+["office.file_cache"]
+name = "Office 文件快取"
+consequence = "OneDrive / SharePoint 文件的本地快取；尚未上傳的修改會丟失，關閉 Office 再清"
+
+["teams.cache"]
+name = "Teams 快取"
+consequence = "Teams 會自動重建"
+
+["onedrive.logs"]
+name = "OneDrive 日誌"
+consequence = "只是同步日誌"
+
+["precommit.cache"]
+name = "pre-commit 鉤子環境快取"
+consequence = "下次 git commit 時重新安裝鉤子環境"

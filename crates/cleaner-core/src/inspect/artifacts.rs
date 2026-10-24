@@ -272,6 +272,7 @@ mod tests {
         let opts = ScanOptions {
             ctx: PathContext::with_vars(vars),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),
