@@ -58,6 +58,14 @@ After full exit and relaunch through the original app entry, all 95 history reco
 
 This is **not a crash-safe write-ahead journal (WAL)**: a log write may fail after a file reaches the Recycle Bin; inspect the Windows Recycle Bin in that case. Transactional relocation-log writes remain deferred. If history fails to load, try Retry, then preserve the original log and check permissions and free disk space; do not empty it or delete damaged lines to conceal the error. MSI, pristine Windows/WebView2, code signing, and signed updates are outside verified coverage. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
+## Windows.old source fix (unreleased)
+
+Selecting Windows.old now opens a separate system-cleanup confirmation explaining permanent removal, no history restore and loss of Windows rollback. Administrator elevation is requested only after confirmation; other selected scan items are left untouched. Ordinary recycle failures show the item, path and actual reason, retain failed selections and bring feedback into view.
+
+Offline tests and mock-IPC UI checks passed at the local R2 checkpoint, including repeated separators from real scanner paths. **That local `0.9.0` R2 build passed in-place installation and complete app exit/restart acceptance**, preserving settings and all 95 history records. Installed Windows.old confirmation/cancel passed; refusal feedback used isolated fixtures and byte-identical application code. Later dot/parent-segment rejection and success-feedback scrolling are limited to fresh offline tests/build checks, not a new installation; R2 desktop acceptance does not cover those subsequent source bytes.
+
+This round is source/docs merge and push only: no installer publication, new tag, updater or stable promotion. Main retains `0.9.0-rc.1`; local uncommitted `0.9.0` version preparation and the installed R2 program are preserved. No real Windows.old cleanup ran; actual system removal is not certified. See the [focused acceptance record](docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
+
 ## Features
 
 ### 🧠 Knows AI-tool junk (136 rules, 90+ tools)
