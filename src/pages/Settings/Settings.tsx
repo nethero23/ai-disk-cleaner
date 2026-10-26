@@ -226,7 +226,7 @@ export function SettingsPage(p: {
               <li key={r.id}>
                 <span className="tool">{r.tool}</span>
                 <span className="name">
-                  {coreLang(p.lang) === "zh" ? r.name_zh : r.name_en} <span className="id md-ltr">· {r.id}</span>
+                  {r.name_local ?? (coreLang(p.lang) === "zh" ? r.name_zh : r.name_en)} <span className="id md-ltr">· {r.id}</span>
                 </span>
                 <span className={`md-safety ${r.safety}`}>{s.safety[r.safety]}</span>
                 <Switch checked={r.enabled} onChange={(v) => p.onToggleRule(r.id, v)}>

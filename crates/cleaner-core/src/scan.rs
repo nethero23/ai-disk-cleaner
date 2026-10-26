@@ -15,6 +15,9 @@ pub struct ScanOptions {
     pub ctx: PathContext,
     /// `zh` or `en`; picks which rule strings go into the items.
     pub lang: String,
+    /// The UI language (e.g. `ja`); rule names and consequences come from
+    /// [`crate::rule_i18n`] when it has them, else from `lang`.
+    pub ui_lang: String,
     /// Skip rules below this size even if the rule itself has no floor.
     pub global_min_bytes: u64,
     /// Lower-cased names of running processes, sampled once per scan.
@@ -30,6 +33,7 @@ impl Default for ScanOptions {
         Self {
             ctx: PathContext::from_env(),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 1024 * 1024,
             running: crate::process::running_names(),
             excluded: Vec::new(),
@@ -116,6 +120,7 @@ pub fn scan_all_with(
     progress: &mut dyn FnMut(ScanProgress),
 ) -> ScanReport {
     let mut report = ScanReport {
+        ui_lang: (!opts.ui_lang.is_empty()).then(|| opts.ui_lang.clone()),
         started_at: Some(Utc::now()),
         ..Default::default()
     };
@@ -255,6 +260,12 @@ pub fn plain_item(rule: &Rule, path: &Path, opts: &ScanOptions) -> ScanItem {
 }
 
 pub fn rule_name(rule: &Rule, opts: &ScanOptions) -> String {
+    if let Some(name) = crate::rule_i18n::lookup_for_rule(&opts.ui_lang, rule)
+        .and_then(|t| t.name.as_ref())
+        .filter(|name| !name.trim().is_empty())
+    {
+        return name.clone();
+    }
     if opts.lang == "en" {
         rule.name_en.clone()
     } else {
@@ -271,7 +282,12 @@ pub fn make_item(
     opts: &ScanOptions,
     detail: Option<String>,
 ) -> ScanItem {
-    let consequence = if opts.lang == "en" {
+    let translated = crate::rule_i18n::lookup_for_rule(&opts.ui_lang, rule)
+        .and_then(|t| t.consequence.clone())
+        .filter(|text| !text.trim().is_empty());
+    let consequence = if let Some(c) = translated {
+        c
+    } else if opts.lang == "en" {
         rule.consequence_en.clone()
     } else {
         rule.consequence_zh.clone()
@@ -329,6 +345,7 @@ mod tests {
         ScanOptions {
             ctx: PathContext::with_vars(vars),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),
@@ -425,6 +442,124 @@ mod tests {
         assert_eq!(report.items[0].size_bytes, 2048);
         assert_eq!(report.items[0].consequence, "会重建 2.0 KB");
         assert_eq!(report.safe_bytes, 2048);
+    }
+
+    #[test]
+    fn localized_scan_results_and_progress_use_the_captured_language() {
+        let tmp = tempfile::tempdir().unwrap();
+        let cache = tmp.path().join("models");
+        fs::create_dir_all(&cache).unwrap();
+        fs::write(cache.join("model"), [0u8; 2048]).unwrap();
+        let mut source = RuleSet::builtin().get("ollama.models").unwrap().clone();
+        // Exercise the shared name/consequence path without model manifests.
+        source.inspector = Inspector::Plain;
+        source.paths = vec!["${USERPROFILE}/models".into()];
+        let set = RuleSet {
+            rules: vec![source.clone()],
+        };
+        for lang in [
+            "zh-TW", "ja", "ko", "de", "fr", "es", "pt", "ru", "ar", "hi",
+        ] {
+            let mut options = opts(tmp.path());
+            options.lang = crate::rule_i18n::core_lang(lang).into();
+            options.ui_lang = lang.into();
+            let translated = crate::rule_i18n::lookup_for_rule(lang, &source).unwrap();
+            let mut progress_names = Vec::new();
+            let report = scan_all_with(&set, &options, &AtomicBool::new(false), &mut |p| {
+                progress_names.push(p.rule_name);
+            });
+            assert_eq!(report.ui_lang.as_deref(), Some(lang));
+            assert_eq!(report.items.len(), 1);
+            let item = &report.items[0];
+            assert_eq!(Some(&item.name), translated.name.as_ref(), "{lang}");
+            assert_eq!(progress_names, vec![item.name.clone()], "{lang}");
+            assert_eq!(
+                item.consequence,
+                translated
+                    .consequence
+                    .as_ref()
+                    .unwrap()
+                    .replace("{size}", "2.0 KB"),
+                "{lang}"
+            );
+            assert!(!item.consequence.contains("{size}"), "{lang}");
+        }
+    }
+
+    #[test]
+    fn updated_rule_source_text_never_uses_stale_bundled_translations() {
+        let builtin = RuleSet::builtin();
+        let original = builtin.get("ollama.models").unwrap();
+        let options = ScanOptions {
+            lang: "en".into(),
+            ui_lang: "ja".into(),
+            ..Default::default()
+        };
+        for changed_field in 0..4 {
+            let mut replacement = original.clone();
+            match changed_field {
+                0 => replacement.name_en.push_str(" updated"),
+                1 => replacement.name_zh.push_str(" 已更新"),
+                2 => replacement.consequence_en = "Deletes user data: {size}".into(),
+                _ => replacement.consequence_zh.push_str(" 已更新"),
+            }
+            assert_eq!(rule_name(&replacement, &options), replacement.name_en);
+            let item = make_item(
+                &replacement,
+                Path::new("unused"),
+                rule_name(&replacement, &options),
+                TreeStats {
+                    bytes: 2048,
+                    ..Default::default()
+                },
+                &options,
+                None,
+            );
+            assert_eq!(
+                item.consequence,
+                replacement.consequence_en.replace("{size}", "2.0 KB")
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_language_and_new_rules_fall_back_to_the_core_language() {
+        let builtin = RuleSet::builtin();
+        for (id, ui_lang) in [
+            ("ollama.models", "unknown"),
+            ("custom.models", "ja"),
+            ("ollama.models", ""),
+        ] {
+            let mut source = builtin.get("ollama.models").unwrap().clone();
+            source.id = id.into();
+            for lang in ["zh", "en"] {
+                let options = ScanOptions {
+                    lang: lang.into(),
+                    ui_lang: ui_lang.into(),
+                    ..Default::default()
+                };
+                let name = if lang == "zh" {
+                    &source.name_zh
+                } else {
+                    &source.name_en
+                };
+                let consequence = if lang == "zh" {
+                    &source.consequence_zh
+                } else {
+                    &source.consequence_en
+                };
+                assert_eq!(&rule_name(&source, &options), name);
+                let item = make_item(
+                    &source,
+                    Path::new("unused"),
+                    name.clone(),
+                    TreeStats::default(),
+                    &options,
+                    None,
+                );
+                assert_eq!(item.consequence, consequence.replace("{size}", "0 B"));
+            }
+        }
     }
 
     #[test]

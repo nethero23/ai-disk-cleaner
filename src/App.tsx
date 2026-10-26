@@ -19,6 +19,7 @@ import { ResultItem } from "./pages/Clean/ResultItem";
 import { ScanProgress } from "./pages/Clean/ScanProgress";
 import { afterClean, withItems } from "./scanReport";
 import { cleanupError, isSystemWindowsOld, needsSystemCleanup, remainingSelection, WINDOWS_OLD_RULE, WINDOWS_OLD_TASK } from "./cleanupFeedback";
+import { createLanguageSync, reportMatchesLanguage } from "./languageSync";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 type Page = "clean" | "space" | "history" | "aitools" | "settings";
@@ -45,6 +46,9 @@ function isDefaultTicked(i: ScanItem): boolean {
 export function App() {
   const [langPref, setLangPref] = useState<LangPref>(loadLangPref);
   const lang = resolveLang(langPref);
+  const langRef = useRef(lang);
+  const previousLang = useRef(lang);
+  langRef.current = lang;
   const [theme, setTheme] = useState<Theme>(loadTheme);
   useEffect(() => applyTheme(theme), [theme]);
   const s = t(lang);
@@ -78,11 +82,18 @@ export function App() {
   const autoConfirmRef = useRef(false);
   const [peeks, setPeeks] = useState<Map<string, Preview | "loading">>(new Map());
   const [scanStep, setScanStep] = useState<{ done: number; total: number; rule_name: string } | null>(null);
+  const scanRequest = useRef(0);
   const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
   const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
   const [bigConfirm, setBigConfirm] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [library, setLibrary] = useState<RuleLibrary | null>(null);
+  const [languageSync] = useState(() => createLanguageSync<RuleLibrary>(
+    lang,
+    (language) => invoke("set_lang", { lang: language }),
+    (language) => invoke<RuleLibrary>("rules", { uiLang: language }),
+    setLibrary,
+  ));
   const [updatingRules, setUpdatingRules] = useState(false);
   const [history, setHistory] = useState<CleanRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -184,7 +195,7 @@ export function App() {
   async function openSettings() {
     try {
       setSettings(await invoke<Settings>("get_settings"));
-      setLibrary(await invoke<RuleLibrary>("rules"));
+      await languageSync.refresh();
     } catch (e) {
       setError(String(e));
     }
@@ -271,9 +282,9 @@ export function App() {
   }, [report, s]);
 
   async function saveSettings(next: Settings) {
-    setSettings(next);
+    setSettings({ ...next, lang: langRef.current });
     try {
-      await invoke("save_settings", { settings: next });
+      await languageSync.write((language) => invoke("save_settings", { settings: { ...next, lang: language } }));
     } catch (e) {
       setError(String(e));
     }
@@ -321,7 +332,7 @@ export function App() {
     const dir = await openDialog({ directory: true, multiple: false, title: s.setCustomDir });
     if (typeof dir !== "string") return;
     await saveSettings({ ...settings, custom_rules_dir: dir });
-    setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+    await languageSync.refresh().catch(() => {});
   }
 
   async function toggleRule(id: string, enabled: boolean) {
@@ -336,11 +347,11 @@ export function App() {
     setUpdatingRules(true);
     setError(null);
     try {
-      await invoke("save_settings", { settings });
+      await languageSync.write((language) => invoke("save_settings", { settings: { ...settings, lang: language } }));
       const r = await invoke<RulesUpdate>("update_rules");
       setNotice(s.updateDone(r.files, r.rules));
       setSettings({ ...settings, rules_updated_at: r.updated_at });
-      setLibrary(await invoke<RuleLibrary>("rules"));
+      await languageSync.refresh();
     } catch (e) {
       setError(String(e));
     }
@@ -626,9 +637,8 @@ export function App() {
       if (!current()) return;
       setRelocations(moves);
       if (!library) {
-        const rules = await invoke<RuleLibrary>("rules");
+        await languageSync.refresh();
         if (!current()) return;
-        setLibrary(rules);
       }
       const paths = [...new Set(log.filter((r) => r.ok).map((r) => r.path))];
       const st = await invoke<RestoreStatus[]>("restore_status", { paths });
@@ -709,7 +719,18 @@ export function App() {
     saveLangPref(langPref);
     document.documentElement.lang = htmlLang(lang);
     document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr";
-    invoke("set_lang", { lang }).catch(() => {});
+    if (previousLang.current !== lang) {
+      previousLang.current = lang;
+      // Report text is localized during scanning. A new language needs a new scan.
+      setReport(null);
+      setSelected(new Set());
+      setLibrary(null);
+      setSettings((current) => current ? { ...current, lang } : current);
+      setScanStep(null);
+      setPhase((current) => current === "ready" ? "idle" : current);
+    }
+    // Serialize persisted writes; obsolete responses cannot replace current names.
+    languageSync.select(lang).catch(() => {});
   }, [langPref, lang]);
 
   useEffect(() => {
@@ -720,6 +741,7 @@ export function App() {
       }
     });
     const p = listen<ScanReport>("background-scan", (e) => {
+      if (!reportMatchesLanguage(e.payload, langRef.current)) return;
       setReport(e.payload);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
@@ -733,15 +755,22 @@ export function App() {
   }, []);
 
   async function runScan() {
+    const request = ++scanRequest.current;
     setPhase("scanning");
     setError(null);
     setResult(null);
     setScanStep(null);
     const unlisten = await listen<{ done: number; total: number; rule_name: string }>("scan-progress", (e) => {
-      setScanStep(e.payload);
+      if (request === scanRequest.current && lang === langRef.current) setScanStep(e.payload);
     });
     try {
-      const r = await invoke<ScanReport>("scan", { lang: coreLang(lang) });
+      const r = await invoke<ScanReport>("scan", { lang: coreLang(lang), uiLang: lang });
+      if (request !== scanRequest.current) return;
+      if (!reportMatchesLanguage(r, langRef.current)) {
+        autoConfirmRef.current = false;
+        setPhase((current) => current === "scanning" ? "idle" : current);
+        return;
+      }
       setReport(r);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.
@@ -751,12 +780,13 @@ export function App() {
       if (autoConfirmRef.current && safe.length > 0) setConfirming(true);
       autoConfirmRef.current = false;
     } catch (e) {
+      if (request !== scanRequest.current) return;
       autoConfirmRef.current = false;
-      setError(String(e));
-      setPhase("idle");
+      if (lang === langRef.current) setError(String(e));
+      setPhase((current) => current === "scanning" ? "idle" : current);
     } finally {
       unlisten();
-      setScanStep(null);
+      if (request === scanRequest.current) setScanStep(null);
     }
   }
 
@@ -1271,7 +1301,7 @@ export function App() {
           onPickRulesDir={pickCustomRulesDir}
           onClearRulesDir={async () => {
             await saveSettings({ ...settings, custom_rules_dir: null });
-            setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+            await languageSync.refresh().catch(() => {});
           }}
           onToggleRule={toggleRule}
         />

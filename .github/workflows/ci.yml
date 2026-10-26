@@ -122,9 +122,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
           prerelease: ${{ env.RELEASE_PRERELEASE == 'true' }}
           make_latest: ${{ env.RELEASE_PRERELEASE == 'true' && 'false' || 'true' }}
           generate_release_notes: true
+          body: |
+            Source commit: `${{ github.sha }}`
+
+            [Changes](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/CHANGELOG.md) · [Validation and known limits](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/RELEASE_CHECKLIST.md)
+
+            ${{ env.RELEASE_PRERELEASE == 'true' && '预发布候选：仅提供 NSIS 安装包和便携 ZIP，稳定版 Latest 与自动更新不变。人工桌面与安装验收范围请见上方清单；CI 通过不代表所有稳定版门槛已完成。' || '' }}
           files: |
             target/release/bundle/nsis/*.exe
             target/release/bundle/msi/*.msi

@@ -4,7 +4,7 @@
 
 # Clearwisp: the disk cleaner that understands AI tools
 
-**Free, open-source Windows disk cleaner for AI developers, for C:, D: and every other drive. Finds and frees the space taken by Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / VS Code caches, pip / conda / npm caches and WSL / Docker virtual disks. Scan first, you choose, every delete can be undone.**
+**Free, open-source Windows disk cleaner for AI developers, for C:, D: and every other drive. Finds and frees the space taken by Ollama / Hugging Face / LM Studio models, Cursor / Claude Code / VS Code caches, pip / conda / npm caches and WSL / Docker virtual disks. Scan first, you choose, standard cleanup can be undone.**
 
 <sub>Formerly AI Disk Cleaner</sub>
 
@@ -31,7 +31,17 @@ On a PC used for AI work, the C: drive rarely fills up with classic system junk.
 
 And it is not only C:. Model libraries, conda environments, Docker disks and project `node_modules` end up on D: and E: too. Clearwisp scans every drive you select.
 
-Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level, nothing is deleted until you tick it, deletes go to the Recycle Bin, and the last clean can be undone in one click.
+Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level and nothing is deleted until you tick it. Standard cleanup uses the Recycle Bin and supports undo; Windows.old requires separate permanent system cleanup without undo.
+
+## v0.9.0-rc.2 rule-language candidate (release preparation)
+
+[v0.9.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.2) is planned, pending exact-source Windows CI and NSIS/portable ZIP packaging. **The currently published candidate remains `v0.9.0-rc.1` below.** Stable Latest remains `v0.7.1`; candidates are manual downloads, with no MSI, updater or package-manager manifests.
+
+- The original 126 scan rules gain names and deletion consequences in ten more languages, with complete-field, dynamic-placeholder and special-character validation. Ten newer rules and some dynamic status messages still use English/Chinese fallback; not every scan string is translated.
+- Fast language changes cannot publish an obsolete rule response. Manual/background scans capture their language at startup; changing language clears the old report and selection, requiring a new scan.
+- Changed rule source text uses its current warning rather than an outdated translation. This candidate also includes the earlier Windows.old source repair: separate administrator confirmation, permanent removal, no Recycle Bin or undo.
+
+Local Linux checks passed: 129 core tests, 37 Node tests, eight Python audit tests, fmt, Clippy, locale parity and frontend build. **Exact-source Windows native build, candidate packaging and new manual desktop language-switch/restart acceptance remain pending.** Historical installation receipts do not certify this candidate. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
 ## v0.9.0-rc.1 recovery reliability prerelease candidate
 
@@ -64,7 +74,7 @@ Selecting Windows.old now opens a separate system-cleanup confirmation explainin
 
 Offline tests and mock-IPC UI checks passed at the local R2 checkpoint, including repeated separators from real scanner paths. **That local `0.9.0` R2 build passed in-place installation and complete app exit/restart acceptance**, preserving settings and all 95 history records. Installed Windows.old confirmation/cancel passed; refusal feedback used isolated fixtures and byte-identical application code. Later dot/parent-segment rejection and success-feedback scrolling are limited to fresh offline tests/build checks, not a new installation; R2 desktop acceptance does not cover those subsequent source bytes.
 
-This round is source/docs merge and push only: no installer publication, new tag, updater or stable promotion. Main retains `0.9.0-rc.1`; local uncommitted `0.9.0` version preparation and the installed R2 program are preserved. No real Windows.old cleanup ran; actual system removal is not certified. See the [focused acceptance record](docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
+This records the October 24 source/docs-only checkpoint: no package, tag, updater or stable promotion ran then, and main retained `0.9.0-rc.1`. Those source changes are now included in the planned `0.9.0-rc.2` candidate above; local uncommitted stable-version preparation and the installed R2 program are outside this publication operation. No real Windows.old cleanup ran; actual system removal is not certified. See the [focused acceptance record](docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
 
 ## Features
 
@@ -88,7 +98,7 @@ It reads Ollama manifests, the Hugging Face cache layout, conda environments, LM
 - **Three safety levels**: 🟢 Safe (pure cache, rebuilt automatically) / 🟡 Re-downloadable / 🔴 Review (user data or possibly in use). Only "Safe" is ticked by default.
 - **Protects chat history**: Cursor's `state.vscdb` and Claude Code's `~/.claude/projects` hold your conversations. They are marked "Review" and can be exported before cleaning.
 - **Running-process check**: warns you when a tool is running instead of pulling files out from under it.
-- **Undo**: everything goes to the Recycle Bin with a cleaning log. Undo the last clean in one click, or restore single items from the history page.
+- **Undo standard cleanup**: ordinary cleanup uses the Recycle Bin and a cleaning log. Undo the last clean in one click, or restore single items from history. Windows.old uses separate permanent system cleanup with no Recycle Bin or undo.
 - **Preview**: look inside any item before you delete it.
 
 ### 💾 Free space without deleting

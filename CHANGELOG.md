@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+## [0.9.0-rc.2] - release preparation (2026-10-26)
+
+Rule-language candidate; publication is pending exact-source Windows CI and
+candidate packaging. The published candidate remains `v0.9.0-rc.1` until that
+process completes. Stable Latest and automatic updates are not promoted.
+
+### Added
+- Names and deletion consequences for the original 126 scan rules in ten more
+  languages, with complete-field, placeholder and Unicode/TOML validation.
+- This candidate also includes the Windows.old routing and failure-feedback
+  source changes described in the historical merge-only checkpoint below.
+
+### Fixed
+- Translation validation rejects missing/blank text and missing, renamed,
+  duplicated or invented placeholders; the original missing-consequence bypass
+  has a reproducible regression test.
+- Changed builtin/custom rule text uses its current fallback instead of an
+  outdated bundled translation, including the current Windows.old warning.
+- Language/settings writes are ordered and obsolete rule responses cannot
+  replace the latest language. Manual/background reports carry their scan
+  language; switching language clears the previous report and selection.
+- The latest-main old-version inspector fixture initializes the new language
+  field, retaining source compatibility within this repository.
+
+### Verification and limits
+- Reviewed Linux integration: 129 core tests, 37 Node tests, eight Python audit
+  tests, fmt, core Clippy, locale parity and frontend build passed.
+- Exact-source Windows CI, native app build/policy tests and candidate packages
+  are pending. New native language-switch/restart/manual UI acceptance has not
+  run; historical receipts do not certify these changed source bytes.
+- The ten newer rules use English/Chinese fallback; some inspector-generated
+  status messages remain English/Chinese. All-language fluency is not certified.
+- Planned assets: NSIS and pristine portable ZIP only, GitHub prerelease, no
+  Latest/MSI/updater/package-manager promotion. Stable gates remain open.
+
+## Windows.old source integration checkpoint (2026-10-24, historically unreleased)
+
+The following records the earlier source/docs-only integration, before rc.2
+publication was authorized. Its runtime changes are now included in the rc.2
+candidate plan; its old native receipts remain historical, not rc.2 acceptance.
+
 ### Added
 - Windows.old uses a separate administrator-only system-cleanup confirmation,
   explaining permanent removal and loss of Windows rollback. Entering from a

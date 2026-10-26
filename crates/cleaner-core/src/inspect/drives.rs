@@ -475,6 +475,7 @@ mod tests {
         ScanOptions {
             ctx: PathContext::with_vars(HashMap::new()),
             lang: "zh".into(),
+            ui_lang: String::new(),
             global_min_bytes: 0,
             running: Default::default(),
             excluded: Vec::new(),

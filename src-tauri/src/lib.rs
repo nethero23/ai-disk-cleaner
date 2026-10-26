@@ -96,13 +96,14 @@ struct ScanStep {
 
 /// Full rule scan; emits `scan-progress` after every rule.
 #[tauri::command]
-async fn scan(app: AppHandle, lang: String) -> Result<ScanReport, String> {
+async fn scan(app: AppHandle, lang: String, ui_lang: Option<String>) -> Result<ScanReport, String> {
     let (rules, _, settings) = effective_rules(&app);
     SCAN_CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
     let growth = growth_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let opts = ScanOptions {
             lang,
+            ui_lang: ui_lang.unwrap_or_default(),
             global_min_bytes: settings.min_item_bytes,
             excluded: settings.excluded_paths,
             extra_roots: settings.scan_drives.clone(),
@@ -204,6 +205,8 @@ struct RuleInfo {
     tool: String,
     name_zh: String,
     name_en: String,
+    /// Name in the UI language when it is neither zh nor en and has a translation.
+    name_local: Option<String>,
     safety: cleaner_core::SafetyLevel,
     enabled: bool,
 }
@@ -218,8 +221,9 @@ struct RuleLibrary {
 /// Every rule known to this install (builtin + downloaded + custom), with
 /// whether the user has it switched on, so the settings page can list them.
 #[tauri::command]
-fn rules(app: AppHandle) -> RuleLibrary {
+fn rules(app: AppHandle, ui_lang: Option<String>) -> RuleLibrary {
     let settings = Settings::load(&settings_path(&app));
+    let lang = ui_lang.as_deref().unwrap_or(&settings.lang);
     let dir = downloaded_rules_dir(&app);
     let (set, errors) = RuleSet::effective(
         dir.is_dir().then_some(dir.as_path()),
@@ -234,6 +238,9 @@ fn rules(app: AppHandle) -> RuleLibrary {
             .into_iter()
             .map(|r| RuleInfo {
                 enabled: !settings.disabled_rules.contains(&r.id),
+                name_local: cleaner_core::rule_i18n::lookup_for_rule(lang, &r)
+                    .and_then(|t| t.name.clone())
+                    .filter(|name| !name.trim().is_empty()),
                 id: r.id,
                 tool: r.tool,
                 name_zh: r.name_zh,

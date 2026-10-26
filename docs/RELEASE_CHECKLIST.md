@@ -1,5 +1,37 @@
 # Release Acceptance
 
+## v0.9.0-rc.2 rule-language candidate (preparation, 2026-10-26)
+
+The owner authorized merging the reviewed PR #58 repair and publishing a new
+candidate. Version files are prepared for `v0.9.0-rc.2`; this section does not
+claim that the release exists. The current published candidate remains
+`v0.9.0-rc.1` and stable Latest remains `v0.7.1` until publication is verified.
+The candidate includes the previously merge-only Windows.old source changes.
+That older authorization/acceptance record below remains historical.
+
+- [x] Ten additional languages each have all 126 baseline rule names and
+  consequences, valid TOML and matching placeholder multisets. Original tests
+  accepting a missing consequence and the original language-response race were
+  reproduced before repair.
+- [x] Reviewed latest-main Linux integration: 129 core tests, 37 Node tests,
+  eight Python audit tests, fmt, core Clippy, locale parity and frontend build.
+- [x] Changed source text rejects stale translations, including Windows.old;
+  ten newer builtin rules retain the English/Chinese fallback. Some dynamic
+  inspector status text remains English/Chinese.
+- [ ] Exact release-source Linux/Windows CI, including Windows core integration
+  tests, native app build and native policy tests.
+- [ ] Fresh candidate NSIS and pristine portable ZIP produced by that CI.
+- [ ] Verify published assets, versions, lengths and SHA-256 receipts; confirm
+  `prerelease: true`, `make_latest: false`, and stable Latest unchanged.
+
+New manual native language-switch/restart/UI acceptance has not run. Local
+Linux native compilation stopped at missing pkg-config/GLib dependencies;
+this is not a passing native build. Earlier Windows receipts and installer
+acceptance do not certify this candidate's changed source or cloud bytes.
+Candidate publication supplies NSIS + portable ZIP only: no MSI, `latest.json`,
+winget/Scoop manifests, stable promotion or local installation. Preserve the
+committed signing policy and all open stable-release gates below.
+
 ## Windows.old merge-only integration (2026-10-24)
 
 The owner chose source/docs merge and push only. No installer publication, new

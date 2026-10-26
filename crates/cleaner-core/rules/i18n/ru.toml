@@ -1,0 +1,505 @@
+# Rule names and consequences in ru, keyed by rule id. See src/rule_i18n.rs.
+
+["claude_code.projects"]
+name = "Журналы сессий Claude Code"
+consequence = "История переписки этого проекта пропадёт; --resume не найдёт старые сессии"
+
+["claude_code.cache"]
+name = "Кэш и отладочные журналы Claude Code"
+consequence = "Восстанавливается сам"
+
+["codex.sessions"]
+name = "Журналы сессий Codex"
+consequence = "История переписки в Codex пропадёт"
+
+["codex.log"]
+name = "Журналы Codex"
+consequence = "Только журналы"
+
+["gemini_cli.sessions"]
+name = "Сессии и контрольные точки Gemini CLI"
+consequence = "История чатов и подготовленные правки Gemini CLI пропадут"
+
+["continue.index"]
+name = "Индекс кода Continue"
+consequence = "Переиндексируется при следующем открытии проекта"
+
+["aider.cache"]
+name = "Кэш Aider"
+consequence = "Восстанавливается сам"
+
+["copilot_cli.cache"]
+name = "Кэш Copilot CLI"
+consequence = "Восстанавливается сам"
+
+["qwen_code.sessions"]
+name = "Временные файлы и сессии Qwen Code"
+consequence = "Прошлые сессии и контрольные точки пропадут"
+
+["opencode.data"]
+name = "Журналы и кэш OpenCode"
+consequence = "Журналы и кэш; создаются заново автоматически"
+
+["cline.tasks"]
+name = "История задач Cline"
+consequence = "Переписка и снимки файлов каждой задачи пропадут"
+
+["roo_code.tasks"]
+name = "История задач Roo Code"
+consequence = "Переписка и снимки файлов каждой задачи пропадут"
+
+["claude_code.file_history"]
+name = "Снимки файлов Claude Code (file-history)"
+consequence = "Нужны для /rewind; старые сессии нельзя будет откатить, текущая не затрагивается"
+
+["codex.archived_sessions"]
+name = "Архивные сессии Codex"
+consequence = "Архивные переписки пропадут"
+
+["kilo_code.tasks"]
+name = "История задач Kilo Code"
+consequence = "Переписка и снимки файлов каждой задачи пропадут"
+
+["goose.sessions"]
+name = "Сессии и журналы Goose"
+consequence = "Прошлые сессии пропадут"
+
+["claude_desktop.cache"]
+name = "Кэш Claude для ПК"
+consequence = "Приложение создаст его заново"
+
+["chatgpt_desktop.cache"]
+name = "Кэш ChatGPT для ПК"
+consequence = "Приложение создаст его заново"
+
+["jan.cache"]
+name = "Кэш и журналы Jan"
+consequence = "Приложение создаст его заново"
+
+["jan.models"]
+name = "Модели Jan"
+consequence = "Скачать {size} заново в Jan"
+
+["anythingllm.cache"]
+name = "Кэш AnythingLLM"
+consequence = "Приложение создаст его заново"
+
+["comfyui.temp"]
+name = "Временные результаты и журналы ComfyUI Desktop"
+consequence = "Превью и журналы; восстанавливается само"
+
+["msty.cache"]
+name = "Кэш Msty"
+consequence = "Приложение создаст его заново"
+
+["lmstudio.cache"]
+name = "Кэш и журналы LM Studio"
+consequence = "Приложение создаст его заново"
+
+["cherry_studio.cache"]
+name = "Кэш Cherry Studio"
+consequence = "Приложение создаст его заново"
+
+["chatbox.cache"]
+name = "Кэш Chatbox"
+consequence = "Приложение создаст его заново"
+
+["open_webui.cache"]
+name = "Кэш Open WebUI"
+consequence = "Кэши эмбеддингов и аудио; создаются заново при необходимости"
+
+["gradio.cache"]
+name = "Кэш загрузок и результатов Gradio"
+consequence = "Копии загрузок и результатов из интерфейсов Gradio, например SD WebUI"
+
+["sd_webui.temp"]
+name = "Временные файлы Stable Diffusion WebUI"
+consequence = "Временные изображения и журналы; на генерацию не влияет"
+
+["cursor.cache"]
+name = "Кэш Cursor"
+consequence = "Cursor создаст его заново"
+
+["cursor.logs"]
+name = "Журналы Cursor"
+consequence = "Только журналы"
+
+["cursor.workspaces"]
+name = "Хранилище рабочих областей Cursor"
+consequence = "Состояние редактора и история чатов этого проекта в Cursor пропадут"
+
+["cursor.global_state"]
+name = "Глобальная база состояния Cursor (state.vscdb, все чаты)"
+consequence = "Все чаты и настройки Cursor пропадут. Лучше экспортируйте или удалите старые чаты внутри Cursor, а не этот файл"
+
+["windsurf.cache"]
+name = "Кэш Windsurf"
+consequence = "Windsurf создаст его заново"
+
+["windsurf.workspaces"]
+name = "Хранилище рабочих областей Windsurf"
+consequence = "Состояние редактора и история чатов этого проекта в Windsurf пропадут"
+
+["vscode.cache"]
+name = "Кэш VS Code"
+consequence = "VS Code создаст его заново"
+
+["vscode.workspaces"]
+name = "Хранилище рабочих областей VS Code"
+consequence = "Состояние редактора этого проекта (включая чаты Copilot) пропадёт"
+
+["antigravity.cache"]
+name = "Кэш Antigravity"
+consequence = "Antigravity создаст его заново"
+
+["jetbrains.caches"]
+name = "Кэши индексов IDE JetBrains"
+consequence = "IDE переиндексирует проект при следующем открытии, это займёт несколько минут"
+
+["trae.cache"]
+name = "Кэш и журналы Trae"
+consequence = "Редактор создаст его заново"
+
+["trae.workspaces"]
+name = "Хранилище рабочих областей Trae"
+consequence = "История и ИИ-индекс этого проекта пропадут"
+
+["kiro.cache"]
+name = "Кэш и журналы Kiro"
+consequence = "Редактор создаст его заново"
+
+["zed.cache"]
+name = "Кэш и журналы Zed"
+consequence = "Редактор создаст его заново"
+
+["cursor.extensions_cache"]
+name = "Кэш загрузок расширений Cursor"
+consequence = "Редактор создаст его заново"
+
+["vscode.extensions_cache"]
+name = "Кэш загрузок расширений VS Code"
+consequence = "Редактор создаст его заново"
+
+["chrome.cache"]
+name = "Кэш Chrome"
+consequence = "Страницы закэшируются заново; входы в аккаунты сохранятся"
+
+["edge.cache"]
+name = "Кэш Edge"
+consequence = "Страницы закэшируются заново; входы в аккаунты сохранятся"
+
+["firefox.cache"]
+name = "Кэш Firefox"
+consequence = "Страницы закэшируются заново; входы в аккаунты сохранятся"
+
+["docker.vhdx"]
+name = "Виртуальный диск Docker Desktop"
+consequence = "Все образы, контейнеры и тома пропадут. Лучше: docker system prune, затем сжать диск"
+
+["wsl.distros"]
+name = "Виртуальные диски дистрибутивов WSL"
+consequence = "Это целая система Linux; удаление уничтожит всё внутри"
+
+["docker.cli_cache"]
+name = "Кэш Docker CLI"
+consequence = "Журналы и кэш; восстанавливается сам"
+
+["nvidia.dxcache"]
+name = "Кэш шейдеров NVIDIA"
+consequence = "Первый запуск игр и приложений будет чуть медленнее; создаётся заново автоматически"
+
+["nvidia.compute_cache"]
+name = "Кэш компиляции ядер CUDA"
+consequence = "Программы CUDA перекомпилируют ядра при первом запуске"
+
+["amd.shader_cache"]
+name = "Кэш шейдеров AMD"
+consequence = "Создаётся заново автоматически"
+
+["intel.shader_cache"]
+name = "Кэш шейдеров Intel"
+consequence = "Создаётся заново автоматически"
+
+["triton.cache"]
+name = "Кэш ядер Triton / torch.compile"
+consequence = "Перекомпилируется при следующем torch.compile"
+
+["nvidia.driver_downloads"]
+name = "Загрузки драйверов NVIDIA"
+consequence = "Установщики уже установленных драйверов; NVIDIA App скачает их снова при необходимости"
+
+["nvidia.installer_leftovers"]
+name = "Остатки распаковки драйверов NVIDIA"
+consequence = "Для восстановления или удаления через панель управления может понадобиться скачать драйвер заново"
+
+["windows.d3d_shader_cache"]
+name = "Кэш шейдеров DirectX"
+consequence = "Игры и GPU-приложения один раз запустятся чуть медленнее"
+
+["torch.extensions"]
+name = "Кэш сборки расширений PyTorch"
+consequence = "Свои CUDA-операции перекомпилируются при следующем import"
+
+["npm.cache"]
+name = "Кэш npm"
+consequence = "npm скачает заново при следующем install"
+
+["npx.cache"]
+name = "Временные пакеты npx (включая MCP-серверы)"
+consequence = "MCP-серверы, запускаемые через npx, скачаются заново при следующем запуске"
+
+["pnpm.store"]
+name = "Хранилище pnpm"
+consequence = "Как pnpm store prune с повторной загрузкой; установленные проекты продолжают работать"
+
+["yarn.cache"]
+name = "Кэш Yarn"
+consequence = "Yarn скачает заново при следующем install"
+
+["bun.cache"]
+name = "Кэш Bun"
+consequence = "Bun скачает заново при следующем install"
+
+["playwright.browsers"]
+name = "Браузеры Playwright"
+consequence = "Проектам и MCP-серверам, которые его используют, понадобится снова playwright install ({size})"
+
+["puppeteer.browsers"]
+name = "Браузеры Puppeteer"
+consequence = "Puppeteer заново скачает {size} при следующем запуске"
+
+["electron.cache"]
+name = "Кэш сборки Electron"
+consequence = "Скачается заново при следующей сборке"
+
+["ollama.models"]
+name = "Модели Ollama"
+consequence = "Скачать {size} заново через ollama pull"
+
+["ollama.logs"]
+name = "Журналы Ollama"
+consequence = "Только журналы; Ollama создаст их заново"
+
+["huggingface.hub"]
+name = "Кэш хаба Hugging Face"
+consequence = "Скачается заново ({size}) при следующем использовании"
+
+["huggingface.xet"]
+name = "Кэш блоков Xet Hugging Face"
+consequence = "Кэш для ускорения загрузок; восстанавливается сам"
+
+["modelscope.hub"]
+name = "Кэш хаба ModelScope"
+consequence = "Скачается заново с ModelScope ({size}) при следующем использовании"
+
+["lmstudio.models"]
+name = "Модели LM Studio"
+consequence = "Скачать {size} заново в LM Studio"
+
+["lmstudio.conversations"]
+name = "Переписки LM Studio"
+consequence = "История ваших чатов с моделями пропадёт"
+
+["torch.hub"]
+name = "Кэш PyTorch Hub"
+consequence = "Скачается заново ({size}), когда понадобится torch.hub"
+
+["whisper.models"]
+name = "Модели Whisper"
+consequence = "Скачаются заново ({size}) при следующей расшифровке"
+
+["chrome.ondevice_model"]
+name = "Локальная ИИ-модель Chrome"
+consequence = "Встроенный ИИ Chrome заново скачает около 4 ГБ"
+
+["edge.ondevice_model"]
+name = "Локальная ИИ-модель Edge"
+consequence = "Встроенный ИИ Edge скачает её заново"
+
+["comfyui.models"]
+name = "Модели ComfyUI"
+consequence = "В основном скачаны вручную; {size} придётся скачивать самостоятельно"
+
+["sd_webui.models"]
+name = "Модели Stable Diffusion WebUI"
+consequence = "В основном скачаны вручную; {size} придётся скачивать самостоятельно"
+
+["stability_matrix.models"]
+name = "Общие модели Stability Matrix"
+consequence = "Скачать {size} заново в Stability Matrix"
+
+["msty.models"]
+name = "Локальные модели Msty"
+consequence = "Скачать {size} заново в Msty"
+
+["xinference.cache"]
+name = "Кэш моделей Xinference"
+consequence = "Скачается заново ({size}) при следующем запуске модели"
+
+["vllm.cache"]
+name = "Кэш компиляции vLLM"
+consequence = "Кэши torch.compile / графов CUDA; создаются заново при следующем запуске (первая загрузка медленнее)"
+
+["keras.models"]
+name = "Кэш предобученных моделей Keras"
+consequence = "Скачается заново ({size}) при следующем использовании"
+
+["kagglehub.cache"]
+name = "Кэш kagglehub"
+consequence = "Скачается заново ({size}) при следующем вызове kagglehub"
+
+["clip.cache"]
+name = "Кэш моделей CLIP"
+consequence = "SD WebUI и подобные заново скачают {size} при следующем использовании"
+
+["paddle.models"]
+name = "Модели PaddleOCR / PaddleX"
+consequence = "Скачаются заново ({size}) при следующем запуске"
+
+["pinokio.cache"]
+name = "Кэш загрузок Pinokio"
+consequence = "Загрузки установщиков; скачиваются снова при необходимости"
+
+["huggingface.datasets"]
+name = "Кэш датасетов Hugging Face"
+consequence = "Скачается заново ({size}) при следующем load_dataset"
+
+["huggingface.transformers_legacy"]
+name = "Старый кэш transformers Hugging Face"
+consequence = "Используется только старыми версиями transformers; текущие используют папку hub"
+
+["llamacpp.cache"]
+name = "Кэш загрузок llama.cpp"
+consequence = "Модели, полученные через -hf; скачаются заново ({size}) при следующем запуске"
+
+["gpt4all.models"]
+name = "Модели GPT4All"
+consequence = "Скачать {size} заново в GPT4All"
+
+["projects.artifacts"]
+name = "Артефакты сборки проектов (node_modules / .venv / target …)"
+consequence = "Создаются заново при следующем install или сборке"
+
+["pip.cache"]
+name = "Кэш pip"
+consequence = "pip скачает пакеты заново, когда они понадобятся"
+
+["uv.cache"]
+name = "Кэш uv"
+consequence = "uv создаст его заново; MCP-серверы, запускаемые через uvx, заново скачают зависимости"
+
+["conda.pkgs"]
+name = "Кэш пакетов conda"
+consequence = "То же, что conda clean --all; установленные окружения не затрагиваются"
+
+["conda.envs"]
+name = "Окружения conda"
+consequence = "Окружение удаляется целиком; использующие его проекты не будут работать, пока его не создать заново"
+
+["uv.python"]
+name = "Интерпретаторы Python под управлением uv"
+consequence = "Проекты, привязанные к этой версии, заново скачают интерпретатор при следующем запуске"
+
+["python.pycache_user"]
+name = "Кэш байт-кода Python (__pycache__)"
+consequence = "Python создаст его заново при следующем import"
+
+["jupyter.runtime"]
+name = "Остатки среды выполнения Jupyter"
+consequence = "Файлы подключения к ядрам; Jupyter создаст их заново"
+
+["windows.user_temp"]
+name = "Временные файлы пользователя"
+consequence = "Используемые файлы пропускаются"
+
+["windows.system_temp"]
+name = "Временные файлы системы"
+consequence = "Используемые файлы пропускаются"
+
+["windows.update_download"]
+name = "Кэш загрузок Центра обновления Windows"
+consequence = "Ожидающие обновления скачаются заново"
+
+["windows.delivery_optimization"]
+name = "Кэш оптимизации доставки"
+consequence = "Кэш для раздачи обновлений другим ПК в локальной сети"
+
+["windows.thumbnails"]
+name = "Кэш эскизов"
+consequence = "Эскизы изображений в папках создадутся заново"
+
+["windows.crash_dumps"]
+name = "Аварийные дампы"
+consequence = "Нужны только для отладки сбоев"
+
+["windows.error_reporting"]
+name = "Отчёты об ошибках Windows"
+consequence = "Очередь отчётов об ошибках для Microsoft"
+
+["windows.prefetch_logs"]
+name = "Журналы Windows"
+consequence = "Системные журналы; от них ничего не зависит"
+
+["windows.installer_cache"]
+name = "Package Cache (остатки установщиков)"
+consequence = "При удалении или восстановлении Visual Studio / .NET может понадобиться скачать установщики заново"
+
+["nuget.cache"]
+name = "Кэш пакетов NuGet"
+consequence = "Скачается заново при следующем restore"
+
+["cargo.registry"]
+name = "Кэш реестра Cargo"
+consequence = "Скачается заново при следующем cargo build"
+
+["gradle.caches"]
+name = "Кэши Gradle"
+consequence = "Зависимости скачаются заново при следующей сборке"
+
+["go.modcache"]
+name = "Кэш модулей Go"
+consequence = "Скачается заново при следующем go build"
+
+["windows.inetcache"]
+name = "Системный веб-кэш (INetCache)"
+consequence = "Веб-кэш системных компонентов и старого IE"
+
+["windows.defender_scans"]
+name = "Журнал проверок Защитника Windows"
+consequence = "Только записи проверок; защита не затрагивается"
+
+["windows.store_cache"]
+name = "Кэш загрузок Microsoft Store"
+consequence = "Store создаст его заново"
+
+["poetry.cache"]
+name = "Кэш пакетов Poetry"
+consequence = "Скачается заново при следующем poetry install"
+
+["maven.repository"]
+name = "Локальный репозиторий Maven"
+consequence = "Зависимости скачаются заново при следующей сборке"
+
+["composer.cache"]
+name = "Кэш Composer"
+consequence = "Скачается заново при следующем composer install"
+
+["windows.old"]
+name = "Windows.old (предыдущая Windows)"
+consequence = "Вернуться к предыдущей Windows будет нельзя; Windows сама удаляет эту папку через 10 дней после обновления. Нужны права администратора; если не получится, воспользуйтесь «Очисткой диска»"
+
+["office.file_cache"]
+name = "Кэш документов Office"
+consequence = "Локальный кэш документов OneDrive / SharePoint; несинхронизированные правки пропадут, сначала закройте Office"
+
+["teams.cache"]
+name = "Кэш Teams"
+consequence = "Teams создаст его заново"
+
+["onedrive.logs"]
+name = "Журналы OneDrive"
+consequence = "Только журналы синхронизации"
+
+["precommit.cache"]
+name = "Окружения хуков pre-commit"
+consequence = "Окружения хуков переустановятся при следующем коммите"

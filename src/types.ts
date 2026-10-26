@@ -33,6 +33,8 @@ export interface ScanItem {
 }
 
 export interface ScanReport {
+  /** UI language captured when the scan started; absent for legacy callers. */
+  ui_lang?: string | null;
   items: ScanItem[];
   total_bytes: number;
   safe_bytes: number;
@@ -153,6 +155,8 @@ export interface RuleInfo {
   tool: string;
   name_zh: string;
   name_en: string;
+  /** Name in the UI language when it is neither zh nor en. */
+  name_local: string | null;
   safety: SafetyLevel;
   enabled: boolean;
 }
