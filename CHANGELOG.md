@@ -2,11 +2,11 @@
 
 ## [Unreleased]
 
-## [0.9.0-rc.2] - release preparation (2026-10-26)
+## [0.9.0-rc.2] - 2026-10-26
 
-Rule-language candidate; publication is pending exact-source Windows CI and
-candidate packaging. The published candidate remains `v0.9.0-rc.1` until that
-process completes. Stable Latest and automatic updates are not promoted.
+Published [rule-language prerelease candidate](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.2) from
+merge/tag `7aab2b8618eb6e2bfc9213765cd8da92d78a7d22`. Stable Latest remains `v0.7.1`;
+automatic updates are not promoted.
 
 ### Added
 - Names and deletion consequences for the original 126 scan rules in ten more
@@ -29,19 +29,24 @@ process completes. Stable Latest and automatic updates are not promoted.
 ### Verification and limits
 - Reviewed Linux integration: 129 core tests, 37 Node tests, eight Python audit
   tests, fmt, core Clippy, locale parity and frontend build passed.
-- Exact-source Windows CI, native app build/policy tests and candidate packages
-  are pending. New native language-switch/restart/manual UI acceptance has not
-  run; historical receipts do not certify these changed source bytes.
+- [PR CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/40268895066) and
+  [release CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/40269318160)
+  passed Linux/Windows core checks and Windows native build/policy tests. Release
+  CI also produced and published NSIS + pristine portable ZIP; both downloaded
+  assets match GitHub SHA-256 digests and report `0.9.0-rc.2`.
+- Packages were inspected, not executed or installed. No embedded Authenticode
+  certificate was found. New native language-switch/restart/manual UI acceptance
+  has not run; historical receipts do not certify these changed source bytes.
 - The ten newer rules use English/Chinese fallback; some inspector-generated
   status messages remain English/Chinese. All-language fluency is not certified.
-- Planned assets: NSIS and pristine portable ZIP only, GitHub prerelease, no
+- Published assets: NSIS and pristine portable ZIP only, GitHub prerelease, no
   Latest/MSI/updater/package-manager promotion. Stable gates remain open.
 
 ## Windows.old source integration checkpoint (2026-10-24, historically unreleased)
 
 The following records the earlier source/docs-only integration, before rc.2
-publication was authorized. Its runtime changes are now included in the rc.2
-candidate plan; its old native receipts remain historical, not rc.2 acceptance.
+publication was authorized. Its runtime changes are now published in the rc.2
+candidate; its old native receipts remain historical, not rc.2 acceptance.
 
 ### Added
 - Windows.old uses a separate administrator-only system-cleanup confirmation,

@@ -33,15 +33,15 @@ And it is not only C:. Model libraries, conda environments, Docker disks and pro
 
 Clearwisp explains every gigabyte: **which model, which conda environment, which tool's cache, when it was last used, and what happens if you delete it**. Each item gets a safety level and nothing is deleted until you tick it. Standard cleanup uses the Recycle Bin and supports undo; Windows.old requires separate permanent system cleanup without undo.
 
-## v0.9.0-rc.2 rule-language candidate (release preparation)
+## v0.9.0-rc.2 rule-language prerelease candidate
 
-[v0.9.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.2) is planned, pending exact-source Windows CI and NSIS/portable ZIP packaging. **The currently published candidate remains `v0.9.0-rc.1` below.** Stable Latest remains `v0.7.1`; candidates are manual downloads, with no MSI, updater or package-manager manifests.
+[v0.9.0-rc.2](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.2) is published as a **prerelease candidate, not a stable release**. Manually download the [NSIS installer](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.2/AI.Disk.Cleaner_0.9.0-rc.2_x64-setup.exe) or [portable ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.2/AI.Disk.Cleaner_0.9.0-rc.2_x64-portable.zip). Stable Latest remains `v0.7.1`; candidates are not offered through automatic updates, with no MSI, updater or package-manager manifests.
 
 - The original 126 scan rules gain names and deletion consequences in ten more languages, with complete-field, dynamic-placeholder and special-character validation. Ten newer rules and some dynamic status messages still use English/Chinese fallback; not every scan string is translated.
 - Fast language changes cannot publish an obsolete rule response. Manual/background scans capture their language at startup; changing language clears the old report and selection, requiring a new scan.
 - Changed rule source text uses its current warning rather than an outdated translation. This candidate also includes the earlier Windows.old source repair: separate administrator confirmation, permanent removal, no Recycle Bin or undo.
 
-Local Linux checks passed: 129 core tests, 37 Node tests, eight Python audit tests, fmt, Clippy, locale parity and frontend build. **Exact-source Windows native build, candidate packaging and new manual desktop language-switch/restart acceptance remain pending.** Historical installation receipts do not certify this candidate. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
+Local Linux checks passed: 129 core tests, 37 Node tests, eight Python audit tests, fmt, Clippy, locale parity and frontend build. [Release CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/40269318160) passed Linux/Windows core checks, Windows native build/tests, NSIS/portable packaging and publication; the tag targets merge [`7aab2b8`](https://github.com/nethero23/ai-disk-cleaner/commit/7aab2b8618eb6e2bfc9213765cd8da92d78a7d22). Both public downloads match GitHub SHA-256 digests and report version `0.9.0-rc.2`; neither examined PE has an embedded Authenticode certificate. The portable ZIP contains only the executable, README, empty `data/` and zero-byte `portable` marker. **Packages were downloaded and inspected, not executed or installed; new manual desktop language-switch/restart acceptance remains untested.** Historical installation receipts do not certify this candidate. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md) for hashes and scope.
 
 ## v0.9.0-rc.1 recovery reliability prerelease candidate
 
@@ -68,13 +68,13 @@ After full exit and relaunch through the original app entry, all 95 history reco
 
 This is **not a crash-safe write-ahead journal (WAL)**: a log write may fail after a file reaches the Recycle Bin; inspect the Windows Recycle Bin in that case. Transactional relocation-log writes remain deferred. If history fails to load, try Retry, then preserve the original log and check permissions and free disk space; do not empty it or delete damaged lines to conceal the error. MSI, pristine Windows/WebView2, code signing, and signed updates are outside verified coverage. See the [acceptance checklist](docs/RELEASE_CHECKLIST.md).
 
-## Windows.old source fix (unreleased)
+## Windows.old source fix (October 24 historical checkpoint)
 
 Selecting Windows.old now opens a separate system-cleanup confirmation explaining permanent removal, no history restore and loss of Windows rollback. Administrator elevation is requested only after confirmation; other selected scan items are left untouched. Ordinary recycle failures show the item, path and actual reason, retain failed selections and bring feedback into view.
 
 Offline tests and mock-IPC UI checks passed at the local R2 checkpoint, including repeated separators from real scanner paths. **That local `0.9.0` R2 build passed in-place installation and complete app exit/restart acceptance**, preserving settings and all 95 history records. Installed Windows.old confirmation/cancel passed; refusal feedback used isolated fixtures and byte-identical application code. Later dot/parent-segment rejection and success-feedback scrolling are limited to fresh offline tests/build checks, not a new installation; R2 desktop acceptance does not cover those subsequent source bytes.
 
-This records the October 24 source/docs-only checkpoint: no package, tag, updater or stable promotion ran then, and main retained `0.9.0-rc.1`. Those source changes are now included in the planned `0.9.0-rc.2` candidate above; local uncommitted stable-version preparation and the installed R2 program are outside this publication operation. No real Windows.old cleanup ran; actual system removal is not certified. See the [focused acceptance record](docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
+This records the October 24 source/docs-only checkpoint: no package, tag, updater or stable promotion ran then, and main retained `0.9.0-rc.1`. Those source changes are now published in the `0.9.0-rc.2` candidate above; local uncommitted stable-version preparation and the installed R2 program are outside this publication operation. No real Windows.old cleanup ran; actual system removal is not certified. See the [focused acceptance record](docs/WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
 
 ## Features
 

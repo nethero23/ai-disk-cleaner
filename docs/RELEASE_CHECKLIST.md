@@ -1,11 +1,13 @@
 # Release Acceptance
 
-## v0.9.0-rc.2 rule-language candidate (preparation, 2026-10-26)
+## v0.9.0-rc.2 rule-language candidate (published, 2026-10-26)
 
-The owner authorized merging the reviewed PR #58 repair and publishing a new
-candidate. Version files are prepared for `v0.9.0-rc.2`; this section does not
-claim that the release exists. The current published candidate remains
-`v0.9.0-rc.1` and stable Latest remains `v0.7.1` until publication is verified.
+[PR #58](https://github.com/nethero23/ai-disk-cleaner/pull/58) merged at
+[`7aab2b8618eb6e2bfc9213765cd8da92d78a7d22`](https://github.com/nethero23/ai-disk-cleaner/commit/7aab2b8618eb6e2bfc9213765cd8da92d78a7d22).
+Its tree `c596d205e1578dbda4d340c8c27d6cb49ab394af` matches the reviewed/tested source tree.
+The `v0.9.0-rc.2` tag targets that exact merge. The
+[public release](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.2)
+is a prerelease with exactly two assets; stable Latest remains `v0.7.1`.
 The candidate includes the previously merge-only Windows.old source changes.
 That older authorization/acceptance record below remains historical.
 
@@ -18,19 +20,37 @@ That older authorization/acceptance record below remains historical.
 - [x] Changed source text rejects stale translations, including Windows.old;
   ten newer builtin rules retain the English/Chinese fallback. Some dynamic
   inspector status text remains English/Chinese.
-- [ ] Exact release-source Linux/Windows CI, including Windows core integration
-  tests, native app build and native policy tests.
-- [ ] Fresh candidate NSIS and pristine portable ZIP produced by that CI.
-- [ ] Verify published assets, versions, lengths and SHA-256 receipts; confirm
-  `prerelease: true`, `make_latest: false`, and stable Latest unchanged.
+- [x] [PR CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/40268895066) and
+  [release CI](https://github.com/nethero23/ai-disk-cleaner/actions/runs/40269318160)
+  each passed all three jobs: Linux/Windows core checks and Windows native app
+  build/policy tests, including Windows core integration tests.
+- [x] Release CI built NSIS and pristine portable ZIP from the tagged source and
+  published only those two assets.
+- [x] Both public assets were actually downloaded; their lengths and independent
+  SHA-256 values match GitHub metadata. The release is `prerelease: true`, uses
+  `make_latest: false`, and stable Latest remains `v0.7.1`.
 
-New manual native language-switch/restart/UI acceptance has not run. Local
-Linux native compilation stopped at missing pkg-config/GLib dependencies;
-this is not a passing native build. Earlier Windows receipts and installer
-acceptance do not certify this candidate's changed source or cloud bytes.
-Candidate publication supplies NSIS + portable ZIP only: no MSI, `latest.json`,
-winget/Scoop manifests, stable promotion or local installation. Preserve the
-committed signing policy and all open stable-release gates below.
+### Public rc.2 package receipt
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `AI.Disk.Cleaner_0.9.0-rc.2_x64-setup.exe` | 4,797,417 | `a4b94fe2039d5b533230d6ce03a3e3714ff96359596668320533d490c9a3c2dc` |
+| `AI.Disk.Cleaner_0.9.0-rc.2_x64-portable.zip` | 6,289,231 | `29748f4b03b9f261fe43db4bbfe7555e05864cc7df35288a3d934a4923c9abea` |
+
+The installer PE and portable executable report FileVersion/ProductVersion
+`0.9.0-rc.2`; neither has an embedded Authenticode certificate. The portable ZIP
+contains exactly `AI Disk Cleaner.exe`, `README.txt`, empty `data/` and zero-byte
+`portable` marker. Packages were downloaded and inspected, **not executed or
+installed**. No existing application/profile was replaced or modified.
+
+New manual native language-switch/restart/UI acceptance has not run. The earlier
+local Linux native compile stopped at missing pkg-config/GLib dependencies; the
+subsequent hosted Windows CI passed native compilation/tests, without claiming
+manual UI acceptance. Earlier Windows receipts and installer acceptance do not
+certify this candidate's changed source or cloud bytes. No MSI, `latest.json`,
+winget/Scoop manifests or stable promotion was published; signing, installer and
+other open stable-release gates below remain open. Private download receipts stay
+outside release assets. This documentation receipt does not move the release tag.
 
 ## Windows.old merge-only integration (2026-10-24)
 
@@ -53,8 +73,9 @@ packages. See the [focused scope record](WINDOWS_OLD_CLEANUP_ACCEPTANCE.md).
 ## v0.9.0 stable acceptance (in progress)
 
 The owner authorized stable validation and publication only after required gates
-pass. `0.9.0` currently exists as a local build, not a release; the published
-candidate remains `v0.9.0-rc.1` and stable Latest remains `v0.7.1`.
+pass. `0.9.0` remains a local validation build, not a stable release. At this
+October 24 checkpoint the published candidate was `v0.9.0-rc.1`; the newer rc.2
+receipt above does not close these stable gates. Stable Latest remains `v0.7.1`.
 
 **Subsequent source change:** the Windows.old routing/failure-feedback repair
 has separate [offline/mock acceptance](WINDOWS_OLD_CLEANUP_ACCEPTANCE.md). The
@@ -62,7 +83,7 @@ earlier frozen installers and native acceptance below do not contain or certify
 that repair. The final repaired local NSIS package separately passed in-place
 installation, confirmation/cancel and complete app restart with original settings
 and 95 history records preserved. Real system cleanup, other package lanes and
-publication remain unverified; do not reinterpret prior cleanup approval as
+stable publication remain unverified; do not reinterpret prior cleanup approval as
 permission to delete Windows.old.
 
 - [x] Local automated gates: nine Node tests, 111 core unit tests, one Windows
