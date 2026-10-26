@@ -213,3 +213,94 @@ safety = "safe"
 consequence_zh = "编辑器会自动重建"
 consequence_en = "The editor rebuilds it"
 processes = ["Code"]
+
+[[rule]]
+id = "cursor.extensions_stale"
+tool = "Cursor"
+category = "ai_editor"
+name_zh = "Cursor 扩展旧版本"
+name_en = "Cursor extension old versions"
+paths = ["${USERPROFILE}/.cursor/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Cursor"]
+
+[[rule]]
+id = "vscode.extensions_stale"
+tool = "VS Code"
+category = "ai_editor"
+name_zh = "VS Code 扩展旧版本"
+name_en = "VS Code extension old versions"
+paths = ["${USERPROFILE}/.vscode/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Code"]
+
+[[rule]]
+id = "windsurf.extensions_stale"
+tool = "Windsurf"
+category = "ai_editor"
+name_zh = "Windsurf 扩展旧版本"
+name_en = "Windsurf extension old versions"
+paths = ["${USERPROFILE}/.windsurf/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Windsurf"]
+
+[[rule]]
+id = "trae.extensions_stale"
+tool = "Trae"
+category = "ai_editor"
+name_zh = "Trae 扩展旧版本"
+name_en = "Trae extension old versions"
+paths = ["${USERPROFILE}/.trae/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Trae", "Trae CN"]
+
+[[rule]]
+id = "kiro.extensions_stale"
+tool = "Kiro"
+category = "ai_editor"
+name_zh = "Kiro 扩展旧版本"
+name_en = "Kiro extension old versions"
+paths = ["${USERPROFILE}/.kiro/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Kiro"]
+
+[[rule]]
+id = "antigravity.extensions_stale"
+tool = "Antigravity"
+category = "ai_editor"
+name_zh = "Antigravity 扩展旧版本"
+name_en = "Antigravity extension old versions"
+paths = ["${USERPROFILE}/.antigravity/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Antigravity"]
+
+[[rule]]
+id = "qoder.extensions_stale"
+tool = "Qoder"
+category = "ai_editor"
+name_zh = "Qoder 扩展旧版本"
+name_en = "Qoder extension old versions"
+paths = ["${USERPROFILE}/.qoder/extensions"]
+safety = "safe"
+inspector = "stale_versions"
+consequence_zh = "升级后残留的旧版本，编辑器已不再加载；当前版本保留"
+consequence_en = "Left behind by an upgrade and no longer loaded; the current version stays"
+processes = ["Qoder"]

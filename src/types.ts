@@ -33,6 +33,8 @@ export interface ScanItem {
 }
 
 export interface ScanReport {
+  /** UI language captured when the scan started; absent for legacy callers. */
+  ui_lang?: string | null;
   items: ScanItem[];
   total_bytes: number;
   safe_bytes: number;
@@ -73,6 +75,7 @@ export interface RestoreSummary {
 export interface CleanSummary {
   freed_bytes: number;
   records: CleanRecord[];
+  log_error?: string | null;
 }
 
 export interface RelocateRecord {
@@ -144,6 +147,7 @@ export interface Settings {
   idle_model_days: number;
   growth_notify_bytes: number;
   onboarded: boolean;
+  mcp_version_check: boolean;
 }
 
 export interface RuleInfo {
@@ -353,4 +357,10 @@ export interface AiInventory {
   tools: AiToolInventory[];
   analysis: AiAnalysis;
   computed_at: string | null;
+}
+
+export interface AiVersionInfo {
+  identity: string;
+  latest: string | null;
+  error: string | null;
 }

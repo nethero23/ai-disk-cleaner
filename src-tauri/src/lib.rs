@@ -11,7 +11,7 @@ use cleaner_core::relocate::{self, RelocateRecord, RelocateResult};
 use cleaner_core::scan::{scan_all_with, ScanProgress};
 use cleaner_core::settings::Settings;
 use cleaner_core::vhdx::{self, CompactResult, Vhdx};
-use cleaner_core::{scan_all, RuleSet, ScanItem, ScanOptions, ScanReport};
+use cleaner_core::{RuleSet, ScanItem, ScanOptions, ScanReport};
 use serde::Serialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
@@ -169,8 +169,12 @@ fn growth_report(app: AppHandle) -> Vec<cleaner_core::growth::Growth> {
 }
 
 #[tauri::command]
-fn clean_log(app: AppHandle) -> Vec<CleanRecord> {
-    clean::read_log(&log_path(&app))
+async fn clean_log(app: AppHandle) -> Result<Vec<CleanRecord>, String> {
+    let path = log_path(&app);
+    tauri::async_runtime::spawn_blocking(move || clean::read_log(&path))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
 }
 
 /// For the history page: which cleaned paths can still be restored.
@@ -180,6 +184,7 @@ async fn restore_status(
 ) -> Result<Vec<cleaner_core::restore::RestoreStatus>, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::status(&paths))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -190,6 +195,7 @@ async fn restore_items(
 ) -> Result<cleaner_core::restore::RestoreSummary, String> {
     tauri::async_runtime::spawn_blocking(move || cleaner_core::restore::restore(&records))
         .await
+        .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
 
@@ -215,8 +221,9 @@ struct RuleLibrary {
 /// Every rule known to this install (builtin + downloaded + custom), with
 /// whether the user has it switched on, so the settings page can list them.
 #[tauri::command]
-fn rules(app: AppHandle) -> RuleLibrary {
+fn rules(app: AppHandle, ui_lang: Option<String>) -> RuleLibrary {
     let settings = Settings::load(&settings_path(&app));
+    let lang = ui_lang.as_deref().unwrap_or(&settings.lang);
     let dir = downloaded_rules_dir(&app);
     let (set, errors) = RuleSet::effective(
         dir.is_dir().then_some(dir.as_path()),
@@ -231,8 +238,9 @@ fn rules(app: AppHandle) -> RuleLibrary {
             .into_iter()
             .map(|r| RuleInfo {
                 enabled: !settings.disabled_rules.contains(&r.id),
-                name_local: cleaner_core::rule_i18n::lookup(&settings.lang, &r.id)
-                    .and_then(|t| t.name.clone()),
+                name_local: cleaner_core::rule_i18n::lookup_for_rule(lang, &r)
+                    .and_then(|t| t.name.clone())
+                    .filter(|name| !name.trim().is_empty()),
                 id: r.id,
                 tool: r.tool,
                 name_zh: r.name_zh,
@@ -377,8 +385,12 @@ async fn relocate_item(
 
 /// Relocations still in effect, newest first.
 #[tauri::command]
-fn relocations(app: AppHandle) -> Vec<RelocateRecord> {
-    relocate::read_relocations(&relocate_log_path(&app))
+async fn relocations(app: AppHandle) -> Result<Vec<RelocateRecord>, String> {
+    let path = relocate_log_path(&app);
+    tauri::async_runtime::spawn_blocking(move || relocate::read_relocations(&path))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -442,6 +454,51 @@ async fn ai_inventory() -> Result<cleaner_core::aiconfig::Inventory, String> {
         cleaner_core::aiconfig::inventory(
             &cleaner_core::aiconfig::Catalog::builtin(),
             &cleaner_core::paths::PathContext::from_env(),
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// Asks npm / PyPI for the latest version of each MCP server package. The
+/// request carries the package name only. Off when the setting is off.
+#[tauri::command]
+async fn ai_version_check(
+    app: AppHandle,
+    identities: Vec<String>,
+) -> Result<Vec<cleaner_core::aiconfig::VersionInfo>, String> {
+    let path = settings_path(&app);
+    let enabled = Settings::version_check_allowed(&path);
+    if !enabled {
+        return Ok(Vec::new());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let agent = ureq::Agent::config_builder()
+            .https_only(true)
+            .max_redirects(0)
+            .build()
+            .new_agent();
+        cleaner_core::aiconfig::check_versions(
+            enabled,
+            identities,
+            std::time::Duration::from_secs(15),
+            |url, timeout| {
+                // Stop starting requests if the user disables checks mid-batch.
+                if !Settings::version_check_allowed(&path) {
+                    return Err("Version checking is disabled".into());
+                }
+                let mut response = agent
+                    .get(url)
+                    .config()
+                    .timeout_global(Some(timeout))
+                    .build()
+                    .call()
+                    .map_err(|e| e.to_string())?;
+                response
+                    .body_mut()
+                    .read_to_string()
+                    .map_err(|e| e.to_string())
+            },
         )
     })
     .await
@@ -699,6 +756,7 @@ pub fn run() {
             unrecognized,
             suggest_rule_url,
             ai_inventory,
+            ai_version_check,
             deep_tasks,
             deep_analyze,
             deep_run,

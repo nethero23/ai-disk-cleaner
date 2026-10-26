@@ -17,7 +17,15 @@
 
 </div>
 
-> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. Die App-Oberfläche gibt es derzeit auf Chinesisch und Englisch.
+> Diese Übersetzung kann hinter der [englischen Fassung](README.en.md) zurückliegen. [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1) mit 12 UI-Sprachen ist als Vorabkandidat veröffentlicht, nicht als stabile Version. [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) oder [portable ZIP](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip) manuell herunterladen. Beim Veröffentlichungscheckpoint waren beide Pakete per SHA-256 geprüft, aber noch nicht ausgeführt. Latest bleibt bei der stabilen `v0.7.1`; Kandidaten erhalten keine automatischen Updates, MSI, `latest.json` oder winget/Scoop-Manifeste.
+>
+> Fehlende JSONL-Protokolle für Bereinigung und Verschiebung gelten als leer; Lese-, Kodierungs- und Datensatzfehler werden mit Wiederholen gemeldet. Wiederherstellen und Zurückverschieben sind beim Laden oder bei Fehlern gesperrt. Eine fehlgeschlagene Papierkorb-Abfrage wird nicht als endgültiger Verlust ausgegeben.
+>
+> Scheitern Prüfung oder Öffnen des Bereinigungsprotokolls, werden keine Dateien gelöscht. Schreib-/Synchronisierungsfehler stoppen weitere Einträge; tatsächliche Erfolge und Warnungen bleiben in Vorder-/Hintergrundergebnissen erhalten. Gültige Altprotokolle ohne Batch-ID oder abschließenden Zeilenumbruch bleiben lesbar. Dies ist kein absturzsicheres WAL; transaktionale Verschiebungsprotokolle stehen noch aus. Erst Wiederholen nutzen, dann Originalprotokoll behalten und Rechte sowie freien Speicher prüfen.
+>
+> Isolierter Vorinstallationscheckpoint: 67 Browserprüfungen (25 Auswahl + 30 Verlauf + 12 Wiederherstellung), lokale Prüfungen und unsignierter NSIS-Build bestanden. Eine lokal gebaute portable `0.9.0-rc.1` zeigte per echtem IPC Logsperre (OS error 32) und beschädigte Verläufe, behielt Zeilen und erlaubte Wiederholen. Lesender Scan, 10 Auswahl-/Schutzprüfungen und zwei Verlaufszeilen nach Neustart bestanden; zwei Prüfungen bestätigten nur deaktivierte Zustände. Die damalige `0.8.0-rc.1` wurde wieder geöffnet, zwölf Basis-Hashes blieben gleich. In diesem isolierten Durchlauf fanden weder Bereinigung/Wiederherstellung noch Installation statt.
+>
+> Danach wurden 368 Dateien und zwei Verknüpfungen gesichert und geprüft; nach gesonderter Freigabe aktualisierte der tatsächliche GitHub-NSIS mit „Nicht deinstallieren“ die vorhandene `0.8.0-rc.1` auf `0.9.0-rc.1`. Zehn installierte Maus-/Space-/Gruppen-/Schutzprüfungen einschließlich echter Klicks auf gesperrte Controls sowie kompletter Neustart bestanden. 95 Verlaufsdatensätze (81 erfolgreich), Einstellungen, 14 Nicht-Scan-Konfigurations-/Regeldateien und zwei Verknüpfungen blieben unverändert; Wachstums-, Übersichts- und WebView-Laufzeitdaten dürfen sich ändern. Keine Bereinigung/Wiederherstellung; die öffentliche portable EXE wurde nicht gestartet. Dies ist ein NSIS-Upgradefall, keine vollständige stabile/MSI/Neuinstallations-/Signaturabnahme. Siehe [Installationsprüfung](docs/RELEASE_CHECKLIST.md#github-v09-in-place-upgrade-and-retest-2026-10-24).
 
 ## Warum
 
@@ -30,7 +38,7 @@ Clearwisp erklärt jedes Gigabyte: **welches Modell, welche conda-Umgebung, welc
 <a id="features"></a>
 ## Funktionen
 
-### 🧠 Kennt den Müll von KI-Tools (126 Regeln, über 90 Tools)
+### 🧠 Kennt den Müll von KI-Tools (136 Regeln, über 90 Tools)
 
 | Kategorie | Abgedeckt |
 |---|---|
@@ -75,7 +83,7 @@ Es liest Ollama-Manifeste, die Cache-Struktur von Hugging Face, conda-Umgebungen
 
 ### 🚫 Niemals
 
-Keine Registry-Bereinigung, keine nervigen Pop-ups, keine gebündelte Software, kein Hochladen Ihrer Dateiliste. Läuft offline; geht nur online, um nach Updates zu suchen.
+Keine Registry-Bereinigung, keine nervigen Pop-ups, keine gebündelte Software, kein Hochladen Ihrer Dateiliste. Scannen und Bereinigen erfolgen lokal; App- und Regelupdates greifen auf GitHub zu. Die MCP-Versionsprüfung auf der Seite „KI-Tools“ ist standardmäßig aktiviert und lässt sich in den Einstellungen deaktivieren. Sie sendet nur Paketnamen an npm / PyPI, niemals Konfigurationsinhalte.
 
 ## Installation
 
@@ -147,7 +155,7 @@ Der Scan ist nur lesend. Bereinigt werden nur Ordner aus dem Regelwerk, jeweils 
 Es deckt ab, was CCleaner nicht kann: KI-Modelle, Python-Umgebungen, Caches von KI-Editoren. Gängigen Windows-Müll bereinigt es ebenfalls. Beide zusammen zu nutzen ist kein Problem.
 
 ### Ist es kostenlos? Werbung oder Telemetrie?
-Kostenlos, MIT-lizenziert, ohne Werbung und ohne gebündelte Software. Scannen und Bereinigen passieren lokal; die App kontaktiert GitHub nur für Update-Prüfungen und (optional) Regelupdates.
+Kostenlos, MIT-lizenziert, ohne Werbung und ohne gebündelte Software. Scannen und Bereinigen erfolgen lokal; App- und Regelupdates greifen auf GitHub zu. Die MCP-Versionsprüfung auf der Seite „KI-Tools“ ist standardmäßig aktiviert und lässt sich in den Einstellungen deaktivieren. Sie sendet nur Paketnamen an npm / PyPI, niemals Konfigurationsinhalte.
 
 ### macOS / Linux?
 Derzeit nur Windows 10 / 11. Die Scan-Engine ist plattformübergreifendes Rust, weitere Plattformen könnten folgen.

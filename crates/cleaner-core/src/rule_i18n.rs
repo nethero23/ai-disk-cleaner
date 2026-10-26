@@ -47,6 +47,40 @@ pub fn lookup(lang: &str, rule_id: &str) -> Option<&'static RuleText> {
     tables().get(lang)?.get(rule_id)
 }
 
+/// Source text at the time the bundled translations were authored. This is
+/// independent of the current builtin rules, which may have changed since.
+fn source_fingerprints() -> &'static HashMap<String, String> {
+    static SOURCE: OnceLock<HashMap<String, String>> = OnceLock::new();
+    SOURCE.get_or_init(|| {
+        toml::from_str(include_str!("../rules/i18n/source_fingerprints.toml"))
+            .expect("invalid bundled translation source fingerprints")
+    })
+}
+
+fn source_fingerprint(rule: &crate::rules::Rule) -> String {
+    use sha2::{Digest, Sha256};
+    let mut digest = Sha256::new();
+    for value in [
+        &rule.name_zh,
+        &rule.name_en,
+        &rule.consequence_zh,
+        &rule.consequence_en,
+    ] {
+        digest.update((value.len() as u64).to_be_bytes());
+        digest.update(value.as_bytes());
+    }
+    format!("{:x}", digest.finalize())
+}
+
+/// A same-id override or newer builtin may change what deletion means. Never
+/// apply an older translation to changed source text; use the current fallback.
+pub fn lookup_for_rule(lang: &str, rule: &crate::rules::Rule) -> Option<&'static RuleText> {
+    if source_fingerprints().get(&rule.id)? != &source_fingerprint(rule) {
+        return None;
+    }
+    lookup(lang, &rule.id)
+}
+
 /// The language whose built-in strings a UI language falls back to.
 pub fn core_lang(lang: &str) -> &'static str {
     if lang.starts_with("zh") {
@@ -61,29 +95,165 @@ mod tests {
     use super::*;
     use crate::rules::RuleSet;
 
+    fn placeholders(text: &str) -> Vec<String> {
+        let pattern = regex::Regex::new(r"\{[^{}]*\}").unwrap();
+        let mut tokens: Vec<_> = pattern
+            .find_iter(text)
+            .map(|token| token.as_str().to_owned())
+            .collect();
+        tokens.sort();
+        tokens
+    }
+
+    fn validate_table(table: &Table, builtin: &RuleSet) -> Result<(), String> {
+        // New builtin/downloaded rules may still fall back. Every rule in the
+        // authored translation baseline must remain complete in every locale.
+        for id in source_fingerprints().keys() {
+            if !table.contains_key(id) {
+                return Err(format!("{id}: missing translation record"));
+            }
+        }
+        for (id, text) in table {
+            let source = builtin
+                .get(id)
+                .ok_or_else(|| format!("{id}: unknown rule id"))?;
+            for (field, value, original) in [
+                ("name", text.name.as_deref(), source.name_en.as_str()),
+                (
+                    "consequence",
+                    text.consequence.as_deref(),
+                    source.consequence_en.as_str(),
+                ),
+            ] {
+                let value = value
+                    .filter(|value| !value.trim().is_empty())
+                    .ok_or_else(|| format!("{id}.{field}: missing or blank string"))?;
+                // A changed source is intentionally not translated at runtime.
+                if source_fingerprints().get(id) == Some(&source_fingerprint(source))
+                    && placeholders(value) != placeholders(original)
+                {
+                    return Err(format!("{id}.{field}: placeholders differ"));
+                }
+            }
+        }
+        Ok(())
+    }
+
     #[test]
-    fn every_file_parses_and_names_only_real_rules() {
+    fn every_file_has_complete_text_for_every_baseline_rule() {
         let builtin = RuleSet::builtin();
-        for (lang, t) in tables() {
-            for (id, text) in t {
-                assert!(builtin.get(id).is_some(), "{lang}: unknown rule id {id}");
-                assert!(text.name.is_some(), "{lang}: {id} has no name");
+        assert_eq!(FILES.len(), 10);
+        assert!(source_fingerprints().len() >= 126);
+        for (lang, raw) in FILES {
+            let table: Table =
+                toml::from_str(raw).unwrap_or_else(|error| panic!("{lang}: invalid TOML: {error}"));
+            validate_table(&table, &builtin).unwrap_or_else(|error| panic!("{lang}: {error}"));
+        }
+    }
+
+    #[test]
+    fn validation_rejects_missing_and_blank_names_and_consequences() {
+        let builtin = RuleSet::builtin();
+        for field in ["name", "consequence"] {
+            for value in [None, Some(""), Some(" \t\n")] {
+                let mut table = tables()["ja"].clone();
+                let text = table.get_mut("pip.cache").unwrap();
+                let slot = if field == "name" {
+                    &mut text.name
+                } else {
+                    &mut text.consequence
+                };
+                *slot = value.map(str::to_owned);
+                let error = validate_table(&table, &builtin).unwrap_err();
+                assert!(error.contains(&format!("pip.cache.{field}: missing or blank")));
             }
         }
     }
 
     #[test]
-    fn placeholders_survive_translation() {
+    fn validation_rejects_missing_and_unknown_rule_records() {
         let builtin = RuleSet::builtin();
-        for (lang, t) in tables() {
-            for (id, text) in t {
-                let want = builtin.get(id).unwrap().consequence_en.contains("{size}");
-                let have = text
-                    .consequence
-                    .as_deref()
-                    .unwrap_or("{size}")
-                    .contains("{size}");
-                assert!(!want || have, "{lang}: {id} lost its {{size}} placeholder");
+        let mut table = tables()["ja"].clone();
+        let text = table.remove("pip.cache").unwrap();
+        assert!(validate_table(&table, &builtin)
+            .unwrap_err()
+            .contains("pip.cache: missing translation record"));
+        table.insert("pip.cache".into(), text.clone());
+        table.insert("no.such.rule".into(), text);
+        assert!(validate_table(&table, &builtin)
+            .unwrap_err()
+            .contains("no.such.rule: unknown rule id"));
+    }
+
+    #[test]
+    fn validation_rejects_missing_renamed_extra_and_duplicate_placeholders() {
+        let builtin = RuleSet::builtin();
+        let source = builtin
+            .rules
+            .iter()
+            .find(|rule| rule.consequence_en.contains("{size}"))
+            .unwrap();
+        for value in [
+            "download",
+            "download {taille}",
+            "{size} {size}",
+            "{size} {extra}",
+        ] {
+            let mut table = tables()["ja"].clone();
+            table.get_mut(&source.id).unwrap().consequence = Some(value.into());
+            assert!(validate_table(&table, &builtin)
+                .unwrap_err()
+                .contains(&format!("{}.consequence: placeholders differ", source.id)));
+        }
+        let mut table = tables()["ja"].clone();
+        table.get_mut("pip.cache").unwrap().name = Some("Cache {invented}".into());
+        assert!(validate_table(&table, &builtin)
+            .unwrap_err()
+            .contains("pip.cache.name: placeholders differ"));
+    }
+
+    #[test]
+    fn unicode_and_escaped_strings_round_trip_through_toml() {
+        for name in [
+            "繁體中文",
+            "日本語",
+            "한국어",
+            "Größe",
+            "français",
+            "español",
+            "português",
+            "Русский",
+            "العربية",
+            "हिन्दी",
+        ] {
+            let raw = format!(
+                r#"["test.cache"]
+name = "{name}"
+consequence = "Été \"quoted\" \\ {{size}} ‎--resume"
+"#
+            );
+            let table: Table = toml::from_str(&raw).unwrap();
+            let text = &table["test.cache"];
+            assert_eq!(text.name.as_deref(), Some(name));
+            assert_eq!(
+                text.consequence.as_deref(),
+                Some("Été \"quoted\" \\ {size} ‎--resume")
+            );
+        }
+    }
+
+    #[test]
+    fn changed_builtin_source_uses_current_fallback_instead_of_old_translation() {
+        let builtin = RuleSet::builtin();
+        for rule in &builtin.rules {
+            let unchanged = source_fingerprints().get(&rule.id) == Some(&source_fingerprint(rule));
+            for (lang, _) in FILES {
+                assert_eq!(
+                    lookup_for_rule(lang, rule).is_some(),
+                    unchanged,
+                    "{lang}: {} translation source changed",
+                    rule.id
+                );
             }
         }
     }

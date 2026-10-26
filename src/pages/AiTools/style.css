@@ -25,3 +25,4 @@
 .ai-cmd { display: block; font-size: 0.8rem; }
 .ai-secret { color: var(--md-error); margin: 0; font-size: 0.875rem; }
 .md-dialog h4 { margin: 12px 0 4px; font-size: 0.875rem; color: var(--md-on-surface-variant); }
+.ai-behind { color: var(--md-primary); font-weight: 500; }

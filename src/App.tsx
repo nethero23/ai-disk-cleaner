@@ -17,6 +17,9 @@ import { Button, Card, Checkbox, Fab, FloatingToolbar, Icon, NavigationRail, Sea
 import { Hero } from "./pages/Clean/Hero";
 import { ResultItem } from "./pages/Clean/ResultItem";
 import { ScanProgress } from "./pages/Clean/ScanProgress";
+import { afterClean, withItems } from "./scanReport";
+import { cleanupError, isSystemWindowsOld, needsSystemCleanup, remainingSelection, WINDOWS_OLD_RULE, WINDOWS_OLD_TASK } from "./cleanupFeedback";
+import { createLanguageSync, reportMatchesLanguage } from "./languageSync";
 
 type Phase = "idle" | "scanning" | "ready" | "cleaning";
 type Page = "clean" | "space" | "history" | "aitools" | "settings";
@@ -43,6 +46,9 @@ function isDefaultTicked(i: ScanItem): boolean {
 export function App() {
   const [langPref, setLangPref] = useState<LangPref>(loadLangPref);
   const lang = resolveLang(langPref);
+  const langRef = useRef(lang);
+  const previousLang = useRef(lang);
+  langRef.current = lang;
   const [theme, setTheme] = useState<Theme>(loadTheme);
   useEffect(() => applyTheme(theme), [theme]);
   const s = t(lang);
@@ -54,6 +60,7 @@ export function App() {
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<CleanSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
@@ -75,13 +82,23 @@ export function App() {
   const autoConfirmRef = useRef(false);
   const [peeks, setPeeks] = useState<Map<string, Preview | "loading">>(new Map());
   const [scanStep, setScanStep] = useState<{ done: number; total: number; rule_name: string } | null>(null);
+  const scanRequest = useRef(0);
   const [bigItems, setBigItems] = useState<ScanItem[] | null>(null);
   const [bigSelected, setBigSelected] = useState<Set<string>>(new Set());
   const [bigConfirm, setBigConfirm] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [library, setLibrary] = useState<RuleLibrary | null>(null);
+  const [languageSync] = useState(() => createLanguageSync<RuleLibrary>(
+    lang,
+    (language) => invoke("set_lang", { lang: language }),
+    (language) => invoke<RuleLibrary>("rules", { uiLang: language }),
+    setLibrary,
+  ));
   const [updatingRules, setUpdatingRules] = useState(false);
   const [history, setHistory] = useState<CleanRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const historyRequest = useRef(0);
   const [relocations, setRelocations] = useState<RelocateRecord[]>([]);
   const [movingBack, setMovingBack] = useState<{ rec: RelocateRecord; progress?: [number, number] } | null>(null);
   const [whereabouts, setWhereabouts] = useState<Map<string, Whereabouts>>(new Map());
@@ -131,7 +148,7 @@ export function App() {
       // A whole store may have moved, taking its other items with it.
       const moved = (i: ScanItem) =>
         i.id === item.id || i.path === result.from || i.path.startsWith(result.from + "\\") || i.path.startsWith(result.from + "/");
-      setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !moved(i)) } : prev));
+      setReport((prev) => (prev ? withItems(prev, prev.items.filter((i) => !moved(i))) : prev));
       setSelected((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
@@ -178,7 +195,7 @@ export function App() {
   async function openSettings() {
     try {
       setSettings(await invoke<Settings>("get_settings"));
-      setLibrary(await invoke<RuleLibrary>("rules"));
+      await languageSync.refresh();
     } catch (e) {
       setError(String(e));
     }
@@ -265,9 +282,9 @@ export function App() {
   }, [report, s]);
 
   async function saveSettings(next: Settings) {
-    setSettings(next);
+    setSettings({ ...next, lang: langRef.current });
     try {
-      await invoke("save_settings", { settings: next });
+      await languageSync.write((language) => invoke("save_settings", { settings: { ...next, lang: language } }));
     } catch (e) {
       setError(String(e));
     }
@@ -294,7 +311,7 @@ export function App() {
     if (!current.excluded_paths.includes(it.path)) {
       await saveSettings({ ...current, excluded_paths: [...current.excluded_paths, it.path] });
     }
-    setReport((prev) => (prev ? { ...prev, items: prev.items.filter((i) => !i.path.startsWith(it.path)) } : prev));
+    setReport((prev) => (prev ? withItems(prev, prev.items.filter((i) => !i.path.startsWith(it.path))) : prev));
     setSelected((prev) => {
       const next = new Set(prev);
       next.delete(it.id);
@@ -315,7 +332,7 @@ export function App() {
     const dir = await openDialog({ directory: true, multiple: false, title: s.setCustomDir });
     if (typeof dir !== "string") return;
     await saveSettings({ ...settings, custom_rules_dir: dir });
-    setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+    await languageSync.refresh().catch(() => {});
   }
 
   async function toggleRule(id: string, enabled: boolean) {
@@ -330,11 +347,11 @@ export function App() {
     setUpdatingRules(true);
     setError(null);
     try {
-      await invoke("save_settings", { settings });
+      await languageSync.write((language) => invoke("save_settings", { settings: { ...settings, lang: language } }));
       const r = await invoke<RulesUpdate>("update_rules");
       setNotice(s.updateDone(r.files, r.rules));
       setSettings({ ...settings, rules_updated_at: r.updated_at });
-      setLibrary(await invoke<RuleLibrary>("rules"));
+      await languageSync.refresh();
     } catch (e) {
       setError(String(e));
     }
@@ -347,6 +364,9 @@ export function App() {
   const [deepBusy, setDeepBusy] = useState<"analyze" | "run" | "hiber" | null>(null);
   const [deepConfirm, setDeepConfirm] = useState(false);
   const [deepResult, setDeepResult] = useState<DeepSummary | null>(null);
+  useEffect(() => {
+    if (error || result || deepResult) feedbackRef.current?.scrollIntoView({ block: "start" });
+  }, [error, result, deepResult]);
 
   async function openDeep() {
     setError(null);
@@ -369,17 +389,61 @@ export function App() {
     setDeepBusy(null);
   }
 
+  async function requestClean(items: ScanItem[], big = false) {
+    if (!needsSystemCleanup(items)) {
+      if (big) setBigConfirm(true);
+      else setConfirming(true);
+      return;
+    }
+    if (deepBusy !== null) return;
+    setError(null);
+    setResult(null);
+    setNotice(null);
+    setDeepBusy("analyze");
+    try {
+      const drive = allDrives.find((drive) => drive.system);
+      const old = items.filter((item) => item.rule_id === WINDOWS_OLD_RULE);
+      if (!drive || old.some((item) => !isSystemWindowsOld(item.path, drive.path))) {
+        throw new Error(`Windows.old: ${s.deepNotApplicable}`);
+      }
+      const tasks = await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) });
+      if (!tasks.some((task) => task.id === WINDOWS_OLD_TASK && task.applicable)) {
+        throw new Error(`Windows.old: ${s.deepNotApplicable}`);
+      }
+      setDeepTasks(tasks);
+      setDeepSel(new Set([WINDOWS_OLD_TASK]));
+      setDeepResult(null);
+      setDeepAnalysis(null);
+      setView("deep");
+      // Do not send other selected scan items through this irreversible flow.
+      setDeepConfirm(true);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setDeepBusy(null);
+    }
+  }
+
   async function runDeep() {
     setDeepConfirm(false);
     setDeepBusy("run");
     setError(null);
+    setNotice(null);
+    setDeepResult(null);
     try {
       const sum = await invoke<DeepSummary>("deep_run", { ids: [...deepSel] });
       setDeepResult(sum);
       const failed = sum.results.filter((r) => !r.ok);
-      setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
-      if (failed.length) setError(failed.map((r) => `${r.id}: ${r.message}`).join("\n"));
-      setDeepSel(new Set());
+      if (sum.results.some((r) => r.ok)) setNotice(s.deepDone(humanSize(sum.freed_bytes)) + (failed.length ? ` · ${s.deepFailed(failed.length)}` : ""));
+      if (failed.length) setError(failed.map((r) => `${deepTasks.find((task) => task.id === r.id)?.title ?? r.id}: ${r.message}`).join("\n"));
+      if (sum.results.some((r) => r.id === WINDOWS_OLD_TASK && r.ok)) {
+        const drive = allDrives.find((drive) => drive.system);
+        const removed = (item: ScanItem) => item.rule_id === WINDOWS_OLD_RULE && !!drive && isSystemWindowsOld(item.path, drive.path);
+        const oldIds = new Set(report?.items.filter(removed).map((item) => item.id));
+        setReport((prev) => prev ? withItems(prev, prev.items.filter((item) => !removed(item))) : prev);
+        setSelected((prev) => new Set([...prev].filter((id) => !oldIds.has(id))));
+      }
+      setDeepSel(new Set([...deepSel].filter((id) => !sum.results.some((r) => r.id === id && r.ok))));
       setDeepAnalysis(null);
       setDeepTasks(await invoke<DeepTask[]>("deep_tasks", { lang: coreLang(lang) }));
     } catch (e) {
@@ -517,13 +581,18 @@ export function App() {
 
   async function runBigClean() {
     setBigConfirm(false);
+    if (needsSystemCleanup(bigSelectedItems)) return requestClean(bigSelectedItems, true);
     setPhase("cleaning");
+    setError(null);
+    setResult(null);
+    setNotice(null);
     try {
       const summary = await invoke<CleanSummary>("clean_items", { items: bigSelectedItems });
       setResult(summary);
-      const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
-      setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || failed.has(i.path)) : prev));
-      setBigSelected(new Set());
+      setError(cleanupError(summary, s.failed(1)));
+      const remaining = remainingSelection(bigSelectedItems, summary);
+      setBigItems((prev) => (prev ? prev.filter((i) => !bigSelected.has(i.id) || remaining.has(i.id)) : prev));
+      setBigSelected(remaining);
     } catch (e) {
       setError(String(e));
     }
@@ -554,17 +623,31 @@ export function App() {
   }
 
   async function openHistory() {
+    const request = ++historyRequest.current;
+    const current = () => request === historyRequest.current;
     setView("history");
+    setHistoryLoading(true);
+    setHistoryError(null);
+    setWhereabouts(new Map());
     try {
       const log = await invoke<CleanRecord[]>("clean_log");
+      if (!current()) return;
       setHistory(log);
-      setRelocations(await invoke<RelocateRecord[]>("relocations"));
-      if (!library) setLibrary(await invoke<RuleLibrary>("rules"));
+      const moves = await invoke<RelocateRecord[]>("relocations");
+      if (!current()) return;
+      setRelocations(moves);
+      if (!library) {
+        await languageSync.refresh();
+        if (!current()) return;
+      }
       const paths = [...new Set(log.filter((r) => r.ok).map((r) => r.path))];
       const st = await invoke<RestoreStatus[]>("restore_status", { paths });
+      if (!current()) return;
       setWhereabouts(new Map(st.map((x) => [x.path, x.state])));
     } catch (e) {
-      setError(String(e));
+      if (current()) setHistoryError(String(e));
+    } finally {
+      if (current()) setHistoryLoading(false);
     }
   }
 
@@ -636,20 +719,29 @@ export function App() {
     saveLangPref(langPref);
     document.documentElement.lang = htmlLang(lang);
     document.documentElement.dir = isRtl(lang) ? "rtl" : "ltr";
-    // The rule list's local names come from the stored language, so refetch it.
-    invoke("set_lang", { lang })
-      .then(() => invoke<RuleLibrary>("rules"))
-      .then((l) => setLibrary((cur) => (cur ? l : cur)))
-      .catch(() => {});
+    if (previousLang.current !== lang) {
+      previousLang.current = lang;
+      // Report text is localized during scanning. A new language needs a new scan.
+      setReport(null);
+      setSelected(new Set());
+      setLibrary(null);
+      setSettings((current) => current ? { ...current, lang } : current);
+      setScanStep(null);
+      setPhase((current) => current === "ready" ? "idle" : current);
+    }
+    // Serialize persisted writes; obsolete responses cannot replace current names.
+    languageSync.select(lang).catch(() => {});
   }, [langPref, lang]);
 
   useEffect(() => {
-    const c = listen<{ cleaned: number; freed_bytes: number }>("background-clean", (e) => {
+    const c = listen<{ cleaned: number; freed_bytes: number; log_error?: string | null }>("background-clean", (e) => {
+      if (e.payload.log_error) setError(e.payload.log_error);
       if (e.payload.cleaned > 0) {
         setNotice(sRef.current.bgCleaned(e.payload.cleaned, humanSize(e.payload.freed_bytes)));
       }
     });
     const p = listen<ScanReport>("background-scan", (e) => {
+      if (!reportMatchesLanguage(e.payload, langRef.current)) return;
       setReport(e.payload);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       setSelected(new Set(e.payload.items.filter(isDefaultTicked).map((i) => i.id)));
@@ -663,15 +755,22 @@ export function App() {
   }, []);
 
   async function runScan() {
+    const request = ++scanRequest.current;
     setPhase("scanning");
     setError(null);
     setResult(null);
     setScanStep(null);
     const unlisten = await listen<{ done: number; total: number; rule_name: string }>("scan-progress", (e) => {
-      setScanStep(e.payload);
+      if (request === scanRequest.current && lang === langRef.current) setScanStep(e.payload);
     });
     try {
       const r = await invoke<ScanReport>("scan", { lang: coreLang(lang), uiLang: lang });
+      if (request !== scanRequest.current) return;
+      if (!reportMatchesLanguage(r, langRef.current)) {
+        autoConfirmRef.current = false;
+        setPhase((current) => current === "scanning" ? "idle" : current);
+        return;
+      }
       setReport(r);
       invoke<Growth[]>("growth_report").then(setGrowth).catch(() => {});
       // Default selection: only what is safe. The user opts into everything else.
@@ -681,12 +780,13 @@ export function App() {
       if (autoConfirmRef.current && safe.length > 0) setConfirming(true);
       autoConfirmRef.current = false;
     } catch (e) {
+      if (request !== scanRequest.current) return;
       autoConfirmRef.current = false;
-      setError(String(e));
-      setPhase("idle");
+      if (lang === langRef.current) setError(String(e));
+      setPhase((current) => current === "scanning" ? "idle" : current);
     } finally {
       unlisten();
-      setScanStep(null);
+      if (request === scanRequest.current) setScanStep(null);
     }
   }
 
@@ -748,8 +848,9 @@ export function App() {
   }
 
   function toggleGroup(items: ScanItem[]) {
-    const all = items.every((i) => selected.has(i.id));
+    const selectable = items.filter((i) => !i.in_use_by);
     setSelected((prev) => {
+      const all = selectable.length > 0 && selectable.every((i) => prev.has(i.id));
       const next = new Set(prev);
       for (const i of items) {
         if (all || i.in_use_by) next.delete(i.id);
@@ -766,7 +867,11 @@ export function App() {
 
   async function runClean() {
     setConfirming(false);
+    if (needsSystemCleanup(selectedItems)) return requestClean(selectedItems);
     setPhase("cleaning");
+    setError(null);
+    setResult(null);
+    setNotice(null);
     try {
       let exported: ExportResult | null = null;
       if (exportOn && exportDest && selectedExportable.length > 0) {
@@ -783,18 +888,11 @@ export function App() {
       }
       const summary = await invoke<CleanSummary>("clean_items", { items: selectedItems });
       setResult(summary);
+      setError(cleanupError(summary, s.failed(1)));
       if (exported) setNotice(s.exported(exported.files, exported.zip_path));
-      // Drop what was deleted; keep what failed so the user sees it.
-      const failed = new Set(summary.records.filter((r) => !r.ok).map((r) => r.path));
-      setReport((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter((i) => !selected.has(i.id) || failed.has(i.path)),
-            }
-          : prev,
-      );
-      setSelected(new Set());
+      // Items and overview must reflect only confirmed successful deletions.
+      setReport((prev) => (prev ? afterClean(prev, summary) : prev));
+      setSelected(remainingSelection(selectedItems, summary));
     } catch (e) {
       setError(String(e));
     }
@@ -862,7 +960,8 @@ export function App() {
         </div>
       )}
 
-      {error && <div className="banner error">{error}</div>}
+      <div ref={feedbackRef} className="feedback-anchor" />
+      {error && <div className="banner error" role="alert">{error}</div>}
       {notice && <div className="banner ok">{notice}</div>}
       {update && (
         <div className="banner update">
@@ -887,7 +986,7 @@ export function App() {
       )}
       {updateMsg && <div className="banner ok">{updateMsg}</div>}
       {result && (
-        <div className="banner ok">
+        <div className={`banner ${result.records.some((r) => !r.ok) ? "error" : "ok"}`} role="status">
           {s.done(humanSize(result.freed_bytes))}
           {result.records.some((r) => !r.ok) && (
             <span> · {s.failed(result.records.filter((r) => !r.ok).length)}</span>
@@ -974,13 +1073,13 @@ export function App() {
             </ul>
             <div className="modal-actions">
               <button className="ghost" onClick={() => setDeepConfirm(false)}>{s.cancel}</button>
-              <button className="primary" onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
+              <button className="primary" disabled={deepBusy !== null || deepSel.size === 0} onClick={runDeep}>{s.deepRun(deepSel.size)}</button>
             </div>
           </div>
         </div>
       )}
 
-      {view === "aitools" && <AiTools lang={lang} />}
+      {view === "aitools" && <AiTools lang={lang} versionCheck={settings?.mcp_version_check ?? true} />}
 
       {view === "overview" && (
         <section className="bigfiles overview">
@@ -1156,7 +1255,7 @@ export function App() {
               {bigSelectedItems.length > 0 && (
                 <footer className="actionbar">
                   <span>{s.selected(bigSelectedItems.length, humanSize(bigSelectedItems.reduce((a, i) => a + i.size_bytes, 0)))}</span>
-                  <button className="primary" disabled={phase === "cleaning"} onClick={() => setBigConfirm(true)}>
+                  <button className="primary" disabled={phase === "cleaning" || deepBusy !== null} onClick={() => requestClean(bigSelectedItems, true)}>
                     {phase === "cleaning" ? s.cleaning : s.clean}
                   </button>
                 </footer>
@@ -1202,14 +1301,21 @@ export function App() {
           onPickRulesDir={pickCustomRulesDir}
           onClearRulesDir={async () => {
             await saveSettings({ ...settings, custom_rules_dir: null });
-            setLibrary(await invoke<RuleLibrary>("rules").catch(() => library));
+            await languageSync.refresh().catch(() => {});
           }}
           onToggleRule={toggleRule}
         />
       )}
 
       {view === "history" && (
-        <section className="history">
+        <section className="history" aria-busy={historyLoading}>
+          {historyLoading && <p role="status">{s.historyLoading}</p>}
+          {historyError && (
+            <div className="banner error" role="alert">
+              <p>{s.historyLoadFailed} {historyError}</p>
+              <button onClick={openHistory} disabled={historyLoading}>{s.retry}</button>
+            </div>
+          )}
           {relocations.length > 0 && (
             <div className="moved">
               <h3>{s.movedTitle}</h3>
@@ -1229,7 +1335,7 @@ export function App() {
                             {movingBack.progress && movingBack.progress[1] > 0 && ` ${Math.round((movingBack.progress[0] / movingBack.progress[1]) * 100)}%`}
                           </span>
                         ) : (
-                          <button className="ghost" disabled={movingBack !== null} onClick={() => moveBack(r)}>
+                          <button className="ghost" disabled={movingBack !== null || historyLoading || !!historyError} onClick={() => moveBack(r)}>
                             {s.moveBack}
                           </button>
                         )}
@@ -1241,7 +1347,7 @@ export function App() {
             </div>
           )}
           {history.length === 0 ? (
-            <p className="empty">{s.historyEmpty}</p>
+            !historyLoading && !historyError && <p className="empty">{s.historyEmpty}</p>
           ) : (
             <>
               <p className="muted">
@@ -1252,7 +1358,7 @@ export function App() {
                 {lastBatch.length > 0 && (
                   <button
                     className="ghost"
-                    disabled={restoring}
+                    disabled={restoring || historyLoading || !!historyError}
                     title={s.undoLastHint(lastBatch.length, humanSize(lastBatch.reduce((a, r) => a + r.size_bytes, 0)))}
                     onClick={() => restoreRecords(lastBatch)}
                   >
@@ -1292,7 +1398,7 @@ export function App() {
                       <td className="size">{humanSize(r.size_bytes)}</td>
                       <td className="muted">
                         {!r.ok ? r.error : whereabouts.get(r.path) === "in_bin" ? (
-                          <button className="ghost" disabled={restoring} onClick={() => restoreRecords([r])}>{s.restore}</button>
+                          <button className="ghost" disabled={restoring || historyLoading || !!historyError} onClick={() => restoreRecords([r])}>{s.restore}</button>
                         ) : whereabouts.get(r.path) === "present" ? s.statePresent : whereabouts.has(r.path) ? s.stateGone : ""}
                       </td>
                     </tr>
@@ -1499,12 +1605,13 @@ export function App() {
           <div className="clean-groups">
             {groups.map((g) => {
               const open = !collapsed.has(g.key);
-              const allOn = g.items.every((i) => selected.has(i.id));
-              const someOn = g.items.some((i) => selected.has(i.id));
+              const selectable = g.items.filter((i) => !i.in_use_by);
+              const allOn = selectable.length > 0 && selectable.every((i) => selected.has(i.id));
+              const someOn = selectable.some((i) => selected.has(i.id));
               return (
                 <section key={g.key} className="cg">
                   <header className="cg-head">
-                    <Checkbox label={g.title} checked={allOn} indeterminate={someOn} onChange={() => toggleGroup(g.items)} />
+                    <Checkbox label={g.title} checked={allOn} indeterminate={someOn} disabled={selectable.length === 0} onChange={() => toggleGroup(g.items)} />
                     <button
                       type="button"
                       className="md-interactive cg-title"
@@ -1564,7 +1671,7 @@ export function App() {
             <FloatingToolbar label={s.clean}>
               <span>{s.selected(selectedItems.length, humanSize(selectedBytes))}</span>
               <Button variant="text" disabled={phase === "cleaning"} onClick={() => setSelected(new Set())}>{s.selectNone}</Button>
-              <Button icon="delete" disabled={selectedItems.length === 0 || phase === "cleaning"} onClick={() => setConfirming(true)}>
+              <Button icon="delete" disabled={selectedItems.length === 0 || phase === "cleaning" || deepBusy !== null} onClick={() => requestClean(selectedItems)}>
                 {phase === "cleaning" ? (exporting ? s.exporting : s.cleaning) : s.clean}
               </Button>
             </FloatingToolbar>

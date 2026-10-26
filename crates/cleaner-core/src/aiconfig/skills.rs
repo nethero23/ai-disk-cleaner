@@ -33,7 +33,7 @@ pub struct Plugin {
     pub version: Option<String>,
     pub path: PathBuf,
     pub bytes: u64,
-    /// Older versions of the same plugin still on disk (cache folders).
+    /// Potential older versions still on disk; not proof they are unused.
     pub stale_versions: Vec<PathBuf>,
     pub stale_bytes: u64,
 }
@@ -45,7 +45,7 @@ pub struct Extension {
     pub version: Option<String>,
     pub path: PathBuf,
     pub bytes: u64,
-    /// Older versions of the same extension still on disk.
+    /// Potential older versions for the same platform; not proof they are unused.
     pub stale_versions: Vec<PathBuf>,
     pub stale_bytes: u64,
 }
@@ -113,7 +113,7 @@ fn description_of(skill_md: &Path) -> Option<String> {
     None
 }
 
-fn sorted_subdirs(dir: &Path) -> Vec<PathBuf> {
+pub(crate) fn sorted_subdirs(dir: &Path) -> Vec<PathBuf> {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
@@ -171,16 +171,41 @@ fn is_junction(_p: &Path) -> bool {
     false
 }
 
+/// VS Code-style platform suffixes: `ms-vscode.cpptools-1.20.5-win32-x64`.
+const PLATFORM_SUFFIXES: &[&str] = &[
+    "-win32-x64",
+    "-win32-arm64",
+    "-win32-ia32",
+    "-darwin-x64",
+    "-darwin-arm64",
+    "-linux-x64",
+    "-linux-arm64",
+    "-linux-armhf",
+    "-alpine-x64",
+    "-alpine-arm64",
+    "-universal",
+    "-web",
+];
+
 /// Splits `name@1.2.3` / `name-1.2.3` / `name_1.2.3` into name and version.
+/// A platform suffix is dropped first, and a pure build number of three or
+/// more digits (`chromium-1140`, `ffmpeg-1010`) also counts as a version.
 pub fn split_name_version(dir_name: &str) -> (String, Option<String>) {
-    if let Some((n, v)) = dir_name.rsplit_once('@') {
+    let mut base = dir_name;
+    for suf in PLATFORM_SUFFIXES {
+        if let Some(b) = base.strip_suffix(suf) {
+            base = b;
+            break;
+        }
+    }
+    if let Some((n, v)) = base.rsplit_once('@') {
         if !v.is_empty() && v.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             return (n.to_string(), Some(v.to_string()));
         }
     }
     for sep in ['-', '_'] {
-        if let Some((n, v)) = dir_name.rsplit_once(sep) {
-            if looks_like_version(v) {
+        if let Some((n, v)) = base.rsplit_once(sep) {
+            if looks_like_version(v) || (v.len() >= 3 && v.chars().all(|c| c.is_ascii_digit())) {
                 return (n.to_string(), Some(v.to_string()));
             }
         }
@@ -210,11 +235,61 @@ pub fn version_key(v: &str) -> Vec<u64> {
 }
 
 /// (name, (newest folder, its version), older folders).
-type VersionGroup = (String, (PathBuf, Option<String>), Vec<PathBuf>);
+pub(crate) type VersionGroup = (String, (PathBuf, Option<String>), Vec<PathBuf>);
 
-/// Groups versioned folders by name; returns (name, newest, older...).
-fn group_versions(dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
-    let mut groups: std::collections::BTreeMap<String, Vec<(PathBuf, Option<String>)>> =
+/// Only plain numeric releases/builds can establish an older-version hint.
+/// Hashes, tags and prereleases need tool-specific knowledge, not mtime ordering.
+fn comparable_version_key(v: &str) -> Option<Vec<u64>> {
+    let mut key: Vec<u64> = v
+        .strip_prefix('v')
+        .unwrap_or(v)
+        .split('.')
+        .map(|part| {
+            if part.is_empty() || !part.bytes().all(|b| b.is_ascii_digit()) {
+                None
+            } else {
+                part.parse().ok()
+            }
+        })
+        .collect::<Option<_>>()?;
+    while key.len() > 1 && key.last() == Some(&0) {
+        key.pop();
+    }
+    Some(key)
+}
+
+/// Preserve unknown versions and equal-version peers as separate inventory rows.
+/// Only strictly smaller comparable versions become potential stale candidates;
+/// the highest number is not evidence of which version is actually in use.
+fn group_named_versions(name: &str, versions: Vec<(PathBuf, Option<String>)>) -> Vec<VersionGroup> {
+    let mut known = Vec::new();
+    let mut groups = Vec::new();
+    for (path, version) in versions {
+        if let Some(key) = version.as_deref().and_then(comparable_version_key) {
+            known.push((path, version, key));
+        } else {
+            groups.push((name.to_string(), (path, version), Vec::new()));
+        }
+    }
+    known.sort_by(|a, b| b.2.cmp(&a.2));
+    if !known.is_empty() {
+        let (newest, version, highest) = known.remove(0);
+        let mut older = Vec::new();
+        for (path, ver, key) in known {
+            if key < highest {
+                older.push(path);
+            } else {
+                groups.push((name.to_string(), (path, ver), Vec::new()));
+            }
+        }
+        groups.push((name.to_string(), (newest, version), older));
+    }
+    groups
+}
+
+/// Groups by name AND platform; another platform's newer build is not a replacement.
+pub(crate) fn group_versions(dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
+    let mut groups: std::collections::BTreeMap<_, Vec<(PathBuf, Option<String>)>> =
         Default::default();
     for d in dirs {
         let name = d
@@ -222,29 +297,29 @@ fn group_versions(dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_default();
         let (n, v) = split_name_version(&name);
-        groups.entry(n).or_default().push((d, v));
+        let platform = PLATFORM_SUFFIXES
+            .iter()
+            .find(|s| name.ends_with(**s))
+            .copied();
+        groups.entry((n, platform)).or_default().push((d, v));
     }
     groups
         .into_iter()
-        .map(|(name, mut vs)| {
-            // Newest version first; when unversioned, the most recently modified.
-            vs.sort_by(|a, b| {
-                let ka = a.1.as_deref().map(version_key);
-                let kb = b.1.as_deref().map(version_key);
-                match (ka, kb) {
-                    (Some(x), Some(y)) => y.cmp(&x),
-                    _ => {
-                        let ma = std::fs::metadata(&a.0).and_then(|m| m.modified()).ok();
-                        let mb = std::fs::metadata(&b.0).and_then(|m| m.modified()).ok();
-                        mb.cmp(&ma)
-                    }
-                }
-            });
-            let newest = vs.remove(0);
-            let older = vs.into_iter().map(|v| v.0).collect();
-            (name, newest, older)
-        })
+        .flat_map(|((name, _), vs)| group_named_versions(&name, vs))
         .collect()
+}
+
+/// Plugin-cache folders are version strings without a plugin-name prefix.
+pub(crate) fn group_plugin_versions(name: &str, dirs: Vec<PathBuf>) -> Vec<VersionGroup> {
+    group_named_versions(
+        name,
+        dirs.into_iter()
+            .map(|path| {
+                let version = path.file_name().map(|n| n.to_string_lossy().to_string());
+                (path, version)
+            })
+            .collect(),
+    )
 }
 
 /// Plugins of Claude Code's shape: `<dir>/cache/<marketplace>/<plugin>/<version>/`
@@ -271,29 +346,19 @@ pub fn list_plugins(tool: &str, dir: &Path) -> Vec<Plugin> {
                         .map(|n| n.to_string_lossy().to_string())
                         .unwrap_or_default()
                 );
-                let mut sorted: Vec<(PathBuf, String)> = versions
-                    .into_iter()
-                    .map(|v| {
-                        let s = v
-                            .file_name()
-                            .map(|n| n.to_string_lossy().to_string())
-                            .unwrap_or_default();
-                        (v, s)
-                    })
-                    .collect();
-                sorted.sort_by_key(|(_, v)| std::cmp::Reverse(version_key(v)));
-                let (newest, ver) = sorted.remove(0);
-                let st = tree_stats(&newest);
-                let stale_bytes = sorted.iter().map(|(p, _)| tree_stats(p).bytes).sum();
-                out.push(Plugin {
-                    tool: tool.to_string(),
-                    name,
-                    version: Some(ver),
-                    path: newest,
-                    bytes: st.bytes,
-                    stale_versions: sorted.into_iter().map(|(p, _)| p).collect(),
-                    stale_bytes,
-                });
+                for (name, (newest, ver), older) in group_plugin_versions(&name, versions) {
+                    let st = tree_stats(&newest);
+                    let stale_bytes = older.iter().map(|p| tree_stats(p).bytes).sum();
+                    out.push(Plugin {
+                        tool: tool.to_string(),
+                        name,
+                        version: ver,
+                        path: newest,
+                        bytes: st.bytes,
+                        stale_versions: older,
+                        stale_bytes,
+                    });
+                }
             }
         }
         return out;
@@ -462,6 +527,64 @@ mod tests {
     }
 
     #[test]
+    fn extension_platform_variants_have_separate_version_histories() {
+        let tmp = tempfile::tempdir().unwrap();
+        for d in [
+            "ext-1.0.0-win32-x64",
+            "ext-2.0.0-win32-x64",
+            "ext-2.0.0-linux-x64",
+            "ext-1.0.0-darwin-arm64",
+            "ext-2.0.0",
+        ] {
+            let p = tmp.path().join(d);
+            std::fs::create_dir_all(&p).unwrap();
+            std::fs::write(p.join("f"), "data").unwrap();
+        }
+        let (exts, _) = list_extensions("cursor", tmp.path());
+        assert_eq!(exts.len(), 4);
+        let windows = exts
+            .iter()
+            .find(|e| e.path.ends_with("ext-2.0.0-win32-x64"))
+            .unwrap();
+        assert_eq!(
+            windows.stale_versions,
+            vec![tmp.path().join("ext-1.0.0-win32-x64")]
+        );
+        assert_eq!(windows.stale_bytes, 4);
+        assert_eq!(
+            exts.iter().map(|e| e.stale_versions.len()).sum::<usize>(),
+            1
+        );
+    }
+
+    #[test]
+    fn equal_and_unknown_versions_remain_visible_without_stale_inference() {
+        let dirs = [
+            "ext-1.0",
+            "ext-1.0.0",
+            "ext@1.0.0-beta",
+            "ext@abcdef",
+            "plain",
+        ]
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+        let groups = group_versions(dirs);
+        assert_eq!(groups.len(), 5);
+        assert!(groups.iter().all(|(_, _, older)| older.is_empty()));
+
+        let tmp = tempfile::tempdir().unwrap();
+        for v in ["1.0", "1.0.0", "v1.0.0", "2.0.0-beta", "abcdef12", "latest"] {
+            std::fs::create_dir_all(tmp.path().join("cache/market/plugin").join(v)).unwrap();
+        }
+        let plugins = list_plugins("claude_code", tmp.path());
+        assert_eq!(plugins.len(), 6);
+        assert!(plugins
+            .iter()
+            .all(|p| p.stale_versions.is_empty() && p.stale_bytes == 0));
+    }
+
+    #[test]
     fn version_parsing() {
         assert_eq!(
             split_name_version("pkg@1.2.3"),
@@ -472,6 +595,15 @@ mod tests {
             ("a.b".into(), Some("1.0.0".into()))
         );
         assert_eq!(split_name_version("plain"), ("plain".into(), None));
+        assert_eq!(
+            split_name_version("ms-vscode.cpptools-1.20.5-win32-x64"),
+            ("ms-vscode.cpptools".into(), Some("1.20.5".into()))
+        );
+        assert_eq!(
+            split_name_version("chromium_headless_shell-1140"),
+            ("chromium_headless_shell".into(), Some("1140".into()))
+        );
+        assert_eq!(split_name_version("ext-2"), ("ext-2".into(), None));
         assert!(version_key("1.10.0") > version_key("1.9.2"));
     }
 }

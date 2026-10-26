@@ -66,6 +66,9 @@ pub struct ScanItem {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScanReport {
+    /// UI language captured at scan start; absent in legacy/CLI reports.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ui_lang: Option<String>,
     pub items: Vec<ScanItem>,
     pub total_bytes: u64,
     pub safe_bytes: u64,
@@ -126,5 +129,21 @@ mod tests {
         assert_eq!(human_size(1023), "1023 B");
         assert_eq!(human_size(1536), "1.5 KB");
         assert_eq!(human_size(4_700_000_000), "4.4 GB");
+    }
+
+    #[test]
+    fn scan_report_language_tag_is_backward_compatible() {
+        let legacy = serde_json::to_value(ScanReport::default()).unwrap();
+        assert!(legacy.get("ui_lang").is_none());
+        let report: ScanReport = serde_json::from_value(legacy).unwrap();
+        assert!(report.ui_lang.is_none());
+
+        let tagged = ScanReport {
+            ui_lang: Some("ja".into()),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&tagged).unwrap();
+        let restored: ScanReport = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.ui_lang.as_deref(), Some("ja"));
     }
 }

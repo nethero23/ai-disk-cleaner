@@ -17,7 +17,15 @@
 
 </div>
 
-> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). La interfaz de la aplicación está disponible por ahora en chino e inglés.
+> Esta traducción puede ir por detrás de la [versión en inglés](README.en.md). [0.9.0-rc.1](https://github.com/nethero23/ai-disk-cleaner/releases/tag/v0.9.0-rc.1), con 12 idiomas de interfaz, está publicada como candidata preliminar, no como versión estable. Descarga manualmente [NSIS](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-setup.exe) o el [ZIP portable](https://github.com/nethero23/ai-disk-cleaner/releases/download/v0.9.0-rc.1/AI.Disk.Cleaner_0.9.0-rc.1_x64-portable.zip). En el punto de publicación, ambos paquetes tenían SHA-256 verificado y aún no se habían ejecutado. Latest sigue en la estable `v0.7.1`; las candidatas no incluyen actualización automática, MSI, `latest.json` ni manifiestos winget/Scoop.
+>
+> Los registros JSONL de limpieza/traslado inexistentes se consideran vacíos; los fallos de lectura, codificación o datos se muestran con Reintentar. Restaurar y devolver al origen siguen bloqueados durante la carga o los errores. Un fallo al enumerar la Papelera ya no se presenta como pérdida definitiva.
+>
+> Si falla validar o abrir el registro, no se limpian archivos. Un fallo de escritura/sincronización detiene los elementos posteriores, conserva los éxitos reales y muestra una advertencia en resultados de primer y segundo plano. Los registros antiguos válidos sin ID de lote ni salto de línea final siguen siendo compatibles. No es un WAL seguro ante fallos; queda pendiente la escritura transaccional de traslados. Reintenta y conserva el registro original mientras compruebas permisos y espacio libre.
+>
+> Control aislado previo a la instalación: pasaron 67 comprobaciones de navegador (25 selección + 30 historial + 12 recuperación), pruebas locales y compilación NSIS sin firma. Una portable local `0.9.0-rc.1` mostró mediante IPC real el bloqueo (OS error 32) e historiales dañados, conservó filas y permitió reintentar. Pasaron el análisis de solo lectura, 10 comprobaciones de selección/protección y dos filas tras reiniciar; dos comprobaciones solo verificaron estados desactivados. Se reabrió la `0.8.0-rc.1` instalada entonces y doce hashes de referencia quedaron intactos. Ese control no incluyó limpieza/restauración ni instalación.
+>
+> Después, tras respaldar y verificar 368 archivos y dos accesos directos y recibir aprobación independiente, el NSIS real de GitHub actualizó `0.8.0-rc.1 → 0.9.0-rc.1` en el mismo lugar con «No desinstalar». Pasaron diez comprobaciones instaladas (ratón, Space, grupos y clics reales en controles desactivados) y el reinicio completo. Se conservaron 95 registros (81 correctos), ajustes, 14 archivos de configuración/reglas ajenos al análisis y dos accesos directos; los datos de crecimiento, resumen y WebView pueden cambiar. No hubo limpieza/restauración y el ejecutable portable público sigue sin ejecutarse. Este caso NSIS no valida toda la matriz estable, MSI, Windows limpio ni firma. Véase la [aceptación instalada](docs/RELEASE_CHECKLIST.md#github-v09-in-place-upgrade-and-retest-2026-10-24).
 
 ## Por qué
 
@@ -30,7 +38,7 @@ Clearwisp explica cada gigabyte: **qué modelo, qué entorno de conda, qué cach
 <a id="features"></a>
 ## Funciones
 
-### 🧠 Conoce la basura de las herramientas de IA (126 reglas, más de 90 herramientas)
+### 🧠 Conoce la basura de las herramientas de IA (136 reglas, más de 90 herramientas)
 
 | Categoría | Cubre |
 |---|---|
@@ -75,7 +83,7 @@ Lee los manifiestos de Ollama, la estructura de la caché de Hugging Face, los e
 
 ### 🚫 Nunca
 
-Sin limpieza del registro, sin ventanas molestas, sin software incluido, sin subir tu lista de archivos. Funciona sin conexión; solo se conecta para buscar actualizaciones.
+Sin limpieza del registro, sin ventanas molestas, sin software incluido, sin subir tu lista de archivos. El análisis y la limpieza se hacen en local; las actualizaciones de la aplicación y de las reglas acceden a GitHub. La comprobación de versiones MCP en la página «Herramientas de IA» está activada de forma predeterminada y se puede desactivar en Ajustes. Solo envía nombres de paquetes a npm / PyPI, nunca el contenido de la configuración.
 
 ## Instalación
 
@@ -147,7 +155,7 @@ El análisis es de solo lectura. Solo se limpian las carpetas incluidas en las r
 Cubre lo que CCleaner no: modelos de IA, entornos de Python, cachés de editores con IA. También limpia la basura habitual de Windows. Usar los dos no es problema.
 
 ### ¿Es gratis? ¿Tiene anuncios o telemetría?
-Gratis, con licencia MIT, sin anuncios ni software incluido. El análisis y la limpieza se hacen en local; la aplicación solo se conecta a GitHub para buscar actualizaciones y (opcionalmente) actualizar las reglas.
+Gratis, con licencia MIT, sin anuncios ni software incluido. El análisis y la limpieza se hacen en local; las actualizaciones de la aplicación y de las reglas acceden a GitHub. La comprobación de versiones MCP en la página «Herramientas de IA» está activada de forma predeterminada y se puede desactivar en Ajustes. Solo envía nombres de paquetes a npm / PyPI, nunca el contenido de la configuración.
 
 ### ¿macOS / Linux?
 Por ahora solo Windows 10 / 11. El motor de análisis está escrito en Rust multiplataforma, así que podrían llegar otras plataformas.

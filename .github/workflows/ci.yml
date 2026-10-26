@@ -36,6 +36,7 @@ jobs:
 
   app:
     name: Tauri app (Windows build)
+    needs: core
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,17 +50,24 @@ jobs:
           workspaces: ". -> target"
       - run: npm ci
       - run: npm run build
+      - run: node tools/i18n_check.mjs
+      - run: node --test tools/*.test.mjs
       - run: cargo build -p ai-disk-cleaner
+      - run: cargo test -p ai-disk-cleaner --lib
       - name: Resolve release tag
         shell: bash
+        env:
+          REQUESTED_RELEASE_TAG: ${{ inputs.tag }}
         run: |
           tag=""
           case "$GITHUB_REF" in
             refs/tags/*) tag="$GITHUB_REF_NAME" ;;
             refs/heads/release/*) tag="${GITHUB_REF_NAME#release/}" ;;
           esac
-          if [ -n "${{ inputs.tag }}" ]; then tag="${{ inputs.tag }}"; fi
-          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          if [ -n "$REQUESTED_RELEASE_TAG" ]; then tag="$REQUESTED_RELEASE_TAG"; fi
+          if [ -n "$tag" ]; then
+            node tools/release-policy.mjs "$tag" >> "$GITHUB_ENV"
+          fi
       - name: Bundle installer (releases only)
         if: env.RELEASE_TAG != ''
         shell: bash
@@ -68,13 +76,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
-            npx tauri build
+            npx tauri build --bundles "$RELEASE_BUNDLES"
           else
             echo "::warning::TAURI_SIGNING_PRIVATE_KEY is not set: building without update signatures, so the in-app updater will not offer this release."
-            npx tauri build --config '{"bundle":{"createUpdaterArtifacts":false}}'
+            npx tauri build --bundles "$RELEASE_BUNDLES" --config '{"bundle":{"createUpdaterArtifacts":false}}'
           fi
       - name: Updater manifest (releases only)
-        if: env.RELEASE_TAG != ''
+        if: env.RELEASE_TAG != '' && env.RELEASE_PRERELEASE != 'true'
         shell: bash
         run: python3 .github/latest_json.py "$RELEASE_TAG" "$GITHUB_REPOSITORY" target/release/bundle/nsis target/release/bundle/latest.json
       - name: Portable zip (releases only)
@@ -93,7 +101,7 @@ jobs:
           (cd portable && 7z a -tzip "../$zip" . > /dev/null)
           ls -l "$zip"
       - name: winget and Scoop manifests (releases only)
-        if: env.RELEASE_TAG != ''
+        if: env.RELEASE_TAG != '' && env.RELEASE_PRERELEASE != 'true'
         shell: bash
         run: |
           set -e
@@ -114,7 +122,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ env.RELEASE_PRERELEASE == 'true' }}
+          make_latest: ${{ env.RELEASE_PRERELEASE == 'true' && 'false' || 'true' }}
           generate_release_notes: true
+          body: |
+            Source commit: `${{ github.sha }}`
+
+            [Changes](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/CHANGELOG.md) · [Validation and known limits](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/RELEASE_CHECKLIST.md)
+
+            ${{ env.RELEASE_PRERELEASE == 'true' && '预发布候选：仅提供 NSIS 安装包和便携 ZIP，稳定版 Latest 与自动更新不变。人工桌面与安装验收范围请见上方清单；CI 通过不代表所有稳定版门槛已完成。' || '' }}
           files: |
             target/release/bundle/nsis/*.exe
             target/release/bundle/msi/*.msi

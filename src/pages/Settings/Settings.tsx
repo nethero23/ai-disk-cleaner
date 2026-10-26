@@ -180,6 +180,7 @@ export function SettingsPage(p: {
             </Row>
           </>
         )}
+        <SwitchRow title={s.aiTools} desc={s.setMcpVersionCheck} checked={st.mcp_version_check} onChange={(v) => save({ ...st, mcp_version_check: v })} />
       </Section>
 
       <Section icon="rule" title={s.setRules} hint={s.setRulesBody}>

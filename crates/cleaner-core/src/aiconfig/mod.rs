@@ -14,11 +14,13 @@ pub mod analyze;
 pub mod catalog;
 pub mod mcp;
 pub mod skills;
+pub mod versions;
 
 pub use analyze::{analyze, Analysis, Finding, FindingKind};
 pub use catalog::{Catalog, McpSource, ToolDef};
 pub use mcp::{ConfigFile, McpServer, McpTransport, SecretHit};
 pub use skills::{Extension, Plugin, Skill};
+pub use versions::{check_versions, latest_from_response, registry_url, VersionInfo};
 
 use crate::paths::PathContext;
 use serde::{Deserialize, Serialize};
@@ -52,17 +54,48 @@ pub struct Inventory {
 /// Reads every catalogued location and analyses the result.
 pub fn inventory(catalog: &Catalog, ctx: &PathContext) -> Inventory {
     let running = crate::process::running_names();
-    let tools: Vec<ToolInventory> = catalog
-        .tools
-        .iter()
-        .map(|t| inventory_tool(t, ctx, &running))
-        .collect();
+    let tools = collect_tools(&catalog.tools, |t| inventory_tool(t, ctx, &running));
     let analysis = analyze(&tools);
     Inventory {
         tools,
         analysis,
         computed_at: Some(chrono::Utc::now()),
     }
+}
+
+fn collect_tools(
+    definitions: &[ToolDef],
+    read: impl Fn(&ToolDef) -> ToolInventory + Sync,
+) -> Vec<ToolInventory> {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    // Independent filesystem reads can overlap, but never start one thread per
+    // tool or keep a stale cross-scan cache. Analyze only after all reads finish.
+    let next = AtomicUsize::new(0);
+    let mut indexed = std::thread::scope(|scope| {
+        let workers: Vec<_> = (0..definitions.len().min(4))
+            .map(|_| {
+                let next = &next;
+                let read = &read;
+                scope.spawn(move || {
+                    let mut found = Vec::new();
+                    loop {
+                        let index = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(definition) = definitions.get(index) else {
+                            break;
+                        };
+                        found.push((index, read(definition)));
+                    }
+                    found
+                })
+            })
+            .collect();
+        workers
+            .into_iter()
+            .flat_map(|worker| worker.join().expect("inventory worker panicked"))
+            .collect::<Vec<_>>()
+    });
+    indexed.sort_unstable_by_key(|(index, _)| *index);
+    indexed.into_iter().map(|(_, tool)| tool).collect()
 }
 
 fn inventory_tool(def: &ToolDef, ctx: &PathContext, running: &HashSet<String>) -> ToolInventory {
@@ -174,6 +207,40 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
+    fn tool_reads_overlap_but_stay_bounded_and_in_catalog_order() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let catalog = Catalog::builtin();
+        let active = AtomicUsize::new(0);
+        let peak = AtomicUsize::new(0);
+        let calls = AtomicUsize::new(0);
+        let tools = collect_tools(&catalog.tools, |def| {
+            let current = active.fetch_add(1, Ordering::SeqCst) + 1;
+            peak.fetch_max(current, Ordering::SeqCst);
+            calls.fetch_add(1, Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            active.fetch_sub(1, Ordering::SeqCst);
+            ToolInventory {
+                id: def.id.clone(),
+                ..Default::default()
+            }
+        });
+        assert_eq!(calls.load(Ordering::SeqCst), catalog.tools.len());
+        assert!(
+            peak.load(Ordering::SeqCst) > 1,
+            "independent I/O should overlap"
+        );
+        assert!(
+            peak.load(Ordering::SeqCst) <= 4,
+            "at most four concurrent tool reads"
+        );
+        assert_eq!(
+            tools.iter().map(|t| &t.id).collect::<Vec<_>>(),
+            catalog.tools.iter().map(|t| &t.id).collect::<Vec<_>>()
+        );
+        assert!(collect_tools(&[], |_| unreachable!()).is_empty());
+    }
+
+    #[test]
     fn inventory_over_a_fake_home_finds_servers_skills_and_findings() {
         let tmp = tempfile::tempdir().unwrap();
         let home = tmp.path();
@@ -203,7 +270,23 @@ mod tests {
         vars.insert("USERPROFILE".to_string(), home.to_path_buf());
         vars.insert("APPDATA".to_string(), home.join("AppData/Roaming"));
         let ctx = PathContext::with_vars(vars);
+        let snapshot = || {
+            let mut files = walkdir::WalkDir::new(home)
+                .into_iter()
+                .map(|entry| entry.unwrap())
+                .filter(|entry| entry.file_type().is_file())
+                .map(|entry| {
+                    let path = entry.path().to_path_buf();
+                    let bytes = std::fs::read(&path).unwrap();
+                    (path, bytes)
+                })
+                .collect::<Vec<_>>();
+            files.sort();
+            files
+        };
+        let before = snapshot();
         let inv = inventory(&Catalog::builtin(), &ctx);
+        assert_eq!(snapshot(), before, "inventory must not modify tool files");
         let present: Vec<&str> = inv
             .tools
             .iter()
